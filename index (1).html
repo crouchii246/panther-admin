@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panther Streams Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#050505;--panel:#111;--panel2:#171717;--text:#fff;--muted:#aaa;--accent:#00E5FF;--border:#2a2a2a;--ok:#50d890}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#080808;border-bottom:1px solid var(--border);padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+h1{font-size:20px;margin:0} h2{font-size:18px;margin:0 0 12px} h3{font-size:16px;margin:0}
+.wrap{max-width:1400px;margin:auto;padding:18px} .hidden{display:none!important}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px}
+.login{max-width:420px;margin:70px auto} .stack{display:grid;gap:12px}
+.toolbar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+input,select,button{font:inherit} input,select{width:100%;background:#0b0b0b;color:#fff;border:1px solid #333;border-radius:10px;padding:11px 12px}
+button{background:#202020;color:#fff;border:1px solid #333;border-radius:10px;padding:10px 14px;cursor:pointer}
+button.primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
+button.small{padding:7px 10px;font-size:13px} button.danger{color:#ff9d9d;border-color:#6b2424}
+.switchrow{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.switchrow label{display:flex;gap:8px;align-items:center} input[type=checkbox]{width:auto;accent-color:var(--accent);transform:scale(1.15)}
+.layout{display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:16px;align-items:start}
+.groups,.categories{display:grid;gap:8px} .categories{max-height:70vh;overflow:auto}
+.group,.category{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px}
+.group.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.group-head,.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.group-actions,.actions{display:flex;gap:6px;flex-wrap:wrap}
+.category{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.category.hidden-cat{opacity:.45} .muted{color:var(--muted)} .status{min-height:20px;margin-top:10px;color:var(--muted)}
+.status.ok{color:var(--ok)} .status.err{color:#ff8a8a} .pill{background:#202020;border:1px solid #333;border-radius:999px;padding:4px 8px;font-size:12px}
+.category-title{font-weight:700} .category-meta{font-size:12px;color:var(--muted);margin-top:3px}
+@media(max-width:850px){.toolbar,.layout{grid-template-columns:1fr}.categories{max-height:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🐆 Panther Streams Admin</h1>
+  <button id="logoutBtn" class="hidden">Log out</button>
+</header>
+
+<div id="loginView" class="wrap">
+  <div class="card login">
+    <h2>Admin login</h2>
+    <div class="stack">
+      <input id="email" type="email" placeholder="Admin email">
+      <input id="password" type="password" placeholder="Password">
+      <button id="loginBtn" class="primary">Sign in</button>
+      <div id="loginStatus" class="status"></div>
+    </div>
+  </div>
+</div>
+
+<div id="appView" class="wrap hidden">
+  <div class="card">
+    <div class="toolbar">
+      <div><div class="muted">Provider</div><select id="providerSelect"></select></div>
+      <div><div class="muted">Content type</div><select id="typeSelect">
+        <option value="live">Live TV</option><option value="movie">Movies</option><option value="series">Series</option>
+      </select></div>
+      <div><div class="muted">Search categories</div><input id="searchBox" placeholder="Search supplier categories..."></div>
+    </div>
+    <div style="height:14px"></div>
+    <div class="switchrow">
+      <label><input id="groupingEnabled" type="checkbox"> Enable grouping</label>
+      <label><input id="showUngrouped" type="checkbox" checked> Show ungrouped</label>
+      <button id="saveSettingsBtn">Save settings</button>
+    </div>
+    <div id="topStatus" class="status"></div>
+  </div>
+
+  <div class="layout">
+    <div class="card">
+      <div class="section-title"><h2>Groups</h2><span id="groupCount" class="pill">0</span></div>
+      <div class="stack" style="grid-template-columns:1fr auto">
+        <input id="newGroupName" placeholder="e.g. SPORTS">
+        <button id="createGroupBtn" class="primary">Create</button>
+      </div>
+      <div style="height:12px"></div>
+      <div id="groups" class="groups"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <div><h2>Supplier categories</h2><div id="selectedGroupLabel" class="muted">Select a group to assign categories.</div></div>
+        <span id="categoryCount" class="pill">0</span>
+      </div>
+      <div id="categories" class="categories"></div>
+      <div style="height:12px"></div>
+      <button id="saveAssignmentsBtn" class="primary" disabled>Save group assignments</button>
+      <div id="categoryStatus" class="status"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://yjjrokhbapsehorfgnfz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_VjFzBu44Dq2eBx5Ve76j5A_vQ4f8jTC';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+
+let providers = [], groups = [], categories = [], groupItems = new Map(), selectedGroupId = null;
+
+function status(el,msg,ok=null){el.textContent=msg||"";el.classList.remove("ok","err");if(ok===true)el.classList.add("ok");if(ok===false)el.classList.add("err")}
+function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function showLogin(){$("loginView").classList.remove("hidden");$("appView").classList.add("hidden");$("logoutBtn").classList.add("hidden")}
+function showApp(){$("loginView").classList.add("hidden");$("appView").classList.remove("hidden");$("logoutBtn").classList.remove("hidden")}
+
+async function boot(){
+  const {data}=await supabase.auth.getSession();
+  if(data.session){showApp();await loadProviders();await reloadAll()} else showLogin();
+}
+
+$("loginBtn").onclick=async()=>{
+  status($("loginStatus"),"Signing in...");
+  const {error}=await supabase.auth.signInWithPassword({
+    email:$("email").value.trim(),
+    password:$("password").value
+  });
+  if(error)return status($("loginStatus"),error.message,false);
+
+  const {error:adminError}=await supabase.rpc("panther_admin_require_admin");
+
+  if(adminError){
+    await supabase.auth.signOut();
+    return status(
+      $("loginStatus"),
+      adminError.message || "This account is not a Panther administrator.",
+      false
+    );
+  }
+
+  showApp();
+  await loadProviders();
+  await reloadAll();
+};
+
+$("logoutBtn").onclick=async()=>{await supabase.auth.signOut();showLogin()};
+
+async function loadProviders(){
+  const {data,error}=await supabase.from("providers").select("id,provider_key,display_name").eq("is_enabled",true).order("display_name");
+  if(error)throw error; providers=data||[];
+  $("providerSelect").innerHTML=providers.map(p=>`<option value="${p.provider_key}">${esc(p.display_name)}</option>`).join("");
+}
+
+async function reloadAll(){
+  selectedGroupId=null;
+  await Promise.all([loadSettings(),loadGroups(),loadCategories()]);
+  await loadGroupItems(); renderGroups(); renderCategories();
+}
+
+async function loadSettings(){
+  const p=providers.find(x=>x.provider_key===$("providerSelect").value); if(!p)return;
+  const {data,error}=await supabase.from("provider_content_settings").select("grouping_enabled,show_ungrouped").eq("provider_id",p.id).eq("content_type",$("typeSelect").value).maybeSingle();
+  if(error)throw error; $("groupingEnabled").checked=data?.grouping_enabled??false; $("showUngrouped").checked=data?.show_ungrouped??true;
+}
+
+async function loadGroups(){
+  const p=providers.find(x=>x.provider_key===$("providerSelect").value); if(!p)return;
+  const {data,error}=await supabase.from("category_groups").select("id,name,sort_order,is_hidden").eq("provider_id",p.id).eq("content_type",$("typeSelect").value).order("sort_order").order("name");
+  if(error)throw error; groups=data||[];
+}
+
+async function loadCategories(){
+  const p=providers.find(x=>x.provider_key===$("providerSelect").value); if(!p)return;
+  const {data,error}=await supabase.from("provider_categories").select("id,supplier_category_id,supplier_name,display_name,is_hidden,is_active,supplier_sort_order").eq("provider_id",p.id).eq("content_type",$("typeSelect").value).eq("is_active",true).order("supplier_sort_order");
+  if(error)throw error; categories=data||[];
+}
+
+async function loadGroupItems(){
+  groupItems=new Map(); if(!groups.length)return;
+  const {data,error}=await supabase.from("category_group_items").select("group_id,provider_category_id,sort_order").in("group_id",groups.map(g=>g.id)).order("sort_order");
+  if(error)throw error;
+  for(const row of data||[]){if(!groupItems.has(row.group_id))groupItems.set(row.group_id,[]);groupItems.get(row.group_id).push(row.provider_category_id)}
+}
+
+function renderGroups(){
+  $("groupCount").textContent=groups.length;
+  if(!groups.length){$("groups").innerHTML='<div class="muted">No groups yet.</div>';return}
+  $("groups").innerHTML=groups.map((g,i)=>`
+    <div class="group ${selectedGroupId===g.id?"selected":""}">
+      <div class="group-head"><div><h3>${esc(g.name)}</h3><div class="muted">${(groupItems.get(g.id)||[]).length} categories${g.is_hidden?" • hidden":""}</div></div>
+      <button class="small select-group" data-id="${g.id}">Select</button></div>
+      <div style="height:8px"></div>
+      <div class="group-actions">
+        <button class="small group-up" data-id="${g.id}" ${i===0?"disabled":""}>↑</button>
+        <button class="small group-down" data-id="${g.id}" ${i===groups.length-1?"disabled":""}>↓</button>
+        <button class="small group-rename" data-id="${g.id}">Rename</button>
+        <button class="small group-hide" data-id="${g.id}">${g.is_hidden?"Show":"Hide"}</button>
+        <button class="small danger group-delete" data-id="${g.id}">Delete</button>
+      </div>
+    </div>`).join("");
+
+  document.querySelectorAll(".select-group").forEach(b=>b.onclick=()=>{selectedGroupId=b.dataset.id;renderGroups();renderCategories()});
+  document.querySelectorAll(".group-up").forEach(b=>b.onclick=()=>moveGroup(b.dataset.id,-1));
+  document.querySelectorAll(".group-down").forEach(b=>b.onclick=()=>moveGroup(b.dataset.id,1));
+  document.querySelectorAll(".group-rename").forEach(b=>b.onclick=()=>renameGroup(b.dataset.id));
+  document.querySelectorAll(".group-hide").forEach(b=>b.onclick=()=>toggleGroupHidden(b.dataset.id));
+  document.querySelectorAll(".group-delete").forEach(b=>b.onclick=()=>deleteGroup(b.dataset.id));
+}
+
+function renderCategories(){
+  const q=$("searchBox").value.trim().toLowerCase(), assigned=new Set(groupItems.get(selectedGroupId)||[]);
+  const list=categories.filter(c=>!q||(c.display_name||c.supplier_name||"").toLowerCase().includes(q)||(c.supplier_name||"").toLowerCase().includes(q));
+  $("categoryCount").textContent=list.length;
+  const g=groups.find(x=>x.id===selectedGroupId);
+  $("selectedGroupLabel").textContent=g?`Assign categories to: ${g.name}`:"Select a group to assign categories.";
+  $("saveAssignmentsBtn").disabled=!selectedGroupId;
+  $("categories").innerHTML=list.map(c=>`
+    <div class="category ${c.is_hidden?"hidden-cat":""}">
+      <input class="cat-check" data-id="${c.id}" type="checkbox" ${assigned.has(c.id)?"checked":""} ${selectedGroupId?"":"disabled"}>
+      <div><div class="category-title">${esc(c.display_name||c.supplier_name)}</div><div class="category-meta">Supplier: ${esc(c.supplier_name)} • ID: ${esc(c.supplier_category_id)}${c.is_hidden?" • HIDDEN":""}</div></div>
+      <div class="actions"><button class="small cat-rename" data-id="${c.id}">Rename</button><button class="small cat-hide" data-id="${c.id}">${c.is_hidden?"Show":"Hide"}</button></div>
+    </div>`).join("");
+  document.querySelectorAll(".cat-rename").forEach(b=>b.onclick=()=>renameCategory(b.dataset.id));
+  document.querySelectorAll(".cat-hide").forEach(b=>b.onclick=()=>toggleCategoryHidden(b.dataset.id));
+}
+
+$("providerSelect").onchange=reloadAll;
+$("typeSelect").onchange=reloadAll;
+$("searchBox").oninput=renderCategories;
+
+$("saveSettingsBtn").onclick=async()=>{
+  const {error}=await supabase.rpc("panther_admin_set_grouping",{p_provider_key:$("providerSelect").value,p_content_type:$("typeSelect").value,p_enabled:$("groupingEnabled").checked,p_show_ungrouped:$("showUngrouped").checked});
+  status($("topStatus"),error?error.message:"Settings saved.",!error);
+};
+
+$("createGroupBtn").onclick=async()=>{
+  const name=$("newGroupName").value.trim();if(!name)return;
+  const {error}=await supabase.rpc("panther_admin_create_group",{p_provider_key:$("providerSelect").value,p_content_type:$("typeSelect").value,p_name:name});
+  if(error)return status($("topStatus"),error.message,false);
+  $("newGroupName").value="";await reloadAll();status($("topStatus"),"Group created.",true);
+};
+
+$("saveAssignmentsBtn").onclick=async()=>{
+  if(!selectedGroupId)return;
+  const ids=[...document.querySelectorAll(".cat-check:checked")].map(x=>x.dataset.id);
+  const {error}=await supabase.rpc("panther_admin_replace_group_items",{p_group_id:selectedGroupId,p_provider_category_ids:ids});
+  if(error)return status($("categoryStatus"),error.message,false);
+  await loadGroupItems();renderGroups();renderCategories();status($("categoryStatus"),"Assignments saved.",true);
+};
+
+async function renameGroup(id){
+  const g=groups.find(x=>x.id===id),name=prompt("Group name",g?.name||"");if(name===null||!name.trim())return;
+  const {error}=await supabase.rpc("panther_admin_update_group",{p_group_id:id,p_name:name.trim()});
+  if(error)return alert(error.message);await reloadAll();
+}
+async function toggleGroupHidden(id){
+  const g=groups.find(x=>x.id===id);const {error}=await supabase.rpc("panther_admin_update_group",{p_group_id:id,p_is_hidden:!g.is_hidden});
+  if(error)return alert(error.message);await reloadAll();
+}
+async function deleteGroup(id){
+  const g=groups.find(x=>x.id===id);if(!confirm(`Delete group "${g?.name||""}"?`))return;
+  const {error}=await supabase.rpc("panther_admin_delete_group",{p_group_id:id});
+  if(error)return alert(error.message);await reloadAll();
+}
+async function moveGroup(id,dir){
+  const i=groups.findIndex(x=>x.id===id),t=i+dir;if(i<0||t<0||t>=groups.length)return;
+  const a=[...groups];[a[i],a[t]]=[a[t],a[i]];
+  const {error}=await supabase.rpc("panther_admin_reorder_groups",{p_provider_key:$("providerSelect").value,p_content_type:$("typeSelect").value,p_group_ids:a.map(x=>x.id)});
+  if(error)return alert(error.message);await reloadAll();
+}
+async function renameCategory(id){
+  const c=categories.find(x=>x.id===id),name=prompt(`Custom Panther name for "${c?.supplier_name||""}". Leave blank to use supplier name.`,c?.display_name||"");
+  if(name===null)return;const {error}=await supabase.rpc("panther_admin_set_category_name",{p_provider_category_id:id,p_display_name:name});
+  if(error)return alert(error.message);await loadCategories();renderCategories();
+}
+async function toggleCategoryHidden(id){
+  const c=categories.find(x=>x.id===id);const {error}=await supabase.rpc("panther_admin_set_category_hidden",{p_provider_category_id:id,p_hidden:!c.is_hidden});
+  if(error)return alert(error.message);await loadCategories();renderCategories();
+}
+
+boot().catch(e=>{console.error(e);alert(e.message||String(e))});
+</script>
+</body>
+</html>
