@@ -33,7 +33,7 @@ body{
   font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
   line-height:1.45;
 }
-button,input,select{font:inherit}
+button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 button:disabled{opacity:.55;cursor:not-allowed}
 .hidden{display:none!important}
@@ -128,7 +128,7 @@ button.danger{
 }
 button.danger:hover{background:#321919;border-color:#994141}
 
-input,select{
+input,select,textarea{
   width:100%;
   background:#090d11;
   color:var(--text);
@@ -137,7 +137,7 @@ input,select{
   padding:11px 12px;
   outline:none;
 }
-input:focus,select:focus{
+input:focus,select:focus,textarea:focus{
   border-color:var(--accent);
   box-shadow:0 0 0 3px rgba(0,229,255,.10);
 }
@@ -197,7 +197,7 @@ input[type=checkbox]{
 
 .stats{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(5,minmax(0,1fr));
   gap:12px;
   margin-bottom:18px;
 }
@@ -522,6 +522,24 @@ input[type=checkbox]{
   .quick-action{min-height:42px;padding:8px}.service-details>summary{padding:11px 12px 11px 15px}
 }
 
+
+/* ===== Announcements ===== */
+.announcement-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.announcement-form .wide{grid-column:1/-1}
+textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:var(--text);border:1px solid #33404c;border-radius:10px;padding:11px 12px;outline:none}
+.announcement-options{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:10px 0 2px}
+.announcement-options label{display:flex;gap:8px;align-items:center;font-size:13px}
+.announcement-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.announcement-list{display:grid;gap:10px}
+.announcement-card{background:var(--panel2);border:1px solid var(--border);border-radius:13px;padding:14px}
+.announcement-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px}
+.announcement-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.announcement-message{white-space:pre-wrap;color:#dce3e9;margin:9px 0 11px}
+.announcement-type-info{border-left:3px solid #00e5ff}
+.announcement-type-warning{border-left:3px solid #ffbd59}
+.announcement-type-critical{border-left:3px solid #ff7474}
+@media(max-width:850px){.announcement-form{grid-template-columns:1fr}.announcement-form .wide{grid-column:auto}}
+
 </style>
 
 </head>
@@ -543,6 +561,7 @@ input[type=checkbox]{
       <a href="#servicesSection">Services</a>
       <a href="#categoriesSection">Categories</a>
       <a href="#groupsSection">Groups</a>
+      <a href="#announcementsSection">Announcements</a>
     </nav>
 
     <button id="logoutBtn" class="small hidden">Log out</button>
@@ -602,6 +621,7 @@ input[type=checkbox]{
     <button id="quickReload" class="quick-action">↻ Reload</button>
     <button id="quickCategories" class="quick-action">🗂 Categories</button>
     <button id="quickGroups" class="quick-action">📁 Groups</button>
+    <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
   </div>
 
   <details id="servicesSection" class="section-anchor collapse-card" open>
@@ -753,6 +773,30 @@ input[type=checkbox]{
     </div>
   </details>
 
+
+  <details id="announcementsSection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left"><div class="section-icon">📢</div><div class="section-title-text"><h2>Announcements</h2><div>Create messages that can be shown inside Panther Streams.</div></div></div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+    <div class="collapse-content">
+      <div class="announcement-form">
+        <div class="wide"><div class="field-label">Title</div><input id="announcementTitle" maxlength="120" placeholder="e.g. Live TV Maintenance"></div>
+        <div class="wide"><div class="field-label">Message</div><textarea id="announcementMessage" maxlength="2000" placeholder="Enter the announcement shown to Panther users..."></textarea></div>
+        <div><div class="field-label">Type</div><select id="announcementType"><option value="info">Info</option><option value="warning">Warning</option><option value="critical">Critical</option></select></div>
+        <div><div class="field-label">Display</div><select id="announcementDisplayType"><option value="popup">Popup</option><option value="banner">Banner</option></select></div>
+        <div><div class="field-label">Target group</div><select id="announcementTargetGroup"><option value="all">All users</option></select></div>
+        <div><div class="field-label">Status</div><select id="announcementEnabled"><option value="true">Enabled</option><option value="false">Disabled</option></select></div>
+        <div><div class="field-label">Starts</div><input id="announcementStartAt" type="datetime-local"></div>
+        <div><div class="field-label">Ends</div><input id="announcementEndAt" type="datetime-local"></div>
+        <div class="wide announcement-options"><label><input id="announcementShowOnce" type="checkbox"> Show once</label><label><input id="announcementRequireAck" type="checkbox"> Require acknowledgement</label></div>
+        <div class="wide announcement-actions"><button id="saveAnnouncementBtn" class="primary">Create announcement</button><button id="cancelAnnouncementEditBtn" class="hidden">Cancel edit</button><button id="reloadAnnouncementsBtn">Reload</button></div>
+      </div>
+      <div id="announcementStatus" class="status"></div>
+      <div id="announcementsList" class="announcement-list"></div>
+    </div>
+  </details>
+
 </div>
 
 <script>
@@ -770,6 +814,8 @@ let groups = [];
 let categories = [];
 let groupItems = new Map();
 let selectedGroupId = null;
+let announcements = [];
+let editingAnnouncementId = null;
 
 function setStatus(el, msg, ok = null) {
   el.textContent = msg || "";
@@ -969,6 +1015,17 @@ async function select(table, query) {
   return Array.isArray(data) ? data : [];
 }
 
+
+async function restMutation(table, method, body = null, query = "") {
+  const suffix = query ? `?${query}` : "";
+  const options = { method, headers: {"Content-Type":"application/json","Prefer":"return=representation"} };
+  if (body !== null) options.body = JSON.stringify(body);
+  const response = await apiFetch(`/rest/v1/${table}${suffix}`, options);
+  const data = await readJson(response);
+  if (!response.ok) throw new Error(data?.message || data?.hint || data?.details || `Request failed (HTTP ${response.status})`);
+  return data;
+}
+
 async function requireAdmin() {
   await rpc("panther_admin_require_admin", {});
   return true;
@@ -985,6 +1042,7 @@ async function boot() {
     showApp();
     await loadProviders();
     await reloadAll();
+    await loadAnnouncements();
   } catch (e) {
     clearTokens();
     showLogin();
@@ -1011,6 +1069,7 @@ $("loginBtn").onclick = async () => {
     showApp();
     await loadProviders();
     await reloadAll();
+    await loadAnnouncements();
 
     setStatus($("loginStatus"), "");
   } catch (e) {
@@ -1766,6 +1825,47 @@ async function toggleCategoryHidden(id) {
   }
 }
 
+
+function formatAnnouncementDate(value){if(!value)return"No limit";const d=new Date(value);return Number.isNaN(d.getTime())?value:d.toLocaleString()}
+function toLocalDateTimeValue(value){if(!value)return"";const d=new Date(value);if(Number.isNaN(d.getTime()))return"";const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return local.toISOString().slice(0,16)}
+function announcementPayload(){
+  const title=$("announcementTitle").value.trim(),message=$("announcementMessage").value.trim();
+  if(!title)throw new Error("Enter an announcement title.");
+  if(!message)throw new Error("Enter an announcement message.");
+  const start=$("announcementStartAt").value,end=$("announcementEndAt").value;
+  return{title,message,type:$("announcementType").value,display_type:$("announcementDisplayType").value,target_group:$("announcementTargetGroup").value||"all",start_at:start?new Date(start).toISOString():new Date().toISOString(),end_at:end?new Date(end).toISOString():null,show_once:$("announcementShowOnce").checked,require_acknowledgement:$("announcementRequireAck").checked,enabled:$("announcementEnabled").value==="true"};
+}
+function resetAnnouncementForm(){
+  editingAnnouncementId=null;$("announcementTitle").value="";$("announcementMessage").value="";$("announcementType").value="info";$("announcementDisplayType").value="popup";$("announcementTargetGroup").value="all";$("announcementEnabled").value="true";$("announcementStartAt").value="";$("announcementEndAt").value="";$("announcementShowOnce").checked=false;$("announcementRequireAck").checked=false;$("saveAnnouncementBtn").textContent="Create announcement";$("cancelAnnouncementEditBtn").classList.add("hidden");
+}
+async function loadAnnouncements(){
+  if(!$("announcementsList"))return;
+  setStatus($("announcementStatus"),"Loading announcements...");
+  try{announcements=await select("announcements","select=id,title,message,type,display_type,target_group,start_at,end_at,show_once,require_acknowledgement,enabled,created_at&order=created_at.desc");renderAnnouncements();setStatus($("announcementStatus"),"")}
+  catch(e){announcements=[];renderAnnouncements();setStatus($("announcementStatus"),e?.message||String(e),false)}
+}
+function renderAnnouncements(){
+  const host=$("announcementsList");if(!host)return;
+  if(!announcements.length){host.innerHTML='<div class="empty-note">No announcements yet.</div>';return}
+  host.innerHTML=announcements.map(a=>`<div class="announcement-card announcement-type-${esc(a.type||"info")}"><div class="announcement-head"><div><h3>${esc(a.title)}</h3><div class="announcement-meta"><span class="pill">${esc((a.type||"info").toUpperCase())}</span><span class="pill">${esc((a.display_type||"popup").toUpperCase())}</span><span class="pill">${esc(a.target_group==="all"?"ALL USERS":a.target_group)}</span><span class="pill ${a.enabled?"enabled":"disabled"}">${a.enabled?"Enabled":"Disabled"}</span>${a.show_once?'<span class="pill">Show once</span>':""}${a.require_acknowledgement?'<span class="pill">Acknowledgement</span>':""}</div></div></div><div class="announcement-message">${esc(a.message)}</div><div class="small-text">Starts: ${esc(formatAnnouncementDate(a.start_at))}<br>Ends: ${esc(formatAnnouncementDate(a.end_at))}</div><div style="height:10px"></div><div class="announcement-actions"><button class="small edit-announcement" data-id="${esc(a.id)}">Edit</button><button class="small toggle-announcement" data-id="${esc(a.id)}">${a.enabled?"Disable":"Enable"}</button><button class="small danger delete-announcement" data-id="${esc(a.id)}">Delete</button></div></div>`).join("");
+  document.querySelectorAll(".edit-announcement").forEach(b=>b.onclick=()=>editAnnouncement(b.dataset.id));
+  document.querySelectorAll(".toggle-announcement").forEach(b=>b.onclick=()=>toggleAnnouncement(b.dataset.id));
+  document.querySelectorAll(".delete-announcement").forEach(b=>b.onclick=()=>deleteAnnouncement(b.dataset.id));
+}
+function editAnnouncement(id){
+  const a=announcements.find(x=>x.id===id);if(!a)return;editingAnnouncementId=id;
+  $("announcementTitle").value=a.title||"";$("announcementMessage").value=a.message||"";$("announcementType").value=a.type||"info";$("announcementDisplayType").value=a.display_type||"popup";$("announcementTargetGroup").value=a.target_group||"all";$("announcementEnabled").value=String(a.enabled!==false);$("announcementStartAt").value=toLocalDateTimeValue(a.start_at);$("announcementEndAt").value=toLocalDateTimeValue(a.end_at);$("announcementShowOnce").checked=!!a.show_once;$("announcementRequireAck").checked=!!a.require_acknowledgement;$("saveAnnouncementBtn").textContent="Save changes";$("cancelAnnouncementEditBtn").classList.remove("hidden");openSection("announcementsSection");setTimeout(()=>$("announcementTitle")?.focus(),150);
+}
+$("saveAnnouncementBtn")?.addEventListener("click",async()=>{
+  const b=$("saveAnnouncementBtn");b.disabled=true;setStatus($("announcementStatus"),editingAnnouncementId?"Saving changes...":"Creating announcement...");
+  try{const payload=announcementPayload();if(editingAnnouncementId){await restMutation("announcements","PATCH",payload,`id=eq.${encodeURIComponent(editingAnnouncementId)}`)}else{await restMutation("announcements","POST",payload)}resetAnnouncementForm();await loadAnnouncements();setStatus($("announcementStatus"),editingAnnouncementId?"Announcement updated.":"Announcement saved.",true)}
+  catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}finally{b.disabled=false}
+});
+$("cancelAnnouncementEditBtn")?.addEventListener("click",()=>{resetAnnouncementForm();setStatus($("announcementStatus"),"")});
+$("reloadAnnouncementsBtn")?.addEventListener("click",loadAnnouncements);
+async function toggleAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a)return;try{await restMutation("announcements","PATCH",{enabled:!a.enabled},`id=eq.${encodeURIComponent(id)}`);await loadAnnouncements()}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
+async function deleteAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a||!confirm(`Delete "${a.title}"?`))return;try{await restMutation("announcements","DELETE",null,`id=eq.${encodeURIComponent(id)}`);if(editingAnnouncementId===id)resetAnnouncementForm();await loadAnnouncements();setStatus($("announcementStatus"),"Announcement deleted.",true)}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
+
 window.addEventListener("error", event => {
   if (!$("loginView").classList.contains("hidden")) {
     setStatus(
@@ -1802,6 +1902,7 @@ $("quickAddService")?.addEventListener("click", () => {
 $("quickReload")?.addEventListener("click", () => $("reloadServicesBtn")?.click());
 $("quickCategories")?.addEventListener("click", () => openSection("categoriesSection"));
 $("quickGroups")?.addEventListener("click", () => openSection("groupsSection"));
+$("quickAnnouncements")?.addEventListener("click", () => openSection("announcementsSection"));
 
 initCollapsibleSections();
 
