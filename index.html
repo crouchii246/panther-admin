@@ -422,6 +422,39 @@ input[type=checkbox]{
   gap:10px;
 }
 .group-actions,.actions{display:flex;gap:6px;flex-wrap:wrap}
+.group-members{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--border-soft);
+  display:grid;
+  gap:8px;
+}
+.group-members-title{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.55px;
+}
+.group-member{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:9px 10px;
+  border:1px solid var(--border-soft);
+  border-radius:10px;
+  background:rgba(255,255,255,.018);
+}
+.group-member-name{
+  min-width:0;
+  font-size:12px;
+  font-weight:750;
+  overflow-wrap:anywhere;
+}
+.group-member .remove-group-category{
+  flex:0 0 auto;
+}
 .category{
   display:grid;
   grid-template-columns:auto 1fr auto;
@@ -918,7 +951,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         <div id="categories" class="categories"></div>
 
         <div class="category-footer">
-          <button id="saveAssignmentsBtn" class="primary" disabled>Save group assignments</button>
+          <button id="saveAssignmentsBtn" class="primary" disabled>Add selected to group</button>
           <div id="categoryStatus" class="status"></div>
         </div>
       </div>
@@ -1971,6 +2004,22 @@ async function loadGroupItems() {
   }
 }
 
+function categoryById(id) {
+  return categories.find(c => c.id === id) || null;
+}
+
+function allAssignedCategoryIds() {
+  const assigned = new Set();
+
+  for (const ids of groupItems.values()) {
+    for (const id of ids) {
+      assigned.add(id);
+    }
+  }
+
+  return assigned;
+}
+
 function renderGroups() {
   $("groupCount").textContent = String(groups.length);
 
@@ -1979,34 +2028,78 @@ function renderGroups() {
     return;
   }
 
-  $("groups").innerHTML = groups.map((g, i) => `
-    <div class="group ${selectedGroupId === g.id ? "selected" : ""}">
-      <div class="group-head">
-        <div>
-          <h3>${esc(g.name)}</h3>
-          <div class="muted">${(groupItems.get(g.id) || []).length} categories${g.is_hidden ? " • hidden" : ""}</div>
+  $("groups").innerHTML = groups.map((g, i) => {
+    const itemIds = groupItems.get(g.id) || [];
+    const isOpen = selectedGroupId === g.id;
+
+    const membersHtml = isOpen
+      ? `
+        <div class="group-members">
+          <div class="group-members-title">Categories in this group</div>
+          ${itemIds.length
+            ? itemIds.map(categoryId => {
+                const category = categoryById(categoryId);
+                const name = category
+                  ? (category.display_name || category.supplier_name)
+                  : `Category ${categoryId}`;
+
+                return `
+                  <div class="group-member">
+                    <div class="group-member-name">${esc(name)}</div>
+                    <button
+                      class="small danger remove-group-category"
+                      data-group-id="${g.id}"
+                      data-category-id="${categoryId}"
+                    >Remove</button>
+                  </div>
+                `;
+              }).join("")
+            : '<div class="empty-note">No categories in this group yet.</div>'}
         </div>
-        <button class="small select-group" data-id="${g.id}">Select</button>
-      </div>
+      `
+      : "";
 
-      <div style="height:8px"></div>
+    return `
+      <div class="group ${isOpen ? "selected" : ""}">
+        <div class="group-head">
+          <div>
+            <h3>${esc(g.name)}</h3>
+            <div class="muted">${itemIds.length} categories${g.is_hidden ? " • hidden" : ""}</div>
+          </div>
+          <button class="small select-group" data-id="${g.id}">${isOpen ? "Close" : "Open"}</button>
+        </div>
 
-      <div class="group-actions">
-        <button class="small group-up" data-id="${g.id}" ${i === 0 ? "disabled" : ""}>↑</button>
-        <button class="small group-down" data-id="${g.id}" ${i === groups.length - 1 ? "disabled" : ""}>↓</button>
-        <button class="small group-rename" data-id="${g.id}">Rename</button>
-        <button class="small group-hide" data-id="${g.id}">${g.is_hidden ? "Show" : "Hide"}</button>
-        <button class="small danger group-delete" data-id="${g.id}">Delete</button>
+        <div style="height:8px"></div>
+
+        <div class="group-actions">
+          <button class="small group-up" data-id="${g.id}" ${i === 0 ? "disabled" : ""}>↑</button>
+          <button class="small group-down" data-id="${g.id}" ${i === groups.length - 1 ? "disabled" : ""}>↓</button>
+          <button class="small group-rename" data-id="${g.id}">Rename</button>
+          <button class="small group-hide" data-id="${g.id}">${g.is_hidden ? "Show" : "Hide"}</button>
+          <button class="small danger group-delete" data-id="${g.id}">Delete</button>
+        </div>
+
+        ${membersHtml}
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 
   document.querySelectorAll(".select-group").forEach(b => {
     b.onclick = () => {
-      selectedGroupId = b.dataset.id;
+      selectedGroupId = selectedGroupId === b.dataset.id
+        ? null
+        : b.dataset.id;
+
       renderGroups();
       renderCategories();
     };
+  });
+
+  document.querySelectorAll(".remove-group-category").forEach(b => {
+    b.onclick = () => removeCategoryFromGroup(
+      b.dataset.groupId,
+      b.dataset.categoryId
+    );
   });
 
   document.querySelectorAll(".group-up").forEach(b => b.onclick = () => moveGroup(b.dataset.id, -1));
@@ -2018,23 +2111,36 @@ function renderGroups() {
 
 function renderCategories() {
   const q = $("searchBox").value.trim().toLowerCase();
-  const assigned = new Set(groupItems.get(selectedGroupId) || []);
+  const assignedAnywhere = allAssignedCategoryIds();
 
   const list = categories.filter(c => {
+    if (assignedAnywhere.has(c.id)) return false;
+
     const shown = (c.display_name || c.supplier_name || "").toLowerCase();
     const supplier = (c.supplier_name || "").toLowerCase();
+
     return !q || shown.includes(q) || supplier.includes(q);
   });
 
   $("categoryCount").textContent = String(list.length);
 
   const group = groups.find(x => x.id === selectedGroupId);
-  $("selectedGroupLabel").textContent =
-    group
-      ? `Assign categories to: ${group.name}`
-      : "Select a group to assign categories.";
+
+  $("selectedGroupLabel").textContent = group
+    ? `Available categories — add to: ${group.name}`
+    : "Ungrouped categories. Open a group to add categories to it.";
 
   $("saveAssignmentsBtn").disabled = !selectedGroupId;
+  $("saveAssignmentsBtn").textContent = group
+    ? `Add selected to ${group.name}`
+    : "Add selected to group";
+
+  if (!list.length) {
+    $("categories").innerHTML = q
+      ? '<div class="empty-note">No ungrouped categories match your search.</div>'
+      : '<div class="empty-note">All categories are currently inside groups.</div>';
+    return;
+  }
 
   $("categories").innerHTML = list.map(c => `
     <div class="category ${c.is_hidden ? "hidden-cat" : ""}">
@@ -2042,7 +2148,6 @@ function renderCategories() {
         class="cat-check"
         data-id="${c.id}"
         type="checkbox"
-        ${assigned.has(c.id) ? "checked" : ""}
         ${selectedGroupId ? "" : "disabled"}
       >
 
@@ -2062,6 +2167,28 @@ function renderCategories() {
 
   document.querySelectorAll(".cat-rename").forEach(b => b.onclick = () => renameCategory(b.dataset.id));
   document.querySelectorAll(".cat-hide").forEach(b => b.onclick = () => toggleCategoryHidden(b.dataset.id));
+}
+
+async function removeCategoryFromGroup(groupId, categoryId) {
+  const currentIds = groupItems.get(groupId) || [];
+  const nextIds = currentIds.filter(id => id !== categoryId);
+
+  setStatus($("categoryStatus"), "Removing category from group...");
+
+  try {
+    await rpc("panther_admin_replace_group_items", {
+      p_group_id: groupId,
+      p_provider_category_ids: nextIds
+    });
+
+    await loadGroupItems();
+    renderGroups();
+    renderCategories();
+
+    setStatus($("categoryStatus"), "Category removed from group.", true);
+  } catch (e) {
+    setStatus($("categoryStatus"), e?.message || String(e), false);
+  }
 }
 
 $("providerSelect").onchange = reloadAll;
@@ -2107,22 +2234,34 @@ $("createGroupBtn").onclick = async () => {
 $("saveAssignmentsBtn").onclick = async () => {
   if (!selectedGroupId) return;
 
-  const ids = [...document.querySelectorAll(".cat-check:checked")]
+  const selectedIds = [...document.querySelectorAll(".cat-check:checked")]
     .map(x => x.dataset.id);
 
-  setStatus($("categoryStatus"), "Saving assignments...");
+  if (!selectedIds.length) {
+    setStatus($("categoryStatus"), "Select at least one category to add.", false);
+    return;
+  }
+
+  const existingIds = groupItems.get(selectedGroupId) || [];
+  const combinedIds = [...new Set([...existingIds, ...selectedIds])];
+
+  setStatus($("categoryStatus"), "Adding categories to group...");
 
   try {
     await rpc("panther_admin_replace_group_items", {
       p_group_id: selectedGroupId,
-      p_provider_category_ids: ids
+      p_provider_category_ids: combinedIds
     });
 
     await loadGroupItems();
     renderGroups();
     renderCategories();
 
-    setStatus($("categoryStatus"), "Assignments saved.", true);
+    setStatus(
+      $("categoryStatus"),
+      `${selectedIds.length} categor${selectedIds.length === 1 ? "y" : "ies"} added to the group.`,
+      true
+    );
   } catch (e) {
     setStatus($("categoryStatus"), e?.message || String(e), false);
   }
