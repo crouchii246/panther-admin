@@ -3075,10 +3075,19 @@ window.addEventListener("error", event => {
 function initCollapsibleSections() {
   document.querySelectorAll(".collapse-card").forEach(section => {
     const key = `panther-collapse-${section.id}`;
-    const saved = localStorage.getItem(key);
-    if (saved === "open") section.open = true;
-    if (saved === "closed") section.open = false;
-    section.addEventListener("toggle", () => localStorage.setItem(key, section.open ? "open" : "closed"));
+
+    // Catalogue Cache should always start closed when the admin panel loads.
+    if (section.id === "catalogCacheSection") {
+      section.open = false;
+    } else {
+      const saved = localStorage.getItem(key);
+      if (saved === "open") section.open = true;
+      if (saved === "closed") section.open = false;
+    }
+
+    section.addEventListener("toggle", () => {
+      localStorage.setItem(key, section.open ? "open" : "closed");
+    });
   });
 }
 
