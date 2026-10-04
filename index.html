@@ -619,6 +619,77 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   pointer-events:none;
 }
 
+
+
+/* ===== Catalog Cache ===== */
+.cache-form{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.cache-form .wide{grid-column:1/-1}
+.cache-explainer{
+  padding:14px 16px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--panel3);
+  color:var(--muted);
+}
+.cache-explainer strong{color:var(--text)}
+.cache-switches{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.cache-switch-card{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  min-height:74px;
+  padding:13px 14px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--panel2);
+}
+.cache-switch-card input{margin-top:4px}
+.cache-switch-title{font-weight:800;color:var(--text)}
+.cache-switch-help{font-size:.9rem;color:var(--muted);margin-top:3px}
+.cache-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+}
+.cache-status-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.cache-status-item{
+  padding:13px;
+  border:1px solid var(--border-soft);
+  border-radius:14px;
+  background:var(--panel2);
+}
+.cache-status-value{
+  margin-top:5px;
+  font-size:1.05rem;
+  font-weight:800;
+  color:var(--text);
+  word-break:break-word;
+}
+.cache-state-ready{color:var(--ok)}
+.cache-state-refreshing{color:var(--accent)}
+.cache-state-error{color:var(--danger)}
+.cache-secret-note{font-size:.86rem;color:var(--muted);margin-top:6px}
+@media(max-width:850px){
+  .cache-form{grid-template-columns:1fr}
+  .cache-form .wide{grid-column:auto}
+  .cache-switches{grid-template-columns:1fr}
+  .cache-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 </style>
 
 </head>
@@ -640,6 +711,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#servicesSection">Services</a>
       <a href="#categoriesSection">Categories</a>
       <a href="#groupsSection">Groups</a>
+      <a href="#catalogCacheSection">Cache</a>
       <a href="#announcementsSection">Announcements</a>
       <a href="#updatesSection">Updates</a>
     </nav>
@@ -701,6 +773,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickReload" class="quick-action">↻ Reload</button>
     <button id="quickCategories" class="quick-action">🗂 Categories</button>
     <button id="quickGroups" class="quick-action">📁 Groups</button>
+    <button id="quickCatalogCache" class="quick-action">⚡ Catalog cache</button>
     <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
     <button id="quickUpdates" class="quick-action">⬆ Updates</button>
   </div>
@@ -854,6 +927,109 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     </div>
   </details>
 
+
+
+  <details id="catalogCacheSection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left">
+        <div class="section-icon">⚡</div>
+        <div class="section-title-text">
+          <h2>Catalog Cache</h2>
+          <div>Cache provider catalog metadata centrally so Panther can browse much faster.</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+
+    <div class="collapse-content">
+
+      <div class="cache-explainer">
+        <strong>How it works:</strong> Panther uses one dedicated Xtream account per provider to cache
+        Live TV, Movies, Series and optionally EPG metadata on Supabase. The Android app can then load
+        those catalog lists from Panther's cache instead of making every device download the full
+        provider library. <strong>Playback still uses each viewer's own IPTV login.</strong> The cache
+        password is never returned to the app or shown again in this panel.
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="cache-form">
+        <div>
+          <div class="field-label">Provider</div>
+          <select id="catalogProviderSelect"></select>
+        </div>
+
+        <div>
+          <div class="field-label">Catalog cache</div>
+          <select id="catalogEnabled">
+            <option value="true">Enabled</option>
+            <option value="false">Disabled</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="field-label">Dedicated Xtream username</div>
+          <input id="catalogUsername" autocomplete="off" placeholder="Cache account username">
+        </div>
+
+        <div>
+          <div class="field-label">Dedicated Xtream password</div>
+          <input id="catalogPassword" type="password" autocomplete="new-password" placeholder="Cache account password">
+          <div id="catalogPasswordHelp" class="cache-secret-note"></div>
+        </div>
+
+        <div class="wide">
+          <div class="field-label">What Panther should cache</div>
+          <div class="cache-switches">
+            <label class="cache-switch-card">
+              <input id="catalogCacheLive" type="checkbox" checked>
+              <span><span class="cache-switch-title">Live TV</span><div class="cache-switch-help">Live categories and channel metadata.</div></span>
+            </label>
+
+            <label class="cache-switch-card">
+              <input id="catalogCacheMovies" type="checkbox" checked>
+              <span><span class="cache-switch-title">Movies</span><div class="cache-switch-help">Movie categories and the full VOD catalog.</div></span>
+            </label>
+
+            <label class="cache-switch-card">
+              <input id="catalogCacheSeries" type="checkbox" checked>
+              <span><span class="cache-switch-title">Series</span><div class="cache-switch-help">Series categories and the full series catalog.</div></span>
+            </label>
+
+            <label class="cache-switch-card">
+              <input id="catalogCacheEpg" type="checkbox">
+              <span><span class="cache-switch-title">EPG</span><div class="cache-switch-help">Optional XMLTV guide cache. Leave off for very large providers if needed.</div></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="wide cache-actions">
+          <button id="saveCatalogCacheBtn" class="primary">Save cache settings</button>
+          <button id="refreshCatalogCacheBtn">↻ Refresh cache now</button>
+          <button id="reloadCatalogCacheBtn">Reload status</button>
+          <button id="clearCatalogCacheBtn" class="danger">Clear cached catalog</button>
+        </div>
+      </div>
+
+      <div id="catalogCacheStatus" class="status"></div>
+
+      <div class="update-summary">
+        <div class="field-label">Current cache status</div>
+        <div class="cache-status-grid">
+          <div class="cache-status-item"><div class="muted">State</div><div id="catalogState" class="cache-status-value">—</div></div>
+          <div class="cache-status-item"><div class="muted">Last refresh</div><div id="catalogLastRefresh" class="cache-status-value">Never</div></div>
+          <div class="cache-status-item"><div class="muted">Refresh time</div><div id="catalogDuration" class="cache-status-value">—</div></div>
+          <div class="cache-status-item"><div class="muted">Cache account</div><div id="catalogAccountState" class="cache-status-value">Not configured</div></div>
+          <div class="cache-status-item"><div class="muted">Live channels</div><div id="catalogLiveCount" class="cache-status-value">0</div></div>
+          <div class="cache-status-item"><div class="muted">Movies</div><div id="catalogMovieCount" class="cache-status-value">0</div></div>
+          <div class="cache-status-item"><div class="muted">Series</div><div id="catalogSeriesCount" class="cache-status-value">0</div></div>
+          <div class="cache-status-item"><div class="muted">EPG size</div><div id="catalogEpgSize" class="cache-status-value">0 B</div></div>
+        </div>
+        <div id="catalogLastError" class="status err"></div>
+      </div>
+
+    </div>
+  </details>
 
 
   <details id="updatesSection" class="section-anchor collapse-card">
@@ -1040,6 +1216,7 @@ let selectedGroupId = null;
 let announcements = [];
 let editingAnnouncementId = null;
 let updateConfig = null;
+let catalogCacheRows = [];
 
 function setStatus(el, msg, ok = null) {
   el.textContent = msg || "";
@@ -1268,6 +1445,7 @@ async function boot() {
     await reloadAll();
     await loadAnnouncements();
     await loadUpdateConfig();
+    await loadCatalogCache();
   } catch (e) {
     clearTokens();
     showLogin();
@@ -1296,6 +1474,7 @@ $("loginBtn").onclick = async () => {
     await reloadAll();
     await loadAnnouncements();
     await loadUpdateConfig();
+    await loadCatalogCache();
 
     setStatus($("loginStatus"), "");
   } catch (e) {
@@ -2630,6 +2809,273 @@ $("reloadUpdateConfigBtn")?.addEventListener(
 );
 
 
+// ============================================================
+// CATALOG CACHE
+// ============================================================
+
+function formatCacheDate(value) {
+  if (!value) return "Never";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Never";
+  return date.toLocaleString();
+}
+
+function formatCacheDuration(value) {
+  const ms = Number(value || 0);
+  if (!Number.isFinite(ms) || ms <= 0) return "—";
+  if (ms < 1000) return `${ms} ms`;
+  const seconds = ms / 1000;
+  if (seconds < 60) return `${seconds.toFixed(seconds < 10 ? 1 : 0)} sec`;
+  return `${(seconds / 60).toFixed(1)} min`;
+}
+
+function formatCacheBytes(value) {
+  let bytes = Number(value || 0);
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  let index = 0;
+  while (bytes >= 1024 && index < units.length - 1) {
+    bytes /= 1024;
+    index++;
+  }
+  return `${bytes.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
+function currentCatalogCacheRow() {
+  const key = $("catalogProviderSelect")?.value || "";
+  return catalogCacheRows.find(row => row.provider_key === key) || null;
+}
+
+function renderCatalogCacheProviderOptions() {
+  const selectEl = $("catalogProviderSelect");
+  if (!selectEl) return;
+
+  const previous = selectEl.value;
+
+  selectEl.innerHTML = catalogCacheRows
+    .map(row => `<option value="${esc(row.provider_key)}">${esc(row.display_name || row.provider_key)} (${esc(row.provider_key)})</option>`)
+    .join("");
+
+  if (previous && catalogCacheRows.some(row => row.provider_key === previous)) {
+    selectEl.value = previous;
+  }
+}
+
+function renderCatalogCacheRow() {
+  const row = currentCatalogCacheRow();
+
+  if (!row) {
+    $("catalogState").textContent = "—";
+    $("catalogLastRefresh").textContent = "Never";
+    $("catalogDuration").textContent = "—";
+    $("catalogAccountState").textContent = "Not configured";
+    $("catalogLiveCount").textContent = "0";
+    $("catalogMovieCount").textContent = "0";
+    $("catalogSeriesCount").textContent = "0";
+    $("catalogEpgSize").textContent = "0 B";
+    $("catalogLastError").textContent = "";
+    return;
+  }
+
+  $("catalogEnabled").value = String(row.cache_enabled !== false);
+  $("catalogCacheLive").checked = row.cache_live !== false;
+  $("catalogCacheMovies").checked = row.cache_movies !== false;
+  $("catalogCacheSeries").checked = row.cache_series !== false;
+  $("catalogCacheEpg").checked = row.cache_epg === true;
+  $("catalogUsername").value = row.cache_username || "";
+  $("catalogPassword").value = "";
+  $("catalogPassword").placeholder = row.has_cache_password
+    ? "Saved — leave blank to keep it"
+    : "Required first time";
+  $("catalogPasswordHelp").textContent = row.has_cache_password
+    ? "A password is already saved securely. Enter a new one only if you want to replace it."
+    : "Enter the dedicated cache account password the first time you configure this provider.";
+
+  const state = String(row.cache_state || "not_configured");
+  const stateLabels = {
+    not_configured: "Not configured",
+    ready: "Ready",
+    refreshing: "Refreshing…",
+    error: "Error",
+    cleared: "Cleared"
+  };
+
+  const stateEl = $("catalogState");
+  stateEl.textContent = stateLabels[state] || state;
+  stateEl.classList.remove("cache-state-ready", "cache-state-refreshing", "cache-state-error");
+  if (state === "ready") stateEl.classList.add("cache-state-ready");
+  if (state === "refreshing") stateEl.classList.add("cache-state-refreshing");
+  if (state === "error") stateEl.classList.add("cache-state-error");
+
+  $("catalogLastRefresh").textContent = formatCacheDate(row.last_finished_at);
+  $("catalogDuration").textContent = formatCacheDuration(row.duration_ms);
+  $("catalogAccountState").textContent = row.has_cache_password
+    ? (row.cache_username || "Configured")
+    : "Not configured";
+  $("catalogLiveCount").textContent = Number(row.live_count || 0).toLocaleString();
+  $("catalogMovieCount").textContent = Number(row.movie_count || 0).toLocaleString();
+  $("catalogSeriesCount").textContent = Number(row.series_count || 0).toLocaleString();
+  $("catalogEpgSize").textContent = formatCacheBytes(row.epg_bytes);
+  $("catalogLastError").textContent = row.last_error ? `Last error: ${row.last_error}` : "";
+}
+
+async function loadCatalogCache() {
+  const statusEl = $("catalogCacheStatus");
+  if (!statusEl) return;
+
+  try {
+    const rows = await rpc("panther_admin_get_catalog_cache", {});
+    catalogCacheRows = Array.isArray(rows) ? rows : [];
+    renderCatalogCacheProviderOptions();
+    renderCatalogCacheRow();
+    setStatus(statusEl, "");
+  } catch (e) {
+    catalogCacheRows = [];
+    renderCatalogCacheProviderOptions();
+    renderCatalogCacheRow();
+    setStatus(
+      statusEl,
+      `Catalog Cache setup is not ready yet: ${e?.message || String(e)}`,
+      false
+    );
+  }
+}
+
+async function saveCatalogCacheSettings() {
+  const providerKey = $("catalogProviderSelect")?.value || "";
+  if (!providerKey) {
+    setStatus($("catalogCacheStatus"), "Choose a provider first.", false);
+    return;
+  }
+
+  const button = $("saveCatalogCacheBtn");
+  button.disabled = true;
+  setStatus($("catalogCacheStatus"), `Saving ${providerKey} cache settings...`);
+
+  try {
+    await rpc("panther_admin_save_catalog_cache", {
+      p_provider_key: providerKey,
+      p_enabled: $("catalogEnabled").value === "true",
+      p_cache_live: $("catalogCacheLive").checked,
+      p_cache_movies: $("catalogCacheMovies").checked,
+      p_cache_series: $("catalogCacheSeries").checked,
+      p_cache_epg: $("catalogCacheEpg").checked,
+      p_username: $("catalogUsername").value.trim() || null,
+      p_password: $("catalogPassword").value || null
+    });
+
+    await loadCatalogCache();
+    setStatus($("catalogCacheStatus"), `${providerKey} cache settings saved.`, true);
+  } catch (e) {
+    setStatus($("catalogCacheStatus"), e?.message || String(e), false);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function callCatalogCacheFunction(action, providerKey) {
+  const response = await apiFetch(
+    "/functions/v1/panther-catalog-cache",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        provider_key: providerKey
+      })
+    }
+  );
+
+  const data = await readJson(response);
+
+  if (!response.ok || data?.success === false) {
+    throw new Error(
+      data?.error ||
+      data?.message ||
+      `Catalog cache request failed (HTTP ${response.status})`
+    );
+  }
+
+  return data;
+}
+
+async function refreshCatalogCacheNow() {
+  const providerKey = $("catalogProviderSelect")?.value || "";
+  if (!providerKey) {
+    setStatus($("catalogCacheStatus"), "Choose a provider first.", false);
+    return;
+  }
+
+  const button = $("refreshCatalogCacheBtn");
+  button.disabled = true;
+  $("saveCatalogCacheBtn").disabled = true;
+  $("clearCatalogCacheBtn").disabled = true;
+
+  setStatus(
+    $("catalogCacheStatus"),
+    `Refreshing ${providerKey} catalog... Large providers can take a little while.`
+  );
+
+  try {
+    // Save first so a changed username/password or switch is applied to this refresh.
+    await rpc("panther_admin_save_catalog_cache", {
+      p_provider_key: providerKey,
+      p_enabled: $("catalogEnabled").value === "true",
+      p_cache_live: $("catalogCacheLive").checked,
+      p_cache_movies: $("catalogCacheMovies").checked,
+      p_cache_series: $("catalogCacheSeries").checked,
+      p_cache_epg: $("catalogCacheEpg").checked,
+      p_username: $("catalogUsername").value.trim() || null,
+      p_password: $("catalogPassword").value || null
+    });
+
+    const data = await callCatalogCacheFunction("refresh", providerKey);
+    await loadCatalogCache();
+
+    const counts = data?.counts || {};
+    setStatus(
+      $("catalogCacheStatus"),
+      `${providerKey} cache refreshed — ${Number(counts.live || 0).toLocaleString()} live, ${Number(counts.movies || 0).toLocaleString()} movies, ${Number(counts.series || 0).toLocaleString()} series.`,
+      true
+    );
+  } catch (e) {
+    await loadCatalogCache();
+    setStatus($("catalogCacheStatus"), e?.message || String(e), false);
+  } finally {
+    button.disabled = false;
+    $("saveCatalogCacheBtn").disabled = false;
+    $("clearCatalogCacheBtn").disabled = false;
+  }
+}
+
+async function clearCatalogCacheNow() {
+  const providerKey = $("catalogProviderSelect")?.value || "";
+  if (!providerKey) return;
+
+  if (!confirm(`Clear the server-side catalog cache for ${providerKey}?`)) return;
+
+  const button = $("clearCatalogCacheBtn");
+  button.disabled = true;
+  setStatus($("catalogCacheStatus"), `Clearing ${providerKey} cache...`);
+
+  try {
+    await callCatalogCacheFunction("clear", providerKey);
+    await loadCatalogCache();
+    setStatus($("catalogCacheStatus"), `${providerKey} cache cleared.`, true);
+  } catch (e) {
+    setStatus($("catalogCacheStatus"), e?.message || String(e), false);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+$("catalogProviderSelect")?.addEventListener("change", renderCatalogCacheRow);
+$("saveCatalogCacheBtn")?.addEventListener("click", saveCatalogCacheSettings);
+$("refreshCatalogCacheBtn")?.addEventListener("click", refreshCatalogCacheNow);
+$("reloadCatalogCacheBtn")?.addEventListener("click", loadCatalogCache);
+$("clearCatalogCacheBtn")?.addEventListener("click", clearCatalogCacheNow);
+
+
 window.addEventListener("error", event => {
   if (!$("loginView").classList.contains("hidden")) {
     setStatus(
@@ -2644,10 +3090,19 @@ window.addEventListener("error", event => {
 function initCollapsibleSections() {
   document.querySelectorAll(".collapse-card").forEach(section => {
     const key = `panther-collapse-${section.id}`;
-    const saved = localStorage.getItem(key);
-    if (saved === "open") section.open = true;
-    if (saved === "closed") section.open = false;
-    section.addEventListener("toggle", () => localStorage.setItem(key, section.open ? "open" : "closed"));
+
+    // Catalogue Cache should always start closed when the admin panel loads.
+    if (section.id === "catalogCacheSection") {
+      section.open = false;
+    } else {
+      const saved = localStorage.getItem(key);
+      if (saved === "open") section.open = true;
+      if (saved === "closed") section.open = false;
+    }
+
+    section.addEventListener("toggle", () => {
+      localStorage.setItem(key, section.open ? "open" : "closed");
+    });
   });
 }
 
@@ -2666,6 +3121,7 @@ $("quickAddService")?.addEventListener("click", () => {
 $("quickReload")?.addEventListener("click", () => $("reloadServicesBtn")?.click());
 $("quickCategories")?.addEventListener("click", () => openSection("categoriesSection"));
 $("quickGroups")?.addEventListener("click", () => openSection("groupsSection"));
+$("quickCatalogCache")?.addEventListener("click", () => openSection("catalogCacheSection"));
 $("quickAnnouncements")?.addEventListener("click", () => openSection("announcementsSection"));
 $("quickUpdates")?.addEventListener("click", () => openSection("updatesSection"));
 
@@ -2675,4 +3131,4 @@ boot();
 </script>
 
 </body>
-          </html>
+</html>
