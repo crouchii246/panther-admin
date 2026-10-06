@@ -1094,6 +1094,36 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
           </select>
         </div>
 
+        <div>
+          <div class="field-label">Install Latest Build button</div>
+          <select id="latestBuildInstallLocked">
+            <option value="false">Unlocked</option>
+            <option value="true">PIN locked</option>
+          </select>
+          <div class="update-help">
+            Locks the manual “Install Latest Build” button inside Panther Streams.
+          </div>
+        </div>
+
+        <div>
+          <div class="field-label">Latest Build PIN</div>
+          <input
+            id="latestBuildInstallPin"
+            type="password"
+            inputmode="numeric"
+            maxlength="8"
+            autocomplete="new-password"
+            placeholder="4–8 digits — blank keeps current PIN"
+          >
+          <div class="update-help">
+            The PIN is verified by Supabase and is never returned to the app or shown again here.
+          </div>
+        </div>
+
+        <div class="wide update-actions">
+          <button id="saveLatestBuildLockBtn">🔒 Save install lock</button>
+        </div>
+
         <div class="wide">
           <div class="field-label">Release title</div>
           <input
@@ -1157,6 +1187,11 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
           <div class="update-summary-item">
             <div class="muted">Prompts</div>
             <div id="updateSummaryStatus" class="update-summary-value">Enabled</div>
+          </div>
+
+          <div class="update-summary-item">
+            <div class="muted">Latest Build button</div>
+            <div id="updateSummaryManualLock" class="update-summary-value">Unlocked</div>
           </div>
         </div>
 
@@ -2304,6 +2339,11 @@ function updateSummaryFromRow(row){
     row?.enabled === false
       ? "Disabled"
       : "Enabled";
+
+  $("updateSummaryManualLock").textContent =
+    row?.manual_install_locked === true
+      ? "PIN locked"
+      : "Unlocked";
 }
 
 
@@ -2320,7 +2360,7 @@ async function loadUpdateConfig(){
     const rows =
       await select(
         "app_update_config",
-        "select=id,enabled,latest_version_name,minimum_version_name,force_update,title,release_notes,apk_url,updated_at&id=eq.1&limit=1"
+        "select=id,enabled,latest_version_name,minimum_version_name,force_update,title,release_notes,apk_url,manual_install_locked,updated_at&id=eq.1&limit=1"
       );
 
     const row =
@@ -2337,6 +2377,14 @@ async function loadUpdateConfig(){
       String(
         row?.enabled !== false
       );
+
+    $("latestBuildInstallLocked").value =
+      String(
+        row?.manual_install_locked === true
+      );
+
+    $("latestBuildInstallPin").value =
+      "";
 
     /*
      * Reload current release should refill the editable publish form,
@@ -2443,6 +2491,93 @@ function storageUploadClient(){
     }
   );
 }
+
+
+$("saveLatestBuildLockBtn")?.addEventListener(
+  "click",
+  async () => {
+
+    const button =
+      $("saveLatestBuildLockBtn");
+
+    const locked =
+      $("latestBuildInstallLocked")
+        .value ===
+        "true";
+
+    const pin =
+      $("latestBuildInstallPin")
+        .value
+        .trim();
+
+
+    if(
+      pin &&
+      !/^\d{4,8}$/.test(pin)
+    ){
+      setStatus(
+        $("updateStatus"),
+        "Latest Build PIN must be 4–8 digits.",
+        false
+      );
+      return;
+    }
+
+
+    button.disabled =
+      true;
+
+    setStatus(
+      $("updateStatus"),
+      locked
+        ? "Saving Latest Build PIN lock..."
+        : "Unlocking the Latest Build button..."
+    );
+
+
+    try{
+
+      await rpc(
+        "panther_admin_save_latest_build_lock",
+        {
+          p_locked:
+            locked,
+
+          p_pin:
+            pin || null
+        }
+      );
+
+
+      $("latestBuildInstallPin").value =
+        "";
+
+      await loadUpdateConfig();
+
+
+      setStatus(
+        $("updateStatus"),
+        locked
+          ? "Latest Build button is now PIN locked."
+          : "Latest Build button is now unlocked.",
+        true
+      );
+
+    }catch(e){
+
+      setStatus(
+        $("updateStatus"),
+        e?.message || String(e),
+        false
+      );
+
+    }finally{
+
+      button.disabled =
+        false;
+    }
+  }
+);
 
 
 $("publishApkFile")?.addEventListener(
