@@ -712,6 +712,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#categoriesSection">Categories</a>
       <a href="#groupsSection">Groups</a>
       <a href="#catalogCacheSection">Cache</a>
+      <a href="#featuresSection">Features</a>
       <a href="#announcementsSection">Announcements</a>
       <a href="#updatesSection">Updates</a>
     </nav>
@@ -1026,6 +1027,108 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
           <div class="cache-status-item"><div class="muted">EPG size</div><div id="catalogEpgSize" class="cache-status-value">0 B</div></div>
         </div>
         <div id="catalogLastError" class="status err"></div>
+      </div>
+
+    </div>
+  </details>
+
+
+  <details id="featuresSection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left">
+        <div class="section-icon">🎛️</div>
+        <div class="section-title-text">
+          <h2>App Features</h2>
+          <div>Remotely show or hide Panther Streams features without publishing another APK.</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+
+    <div class="collapse-content">
+
+      <div class="update-help" style="margin-bottom:14px">
+        Disabled features are hidden from Panther's Home/Extras screens. TorBox searches are also stopped when TorBox is disabled.
+        Panther keeps the last successfully downloaded feature state so temporary connection problems do not reset your choices.
+      </div>
+
+      <div class="cache-switch-grid">
+
+        <label class="cache-switch-card">
+          <input id="featureLiveTv" type="checkbox">
+          <span><span class="cache-switch-title">Live TV</span><div class="cache-switch-help">Home Live TV button.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureMovies" type="checkbox">
+          <span><span class="cache-switch-title">Movies</span><div class="cache-switch-help">Movies button and Home movie row.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureSeries" type="checkbox">
+          <span><span class="cache-switch-title">Series</span><div class="cache-switch-help">Series button and Home series row.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureCatchup" type="checkbox">
+          <span><span class="cache-switch-title">Catch-up</span><div class="cache-switch-help">Catch-up button on Home.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureDownloads" type="checkbox">
+          <span><span class="cache-switch-title">Downloads</span><div class="cache-switch-help">Downloads inside Extras.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureRecordings" type="checkbox">
+          <span><span class="cache-switch-title">Recordings</span><div class="cache-switch-help">Recordings inside Extras.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureMediaServers" type="checkbox">
+          <span><span class="cache-switch-title">Media Servers</span><div class="cache-switch-help">Plex, Emby and Jellyfin entry point.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureTvGuide" type="checkbox">
+          <span><span class="cache-switch-title">TV Guide</span><div class="cache-switch-help">TV Guide inside Extras.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureRadio" type="checkbox">
+          <span><span class="cache-switch-title">Radio</span><div class="cache-switch-help">Radio inside Extras.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureWatchParty" type="checkbox">
+          <span><span class="cache-switch-title">Watch Party</span><div class="cache-switch-help">Watch Party inside Extras.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureMultiView" type="checkbox">
+          <span><span class="cache-switch-title">Multi View</span><div class="cache-switch-help">Multi View inside Extras.</div></span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="featureTorBox" type="checkbox">
+          <span><span class="cache-switch-title">TorBox</span><div class="cache-switch-help">TorBox search/results in Movies and Series.</div></span>
+        </label>
+
+      </div>
+
+      <div class="wide cache-actions" style="margin-top:14px">
+        <button id="saveFeatureFlagsBtn" class="primary">Save feature controls</button>
+        <button id="reloadFeatureFlagsBtn">Reload</button>
+      </div>
+
+      <div id="featureFlagsStatus" class="status"></div>
+
+      <div class="update-summary">
+        <div class="field-label">Current feature state</div>
+        <div id="featureFlagsSummary" class="update-summary-value">Loading…</div>
+        <div class="update-help">
+          Changes are picked up when Panther refreshes its remote controls. Usually this is when Home, Extras, Movies or Series is opened/resumed.
+        </div>
       </div>
 
     </div>
@@ -1481,6 +1584,7 @@ async function boot() {
     await loadAnnouncements();
     await loadUpdateConfig();
     await loadCatalogCache();
+    await loadFeatureFlags();
   } catch (e) {
     clearTokens();
     showLogin();
@@ -1510,6 +1614,7 @@ $("loginBtn").onclick = async () => {
     await loadAnnouncements();
     await loadUpdateConfig();
     await loadCatalogCache();
+    await loadFeatureFlags();
 
     setStatus($("loginStatus"), "");
   } catch (e) {
@@ -2306,6 +2411,157 @@ $("cancelAnnouncementEditBtn")?.addEventListener("click",()=>{resetAnnouncementF
 $("reloadAnnouncementsBtn")?.addEventListener("click",loadAnnouncements);
 async function toggleAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a)return;try{await restMutation("announcements","PATCH",{enabled:!a.enabled},`id=eq.${encodeURIComponent(id)}`);await loadAnnouncements()}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
 async function deleteAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a||!confirm(`Delete "${a.title}"?`))return;try{await restMutation("announcements","DELETE",null,`id=eq.${encodeURIComponent(id)}`);if(editingAnnouncementId===id)resetAnnouncementForm();await loadAnnouncements();setStatus($("announcementStatus"),"Announcement deleted.",true)}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
+
+
+const FEATURE_FLAG_FIELDS = {
+  live_tv_enabled: "featureLiveTv",
+  movies_enabled: "featureMovies",
+  series_enabled: "featureSeries",
+  catchup_enabled: "featureCatchup",
+  downloads_enabled: "featureDownloads",
+  recordings_enabled: "featureRecordings",
+  media_servers_enabled: "featureMediaServers",
+  tv_guide_enabled: "featureTvGuide",
+  radio_enabled: "featureRadio",
+  watch_party_enabled: "featureWatchParty",
+  multi_view_enabled: "featureMultiView",
+  torbox_enabled: "featureTorBox"
+};
+
+
+function applyFeatureFlagsToForm(row){
+  Object.entries(FEATURE_FLAG_FIELDS).forEach(([field,id])=>{
+    const input=$(id);
+    if(input) input.checked = row?.[field] !== false;
+  });
+
+  updateFeatureFlagsSummary(row);
+}
+
+
+function featureFlagsFromForm(){
+  const payload={};
+
+  Object.entries(FEATURE_FLAG_FIELDS).forEach(([field,id])=>{
+    payload[field]=!!$(id)?.checked;
+  });
+
+  return payload;
+}
+
+
+function updateFeatureFlagsSummary(row){
+  const values=Object.keys(FEATURE_FLAG_FIELDS).map(
+    field => row?.[field] !== false
+  );
+
+  const enabled=values.filter(Boolean).length;
+  const total=values.length;
+
+  const host=$("featureFlagsSummary");
+  if(host){
+    host.textContent=`${enabled} of ${total} features enabled`;
+  }
+}
+
+
+async function loadFeatureFlags(){
+  if(!$("featuresSection")) return;
+
+  setStatus(
+    $("featureFlagsStatus"),
+    "Loading feature controls..."
+  );
+
+  try{
+    const selectFields=[
+      "id",
+      ...Object.keys(FEATURE_FLAG_FIELDS),
+      "updated_at"
+    ].join(",");
+
+    const rows=await select(
+      "app_feature_flags",
+      `select=${selectFields}&id=eq.1&limit=1`
+    );
+
+    const row=rows[0] || null;
+
+    applyFeatureFlagsToForm(row || {});
+
+    setStatus(
+      $("featureFlagsStatus"),
+      ""
+    );
+  }catch(e){
+    applyFeatureFlagsToForm({});
+
+    setStatus(
+      $("featureFlagsStatus"),
+      "Unable to load feature controls. Run Panther_Feature_Flags.sql in Supabase first if this is the first install. " +
+        (e?.message || String(e)),
+      false
+    );
+  }
+}
+
+
+$("saveFeatureFlagsBtn")?.addEventListener(
+  "click",
+  async () => {
+    const button=$("saveFeatureFlagsBtn");
+    const values=featureFlagsFromForm();
+
+    button.disabled=true;
+
+    setStatus(
+      $("featureFlagsStatus"),
+      "Saving feature controls..."
+    );
+
+    try{
+      await rpc(
+        "panther_admin_save_feature_flags",
+        {
+          p_live_tv_enabled: values.live_tv_enabled,
+          p_movies_enabled: values.movies_enabled,
+          p_series_enabled: values.series_enabled,
+          p_catchup_enabled: values.catchup_enabled,
+          p_downloads_enabled: values.downloads_enabled,
+          p_recordings_enabled: values.recordings_enabled,
+          p_media_servers_enabled: values.media_servers_enabled,
+          p_tv_guide_enabled: values.tv_guide_enabled,
+          p_radio_enabled: values.radio_enabled,
+          p_watch_party_enabled: values.watch_party_enabled,
+          p_multi_view_enabled: values.multi_view_enabled,
+          p_torbox_enabled: values.torbox_enabled
+        }
+      );
+
+      await loadFeatureFlags();
+
+      setStatus(
+        $("featureFlagsStatus"),
+        "Feature controls saved.",
+        true
+      );
+    }catch(e){
+      setStatus(
+        $("featureFlagsStatus"),
+        e?.message || String(e),
+        false
+      );
+    }finally{
+      button.disabled=false;
+    }
+  }
+);
+
+
+$("reloadFeatureFlagsBtn")?.addEventListener(
+  "click",
+  loadFeatureFlags
+);
 
 
 function formatFileSize(bytes){
