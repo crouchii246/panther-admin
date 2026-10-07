@@ -520,8 +520,18 @@ input[type=checkbox]{
 .device-stat{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.02)}
 .device-stat strong{display:block;font-size:22px}
 .device-stat span{font-size:12px;color:var(--muted)}
-.device-list{display:grid;gap:10px}
-.device-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:rgba(255,255,255,.025)}
+.device-list{display:grid;gap:12px}
+.device-account{border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.018);overflow:hidden}
+.device-account>summary{list-style:none;cursor:pointer;padding:14px 15px;display:flex;justify-content:space-between;align-items:center;gap:14px;background:rgba(0,229,255,.035)}
+.device-account>summary::-webkit-details-marker{display:none}
+.device-account[open]>summary{border-bottom:1px solid var(--border-soft)}
+.device-account-title{font-size:16px;font-weight:850}
+.device-account-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.device-account-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.device-account-chevron{color:var(--accent);font-size:14px;transition:transform .16s ease}
+.device-account:not([open]) .device-account-chevron{transform:rotate(-90deg)}
+.device-account-cards{display:grid;gap:9px;padding:10px}
+.device-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.025)}
 .device-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .device-title{font-size:17px;font-weight:800}
 .device-meta{font-size:12px;color:var(--muted);line-height:1.6;margin-top:5px;word-break:break-word}
@@ -1372,7 +1382,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         <input
           id="deviceSearch"
           type="search"
-          placeholder="Search device, service, username, profile or version">
+          placeholder="Search account, device, service, username, profile or version">
         <button id="reloadDevicesBtn">Reload devices</button>
       </div>
 
@@ -2555,6 +2565,118 @@ function filteredDevices(){
 }
 
 
+function deviceAccountKey(device){
+  const scope = String(device.account_scope_id || "").trim();
+  if(scope) return `scope:${scope}`;
+
+  const service = String(device.service_name || "").trim().toLowerCase();
+  const username = String(device.username || "").trim().toLowerCase();
+
+  if(service || username){
+    return `fallback:${service}::${username}`;
+  }
+
+  return `unknown:${device.device_id || Math.random()}`;
+}
+
+
+function groupDevicesByAccount(devices){
+  const groups = new Map();
+
+  devices.forEach(device => {
+    const key = deviceAccountKey(device);
+
+    if(!groups.has(key)){
+      groups.set(key, {
+        key,
+        serviceName: device.service_name || "Unknown service",
+        username: device.username || "Unknown username",
+        accountScopeId: device.account_scope_id || "",
+        devices: []
+      });
+    }
+
+    groups.get(key).devices.push(device);
+  });
+
+  return [...groups.values()]
+    .map(group => {
+      group.devices.sort((a, b) => {
+        const aTime = new Date(a.last_seen_at || 0).getTime() || 0;
+        const bTime = new Date(b.last_seen_at || 0).getTime() || 0;
+        return bTime - aTime;
+      });
+
+      group.lastSeenAt = group.devices.reduce((latest, device) => {
+        const time = new Date(device.last_seen_at || 0).getTime() || 0;
+        return Math.max(latest, time);
+      }, 0);
+
+      return group;
+    })
+    .sort((a, b) => b.lastSeenAt - a.lastSeenAt);
+}
+
+
+function renderDeviceCard(device){
+  const recent = deviceSeenRecently(device.last_seen_at);
+  const enabled = device.enabled !== false;
+  const forceQueued = device.force_logout === true;
+
+  const title = esc(deviceDisplayName(device));
+  const rawDevice = esc(device.device_name || device.model || "");
+  const id = esc(device.device_id || "");
+  const platform = esc(device.platform || "Android");
+  const version = esc(device.app_version || "Unknown");
+  const os = esc(device.os_version || "");
+  const profile = esc(device.profile_name || "Unknown");
+  const lastSeen = esc(formatDeviceLastSeen(device.last_seen_at));
+  const firstSeen = esc(
+    device.first_seen_at
+      ? new Date(device.first_seen_at).toLocaleString()
+      : "Unknown"
+  );
+
+  return `
+    <div class="device-card">
+      <div class="device-head">
+        <div>
+          <div class="device-title">${title}</div>
+          <div class="device-meta">
+            ${rawDevice && rawDevice !== title ? `${rawDevice}<br>` : ""}
+            ${platform}${os ? ` · Android ${os}` : ""}<br>
+            Panther ${version}<br>
+            Profile: ${profile}<br>
+            Device ID: ${id}<br>
+            First seen: ${firstSeen}
+          </div>
+        </div>
+        <div class="${enabled ? (recent ? "device-online" : "device-offline") : "device-disabled"}">
+          ${enabled ? (recent ? "● Recent" : "● Enabled") : "● Disabled"}
+        </div>
+      </div>
+
+      <div class="device-pills">
+        <span class="pill">${enabled ? "ENABLED" : "DISABLED"}</span>
+        ${forceQueued ? '<span class="pill disabled">LOGOUT QUEUED</span>' : ""}
+        <span class="pill">Seen ${lastSeen}</span>
+        ${device.is_tv ? '<span class="pill">TV</span>' : '<span class="pill">MOBILE</span>'}
+      </div>
+
+      <div class="device-actions">
+        <button class="small rename-device" data-id="${id}">Rename</button>
+        <button class="small ${enabled ? "danger" : ""} toggle-device" data-id="${id}">
+          ${enabled ? "Disable" : "Enable"}
+        </button>
+        <button class="small danger force-logout-device" data-id="${id}">
+          Force logout
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+
 function renderDevices(){
   const host = $("devicesList");
   if(!host) return;
@@ -2576,60 +2698,45 @@ function renderDevices(){
     return;
   }
 
-  host.innerHTML = devices.map(device => {
-    const recent = deviceSeenRecently(device.last_seen_at);
-    const enabled = device.enabled !== false;
-    const forceQueued = device.force_logout === true;
+  const groups = groupDevicesByAccount(devices);
+  const searchActive = Boolean(($("deviceSearch")?.value || "").trim());
 
-    const title = esc(deviceDisplayName(device));
-    const rawDevice = esc(device.device_name || device.model || "");
-    const id = esc(device.device_id || "");
-    const platform = esc(device.platform || "Android");
-    const version = esc(device.app_version || "Unknown");
-    const os = esc(device.os_version || "");
-    const service = esc(device.service_name || "Unknown service");
-    const username = esc(device.username || "Unknown");
-    const profile = esc(device.profile_name || "Unknown");
-    const lastSeen = esc(formatDeviceLastSeen(device.last_seen_at));
-    const firstSeen = esc(device.first_seen_at ? new Date(device.first_seen_at).toLocaleString() : "Unknown");
+  host.innerHTML = groups.map(group => {
+    const groupDevices = group.devices;
+    const groupEnabled = groupDevices.filter(device => device.enabled !== false).length;
+    const groupDisabled = groupDevices.length - groupEnabled;
+    const groupRecent = groupDevices.filter(device => deviceSeenRecently(device.last_seen_at)).length;
+
+    const serviceName = esc(group.serviceName || "Unknown service");
+    const username = esc(group.username || "Unknown username");
+    const deviceWord = groupDevices.length === 1 ? "device" : "devices";
+
+    const statusPills = [
+      `<span class="pill">${groupDevices.length} ${deviceWord}</span>`,
+      groupRecent > 0 ? `<span class="pill enabled">${groupRecent} recent</span>` : "",
+      groupDisabled > 0 ? `<span class="pill disabled">${groupDisabled} disabled</span>` : ""
+    ].filter(Boolean).join("");
 
     return `
-      <div class="device-card">
-        <div class="device-head">
+      <details class="device-account" ${searchActive || groupRecent > 0 ? "open" : ""}>
+        <summary>
           <div>
-            <div class="device-title">${title}</div>
-            <div class="device-meta">
-              ${rawDevice && rawDevice !== title ? `${rawDevice}<br>` : ""}
-              ${platform}${os ? ` · Android ${os}` : ""}<br>
-              Panther ${version}<br>
-              ${service} · ${username}<br>
-              Profile: ${profile}<br>
-              Device ID: ${id}<br>
-              First seen: ${firstSeen}
+            <div class="device-account-title">${serviceName} · ${username}</div>
+            <div class="device-account-sub">
+              ${groupDevices.length} ${deviceWord} registered to this IPTV account
             </div>
           </div>
-          <div class="${enabled ? (recent ? "device-online" : "device-offline") : "device-disabled"}">
-            ${enabled ? (recent ? "● Recent" : "● Enabled") : "● Disabled"}
+
+          <div class="device-account-right">
+            ${statusPills}
+            <span class="device-account-chevron">▼</span>
           </div>
-        </div>
+        </summary>
 
-        <div class="device-pills">
-          <span class="pill">${enabled ? "ENABLED" : "DISABLED"}</span>
-          ${forceQueued ? '<span class="pill disabled">LOGOUT QUEUED</span>' : ""}
-          <span class="pill">Seen ${lastSeen}</span>
-          ${device.is_tv ? '<span class="pill">TV</span>' : '<span class="pill">MOBILE</span>'}
+        <div class="device-account-cards">
+          ${groupDevices.map(renderDeviceCard).join("")}
         </div>
-
-        <div class="device-actions">
-          <button class="small rename-device" data-id="${id}">Rename</button>
-          <button class="small ${enabled ? "danger" : ""} toggle-device" data-id="${id}">
-            ${enabled ? "Disable" : "Enable"}
-          </button>
-          <button class="small danger force-logout-device" data-id="${id}">
-            Force logout
-          </button>
-        </div>
-      </div>
+      </details>
     `;
   }).join("");
 
@@ -2645,7 +2752,6 @@ function renderDevices(){
     button.onclick = () => forceLogoutPantherDevice(button.dataset.id);
   });
 }
-
 
 async function loadDevices(){
   if(!$("devicesSection")) return;
