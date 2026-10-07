@@ -736,6 +736,19 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 .private-title-access-item input{margin-top:3px}
 @media(max-width:900px){.private-library-grid{grid-template-columns:1fr}.private-account-controls,.private-title-access-list{grid-template-columns:1fr}}
 
+.private-bulk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.private-bulk-grid .wide{grid-column:1/-1}
+.private-bulk-summary{margin-top:10px;padding:10px;border:1px solid var(--border-soft);border-radius:11px;background:var(--panel2);font-size:12px;color:var(--muted);line-height:1.55}
+.private-bulk-queue{display:grid;gap:7px;margin-top:10px;max-height:320px;overflow:auto}
+.private-bulk-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--border-soft);border-radius:10px;padding:9px 10px;background:rgba(255,255,255,.018)}
+.private-bulk-title{font-size:12px;font-weight:800;word-break:break-word}
+.private-bulk-meta{font-size:11px;color:var(--muted);margin-top:2px;word-break:break-word}
+.private-bulk-state{font-size:11px;font-weight:800;text-align:right;white-space:nowrap}
+.private-bulk-state.ok{color:var(--ok)}
+.private-bulk-state.fail{color:var(--danger)}
+.private-bulk-state.work{color:var(--accent)}
+@media(max-width:700px){.private-bulk-grid{grid-template-columns:1fr}.private-bulk-grid .wide{grid-column:auto}.private-bulk-row{grid-template-columns:1fr}}
+
 
 /* ===== Private Library uploads ===== */
 .private-upload-row{
@@ -1530,6 +1543,72 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         Panther only shows the Private Library button after the current registered device's IPTV account is approved here.
         You can require a 4–8 digit PIN, set an expiry date, allow the whole library, or select individual titles.
         Only add material you are legally permitted to store and stream, and only make explicit material available to adults.
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left">
+            <div class="section-title-text">
+              <h2>Bulk upload</h2>
+              <div>Select multiple videos at once. Matching posters are paired automatically by filename.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="private-bulk-grid">
+          <div class="wide">
+            <div class="field-label">Videos</div>
+            <input id="privateBulkVideos" type="file" multiple accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
+            <div class="small-text">Example: My Movie.mp4</div>
+          </div>
+
+          <div class="wide">
+            <div class="field-label">Optional posters</div>
+            <input id="privateBulkPosters" type="file" multiple accept="image/*,.jpg,.jpeg,.png,.webp">
+            <div class="small-text">Use the same base filename, for example My Movie.jpg, and Panther will match it to My Movie.mp4.</div>
+          </div>
+
+          <div>
+            <div class="field-label">Category</div>
+            <input id="privateBulkCategory" maxlength="100" value="Private" placeholder="Private">
+          </div>
+
+          <div>
+            <div class="field-label">Creator / studio</div>
+            <input id="privateBulkCreator" maxlength="180" placeholder="Optional default for the whole batch">
+          </div>
+
+          <div>
+            <div class="field-label">Licence</div>
+            <input id="privateBulkLicence" maxlength="180" placeholder="Optional default for the whole batch">
+          </div>
+
+          <div>
+            <div class="field-label">Starting sort order</div>
+            <input id="privateBulkSortOrder" type="number" value="100">
+          </div>
+
+          <label class="private-check-card">
+            <input id="privateBulkEnabled" type="checkbox" checked>
+            <span><strong>Enable imported titles</strong><div class="small-text">Turn off if you want to review everything before it appears in Panther.</div></span>
+          </label>
+
+          <label class="private-check-card">
+            <input id="privateBulkSkipDuplicates" type="checkbox" checked>
+            <span><strong>Skip duplicate titles</strong><div class="small-text">Prevents a filename from creating another title when that title already exists.</div></span>
+          </label>
+        </div>
+
+        <div class="cache-actions" style="margin-top:12px">
+          <button id="startPrivateBulkUploadBtn" class="primary">Upload batch</button>
+          <button id="clearPrivateBulkUploadBtn">Clear</button>
+        </div>
+
+        <div id="privateBulkStatus" class="status"></div>
+        <div id="privateBulkSummary" class="private-bulk-summary">Choose one or more videos to build the upload queue.</div>
+        <div id="privateBulkQueue" class="private-bulk-queue"></div>
       </div>
 
       <div style="height:14px"></div>
@@ -3232,6 +3311,271 @@ $("uploadPrivatePosterBtn")?.addEventListener(
   "click",
   uploadSelectedPrivatePoster
 );
+
+
+// ============================================================
+// PRIVATE LIBRARY BULK UPLOAD
+// ============================================================
+
+let privateBulkQueue = [];
+let privateBulkRunning = false;
+
+
+function privateBulkBaseName(name){
+  return String(name || "")
+    .replace(/\.[^.]+$/, "")
+    .trim();
+}
+
+
+function privateBulkMatchKey(name){
+  return privateBulkBaseName(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "")
+    .trim();
+}
+
+
+function privateBulkTitleFromFilename(name){
+  let title = privateBulkBaseName(name)
+    .replace(/[._-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Remove only common technical tags at the END of the filename.
+  title = title
+    .replace(/\s+(2160p|1080p|720p|480p|4k)$/i, "")
+    .replace(/\s+(x264|x265|h264|h265|hevc)$/i, "")
+    .replace(/\s+(web[ ._-]?dl|webrip|bluray|brrip)$/i, "")
+    .trim();
+
+  return title || "Untitled";
+}
+
+
+function privateBulkSizeText(bytes){
+  const value = Number(bytes || 0);
+  if(value >= 1024 * 1024 * 1024) return `${(value / 1024 / 1024 / 1024).toFixed(2)} GB`;
+  if(value >= 1024 * 1024) return `${(value / 1024 / 1024).toFixed(1)} MB`;
+  if(value >= 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${value} B`;
+}
+
+
+function buildPrivateBulkQueue(){
+  const videos = Array.from($("privateBulkVideos")?.files || []);
+  const posters = Array.from($("privateBulkPosters")?.files || []);
+
+  const posterMap = new Map();
+  for(const poster of posters){
+    const key = privateBulkMatchKey(poster.name);
+    if(key && !posterMap.has(key)) posterMap.set(key, poster);
+  }
+
+  const existingTitles = new Set(
+    privateLibraryContent
+      .map(item => String(item?.title || "").trim().toLowerCase())
+      .filter(Boolean)
+  );
+
+  const skipDuplicates = $("privateBulkSkipDuplicates")?.checked !== false;
+
+  privateBulkQueue = videos.map((video, index) => {
+    const title = privateBulkTitleFromFilename(video.name);
+    const poster = posterMap.get(privateBulkMatchKey(video.name)) || null;
+    const duplicate = existingTitles.has(title.toLowerCase());
+
+    return {
+      index,
+      video,
+      poster,
+      title,
+      duplicate,
+      skipped: duplicate && skipDuplicates,
+      state: duplicate && skipDuplicates ? "Skipped duplicate" : "Ready",
+      stateClass: duplicate && skipDuplicates ? "fail" : "",
+      error: ""
+    };
+  });
+
+  renderPrivateBulkQueue();
+}
+
+
+function renderPrivateBulkQueue(){
+  const host = $("privateBulkQueue");
+  const summary = $("privateBulkSummary");
+  if(!host || !summary) return;
+
+  if(!privateBulkQueue.length){
+    host.innerHTML = "";
+    summary.textContent = "Choose one or more videos to build the upload queue.";
+    return;
+  }
+
+  const matched = privateBulkQueue.filter(item => item.poster).length;
+  const duplicates = privateBulkQueue.filter(item => item.duplicate).length;
+  const totalBytes = privateBulkQueue.reduce((sum, item) => sum + Number(item.video?.size || 0) + Number(item.poster?.size || 0), 0);
+
+  summary.textContent =
+    `${privateBulkQueue.length} video${privateBulkQueue.length === 1 ? "" : "s"} · ` +
+    `${matched} matched poster${matched === 1 ? "" : "s"} · ` +
+    `${duplicates} duplicate title${duplicates === 1 ? "" : "s"} · ` +
+    `${privateBulkSizeText(totalBytes)} selected`;
+
+  host.innerHTML = privateBulkQueue.map((item, i) => `
+    <div class="private-bulk-row">
+      <div>
+        <div class="private-bulk-title">${esc(item.title)}</div>
+        <div class="private-bulk-meta">
+          ${esc(item.video.name)} · ${privateBulkSizeText(item.video.size)}
+          ${item.poster ? `<br>Poster: ${esc(item.poster.name)}` : `<br>No matching poster`}
+          ${item.duplicate ? `<br>Title already exists in library` : ""}
+          ${item.error ? `<br>${esc(item.error)}` : ""}
+        </div>
+      </div>
+      <div id="privateBulkState${i}" class="private-bulk-state ${esc(item.stateClass || "")}">${esc(item.state || "Ready")}</div>
+    </div>
+  `).join("");
+}
+
+
+function updatePrivateBulkItem(index, state, stateClass = "", error = ""){
+  const item = privateBulkQueue[index];
+  if(!item) return;
+  item.state = state;
+  item.stateClass = stateClass;
+  item.error = error || "";
+  renderPrivateBulkQueue();
+}
+
+
+function clearPrivateBulkUpload(){
+  if(privateBulkRunning) return;
+  privateBulkQueue = [];
+  if($("privateBulkVideos")) $("privateBulkVideos").value = "";
+  if($("privateBulkPosters")) $("privateBulkPosters").value = "";
+  setStatus($("privateBulkStatus"), "");
+  renderPrivateBulkQueue();
+}
+
+
+async function startPrivateBulkUpload(){
+  if(privateBulkRunning) return;
+
+  buildPrivateBulkQueue();
+
+  if(!privateBulkQueue.length){
+    setStatus($("privateBulkStatus"), "Choose at least one video file.", false);
+    return;
+  }
+
+  const button = $("startPrivateBulkUploadBtn");
+  const clearButton = $("clearPrivateBulkUploadBtn");
+  privateBulkRunning = true;
+  if(button) button.disabled = true;
+  if(clearButton) clearButton.disabled = true;
+
+  const category = $("privateBulkCategory")?.value.trim() || "Private";
+  const creator = $("privateBulkCreator")?.value.trim() || "";
+  const licence = $("privateBulkLicence")?.value.trim() || "";
+  const enabled = $("privateBulkEnabled")?.checked !== false;
+  const startingSort = Number.parseInt($("privateBulkSortOrder")?.value || "100", 10) || 100;
+
+  let added = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  try{
+    for(let i = 0; i < privateBulkQueue.length; i++){
+      const item = privateBulkQueue[i];
+
+      if(item.skipped){
+        skipped++;
+        updatePrivateBulkItem(i, "Skipped duplicate", "fail");
+        continue;
+      }
+
+      let uploadedVideoUrl = "";
+      let uploadedPosterUrl = "";
+
+      try{
+        setStatus(
+          $("privateBulkStatus"),
+          `Uploading ${i + 1} of ${privateBulkQueue.length}: ${item.title}`
+        );
+
+        updatePrivateBulkItem(i, "Uploading video…", "work");
+        const videoResult = await uploadPrivateMedia(item.video, "video");
+        uploadedVideoUrl = videoResult.url;
+
+        if(item.poster){
+          updatePrivateBulkItem(i, "Uploading poster…", "work");
+          const posterResult = await uploadPrivateMedia(item.poster, "poster");
+          uploadedPosterUrl = posterResult.url;
+        }
+
+        updatePrivateBulkItem(i, "Saving title…", "work");
+
+        await rpc("panther_admin_save_private_content", {
+          p_id: null,
+          p_title: item.title,
+          p_description: "",
+          p_video_url: uploadedVideoUrl,
+          p_poster_url: uploadedPosterUrl,
+          p_category: category,
+          p_creator: creator,
+          p_licence: licence,
+          p_attribution: "",
+          p_source_url: "",
+          p_enabled: enabled,
+          p_sort_order: startingSort + i
+        });
+
+        added++;
+        updatePrivateBulkItem(i, "Added", "ok");
+
+      }catch(e){
+        failed++;
+        const message = e?.message || String(e);
+
+        // If the file uploaded but the database save failed, clean up the orphan.
+        if(uploadedVideoUrl){
+          try{ await deletePrivateStorageUrl(uploadedVideoUrl); }catch(_){ }
+        }
+        if(uploadedPosterUrl){
+          try{ await deletePrivateStorageUrl(uploadedPosterUrl); }catch(_){ }
+        }
+
+        updatePrivateBulkItem(i, "Failed", "fail", message);
+      }
+    }
+
+    await loadPrivateContent();
+
+    const parts = [`${added} added`];
+    if(skipped) parts.push(`${skipped} skipped`);
+    if(failed) parts.push(`${failed} failed`);
+
+    setStatus(
+      $("privateBulkStatus"),
+      `Batch finished: ${parts.join(" · ")}.`,
+      failed === 0
+    );
+
+  }finally{
+    privateBulkRunning = false;
+    if(button) button.disabled = false;
+    if(clearButton) clearButton.disabled = false;
+  }
+}
+
+
+$("privateBulkVideos")?.addEventListener("change", buildPrivateBulkQueue);
+$("privateBulkPosters")?.addEventListener("change", buildPrivateBulkQueue);
+$("privateBulkSkipDuplicates")?.addEventListener("change", buildPrivateBulkQueue);
+$("startPrivateBulkUploadBtn")?.addEventListener("click", startPrivateBulkUpload);
+$("clearPrivateBulkUploadBtn")?.addEventListener("click", clearPrivateBulkUpload);
 
 
 // ============================================================
