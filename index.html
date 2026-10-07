@@ -514,6 +514,23 @@ input[type=checkbox]{
 .service-details[open]>summary{border-bottom:1px solid var(--border-soft)}
 .service-details .service-card{border:0;border-radius:0;background:transparent;padding:14px 14px 14px 17px}
 .service-details .service-head{display:none}
+.device-toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.device-toolbar input{flex:1;min-width:180px}
+.device-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.device-stat{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.02)}
+.device-stat strong{display:block;font-size:22px}
+.device-stat span{font-size:12px;color:var(--muted)}
+.device-list{display:grid;gap:10px}
+.device-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:rgba(255,255,255,.025)}
+.device-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.device-title{font-size:17px;font-weight:800}
+.device-meta{font-size:12px;color:var(--muted);line-height:1.6;margin-top:5px;word-break:break-word}
+.device-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.device-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.device-online{color:#36e69a}
+.device-offline{color:var(--muted)}
+.device-disabled{color:#ff7b87}
+@media(max-width:850px){.device-stats{grid-template-columns:1fr 1fr}}
 @media(max-width:850px){.quick-actions{grid-template-columns:1fr 1fr}.collapse-card>summary{padding:13px 14px}.collapse-content{padding:13px 14px 15px}}
 @media(max-width:520px){
   .wrap{padding:10px}.topbar{min-height:58px}.topbar-inner{padding:7px 10px}.brand-mark{width:36px;height:36px;border-radius:10px}.brand-title{font-size:13px}.brand-sub{font-size:8px}
@@ -713,6 +730,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#groupsSection">Groups</a>
       <a href="#catalogCacheSection">Cache</a>
       <a href="#featuresSection">Features</a>
+      <a href="#devicesSection">Devices</a>
       <a href="#announcementsSection">Announcements</a>
       <a href="#updatesSection">Updates</a>
     </nav>
@@ -776,6 +794,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickGroups" class="quick-action">📁 Groups</button>
     <button id="quickCatalogCache" class="quick-action">⚡ Catalog cache</button>
     <button id="quickFeatures" class="quick-action">⚙ App Features</button>
+    <button id="quickDevices" class="quick-action">📱 Devices</button>
     <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
     <button id="quickUpdates" class="quick-action">⬆ Updates</button>
   </div>
@@ -1311,6 +1330,59 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   </details>
 
 
+  <details id="devicesSection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-summary-icon">📱</div>
+      <div class="section-summary-text">
+        <h2>Device Management</h2>
+        <div>See Panther devices and remotely manage access.</div>
+      </div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+
+    <div class="collapse-content">
+
+      <div class="info-box">
+        Devices register automatically when Panther Streams is opened while logged in.
+        No IPTV password is sent to the device-management table.
+        Disable blocks the device the next time its heartbeat checks in.
+        Force Logout signs the device out without permanently disabling it.
+      </div>
+
+      <div class="device-stats">
+        <div class="device-stat">
+          <strong id="deviceTotalCount">0</strong>
+          <span>Total devices</span>
+        </div>
+        <div class="device-stat">
+          <strong id="deviceEnabledCount">0</strong>
+          <span>Enabled</span>
+        </div>
+        <div class="device-stat">
+          <strong id="deviceDisabledCount">0</strong>
+          <span>Disabled</span>
+        </div>
+        <div class="device-stat">
+          <strong id="deviceRecentCount">0</strong>
+          <span>Seen in last 2 min</span>
+        </div>
+      </div>
+
+      <div class="device-toolbar">
+        <input
+          id="deviceSearch"
+          type="search"
+          placeholder="Search device, service, username, profile or version">
+        <button id="reloadDevicesBtn">Reload devices</button>
+      </div>
+
+      <div id="deviceStatus" class="status"></div>
+      <div id="devicesList" class="device-list"></div>
+
+    </div>
+  </details>
+
+
   <details id="announcementsSection" class="section-anchor collapse-card">
     <summary>
       <div class="section-heading-left"><div class="section-icon">📢</div><div class="section-title-text"><h2>Announcements</h2><div>Create messages that can be shown inside Panther Streams.</div></div></div>
@@ -1586,6 +1658,7 @@ async function boot() {
     await loadUpdateConfig();
     await loadCatalogCache();
     await loadFeatureFlags();
+    await loadDevices();
   } catch (e) {
     clearTokens();
     showLogin();
@@ -1616,6 +1689,7 @@ $("loginBtn").onclick = async () => {
     await loadUpdateConfig();
     await loadCatalogCache();
     await loadFeatureFlags();
+    await loadDevices();
 
     setStatus($("loginStatus"), "");
   } catch (e) {
@@ -2412,6 +2486,276 @@ $("cancelAnnouncementEditBtn")?.addEventListener("click",()=>{resetAnnouncementF
 $("reloadAnnouncementsBtn")?.addEventListener("click",loadAnnouncements);
 async function toggleAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a)return;try{await restMutation("announcements","PATCH",{enabled:!a.enabled},`id=eq.${encodeURIComponent(id)}`);await loadAnnouncements()}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
 async function deleteAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a||!confirm(`Delete "${a.title}"?`))return;try{await restMutation("announcements","DELETE",null,`id=eq.${encodeURIComponent(id)}`);if(editingAnnouncementId===id)resetAnnouncementForm();await loadAnnouncements();setStatus($("announcementStatus"),"Announcement deleted.",true)}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
+
+
+
+let pantherDevices = [];
+
+
+function formatDeviceLastSeen(value){
+  if(!value) return "Never";
+
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return value;
+
+  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+
+  if(seconds < 60) return `${seconds}s ago`;
+  if(seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if(seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return date.toLocaleString();
+}
+
+
+function deviceSeenRecently(value){
+  if(!value) return false;
+
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return false;
+
+  return (Date.now() - date.getTime()) <= 120000;
+}
+
+
+function deviceDisplayName(device){
+  return (
+    device.nickname ||
+    device.device_name ||
+    device.model ||
+    "Panther device"
+  );
+}
+
+
+function filteredDevices(){
+  const query = ($("deviceSearch")?.value || "").trim().toLowerCase();
+
+  if(!query) return pantherDevices;
+
+  return pantherDevices.filter(device => {
+    const haystack = [
+      device.nickname,
+      device.device_name,
+      device.manufacturer,
+      device.model,
+      device.platform,
+      device.app_version,
+      device.service_name,
+      device.username,
+      device.profile_name,
+      device.account_scope_id,
+      device.device_id
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(query);
+  });
+}
+
+
+function renderDevices(){
+  const host = $("devicesList");
+  if(!host) return;
+
+  const devices = filteredDevices();
+
+  const total = pantherDevices.length;
+  const enabled = pantherDevices.filter(x => x.enabled !== false).length;
+  const disabled = total - enabled;
+  const recent = pantherDevices.filter(x => deviceSeenRecently(x.last_seen_at)).length;
+
+  $("deviceTotalCount").textContent = String(total);
+  $("deviceEnabledCount").textContent = String(enabled);
+  $("deviceDisabledCount").textContent = String(disabled);
+  $("deviceRecentCount").textContent = String(recent);
+
+  if(!devices.length){
+    host.innerHTML = '<div class="empty-note">No matching Panther devices yet. Open the new app build on a logged-in device and it will appear here.</div>';
+    return;
+  }
+
+  host.innerHTML = devices.map(device => {
+    const recent = deviceSeenRecently(device.last_seen_at);
+    const enabled = device.enabled !== false;
+    const forceQueued = device.force_logout === true;
+
+    const title = esc(deviceDisplayName(device));
+    const rawDevice = esc(device.device_name || device.model || "");
+    const id = esc(device.device_id || "");
+    const platform = esc(device.platform || "Android");
+    const version = esc(device.app_version || "Unknown");
+    const os = esc(device.os_version || "");
+    const service = esc(device.service_name || "Unknown service");
+    const username = esc(device.username || "Unknown");
+    const profile = esc(device.profile_name || "Unknown");
+    const lastSeen = esc(formatDeviceLastSeen(device.last_seen_at));
+    const firstSeen = esc(device.first_seen_at ? new Date(device.first_seen_at).toLocaleString() : "Unknown");
+
+    return `
+      <div class="device-card">
+        <div class="device-head">
+          <div>
+            <div class="device-title">${title}</div>
+            <div class="device-meta">
+              ${rawDevice && rawDevice !== title ? `${rawDevice}<br>` : ""}
+              ${platform}${os ? ` · Android ${os}` : ""}<br>
+              Panther ${version}<br>
+              ${service} · ${username}<br>
+              Profile: ${profile}<br>
+              Device ID: ${id}<br>
+              First seen: ${firstSeen}
+            </div>
+          </div>
+          <div class="${enabled ? (recent ? "device-online" : "device-offline") : "device-disabled"}">
+            ${enabled ? (recent ? "● Recent" : "● Enabled") : "● Disabled"}
+          </div>
+        </div>
+
+        <div class="device-pills">
+          <span class="pill">${enabled ? "ENABLED" : "DISABLED"}</span>
+          ${forceQueued ? '<span class="pill disabled">LOGOUT QUEUED</span>' : ""}
+          <span class="pill">Seen ${lastSeen}</span>
+          ${device.is_tv ? '<span class="pill">TV</span>' : '<span class="pill">MOBILE</span>'}
+        </div>
+
+        <div class="device-actions">
+          <button class="small rename-device" data-id="${id}">Rename</button>
+          <button class="small ${enabled ? "danger" : ""} toggle-device" data-id="${id}">
+            ${enabled ? "Disable" : "Enable"}
+          </button>
+          <button class="small danger force-logout-device" data-id="${id}">
+            Force logout
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  document.querySelectorAll(".rename-device").forEach(button => {
+    button.onclick = () => renamePantherDevice(button.dataset.id);
+  });
+
+  document.querySelectorAll(".toggle-device").forEach(button => {
+    button.onclick = () => togglePantherDevice(button.dataset.id);
+  });
+
+  document.querySelectorAll(".force-logout-device").forEach(button => {
+    button.onclick = () => forceLogoutPantherDevice(button.dataset.id);
+  });
+}
+
+
+async function loadDevices(){
+  if(!$("devicesSection")) return;
+
+  setStatus($("deviceStatus"), "Loading devices...");
+
+  try{
+    const rows = await rpc("panther_admin_list_devices", {});
+    pantherDevices = Array.isArray(rows) ? rows : [];
+    renderDevices();
+    setStatus($("deviceStatus"), "");
+  }catch(e){
+    pantherDevices = [];
+    renderDevices();
+    setStatus(
+      $("deviceStatus"),
+      "Device Management is not ready yet. Run Panther_Device_Management.txt in Supabase SQL Editor first. " +
+        (e?.message || String(e)),
+      false
+    );
+  }
+}
+
+
+async function renamePantherDevice(deviceId){
+  const device = pantherDevices.find(x => x.device_id === deviceId);
+  if(!device) return;
+
+  const nickname = prompt(
+    "Device nickname. Leave blank to use the detected device name.",
+    device.nickname || ""
+  );
+
+  if(nickname === null) return;
+
+  try{
+    await rpc("panther_admin_rename_device", {
+      p_device_id: deviceId,
+      p_nickname: nickname.trim()
+    });
+
+    await loadDevices();
+  }catch(e){
+    setStatus($("deviceStatus"), e?.message || String(e), false);
+  }
+}
+
+
+async function togglePantherDevice(deviceId){
+  const device = pantherDevices.find(x => x.device_id === deviceId);
+  if(!device) return;
+
+  const enable = device.enabled === false;
+
+  if(!enable){
+    const name = deviceDisplayName(device);
+    if(!confirm(`Disable "${name}"? Panther will sign this device out when it next checks in.`)){
+      return;
+    }
+  }
+
+  try{
+    await rpc("panther_admin_set_device_enabled", {
+      p_device_id: deviceId,
+      p_enabled: enable
+    });
+
+    await loadDevices();
+
+    setStatus(
+      $("deviceStatus"),
+      enable ? "Device enabled." : "Device disabled.",
+      true
+    );
+  }catch(e){
+    setStatus($("deviceStatus"), e?.message || String(e), false);
+  }
+}
+
+
+async function forceLogoutPantherDevice(deviceId){
+  const device = pantherDevices.find(x => x.device_id === deviceId);
+  if(!device) return;
+
+  const name = deviceDisplayName(device);
+
+  if(!confirm(`Force "${name}" to log out of Panther Streams?`)){
+    return;
+  }
+
+  try{
+    await rpc("panther_admin_force_logout_device", {
+      p_device_id: deviceId
+    });
+
+    await loadDevices();
+
+    setStatus(
+      $("deviceStatus"),
+      "Remote logout queued. The device checks in about every 30 seconds while Panther is running.",
+      true
+    );
+  }catch(e){
+    setStatus($("deviceStatus"), e?.message || String(e), false);
+  }
+}
+
+
+$("reloadDevicesBtn")?.addEventListener("click", loadDevices);
+$("deviceSearch")?.addEventListener("input", renderDevices);
 
 
 const FEATURE_FLAG_FIELDS = {
@@ -3515,6 +3859,10 @@ $("quickCategories")?.addEventListener("click", () => openSection("categoriesSec
 $("quickGroups")?.addEventListener("click", () => openSection("groupsSection"));
 $("quickCatalogCache")?.addEventListener("click", () => openSection("catalogCacheSection"));
 $("quickFeatures")?.addEventListener("click", () => openSection("featuresSection"));
+$("quickDevices")?.addEventListener("click", () => {
+  openSection("devicesSection");
+  loadDevices();
+});
 $("quickAnnouncements")?.addEventListener("click", () => openSection("announcementsSection"));
 $("quickUpdates")?.addEventListener("click", () => openSection("updatesSection"));
 
@@ -3524,4 +3872,4 @@ boot();
 </script>
 
 </body>
-  </html>
+          </html>
