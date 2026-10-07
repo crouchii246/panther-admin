@@ -1559,7 +1559,18 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 
         <div class="private-bulk-grid">
           <div class="wide">
-            <div class="field-label">Videos</div>
+            <div class="field-label">Import a whole folder</div>
+            <input id="privateBulkFolder" type="file" webkitdirectory directory multiple>
+            <div class="small-text">Choose one folder containing videos and optional matching posters. Subfolders can automatically become categories.</div>
+          </div>
+
+          <label class="private-check-card wide">
+            <input id="privateBulkUseSubfolderCategory" type="checkbox" checked>
+            <span><strong>Use subfolder names as categories</strong><div class="small-text">Example: My Library/Category Name/Video.mp4 will import into “Category Name”. Files in the main folder use the default category below.</div></span>
+          </label>
+
+          <div class="wide">
+            <div class="field-label">Or choose videos</div>
             <input id="privateBulkVideos" type="file" multiple accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
             <div class="small-text">Example: My Movie.mp4</div>
           </div>
@@ -3336,6 +3347,65 @@ function privateBulkMatchKey(name){
 }
 
 
+function privateBulkRelativePath(file){
+  return String(
+    file?.webkitRelativePath ||
+    file?.name ||
+    ""
+  )
+    .replace(/\\/g, "/")
+    .replace(/^\/+|\/+$/g, "");
+}
+
+
+function privateBulkPathMatchKey(file){
+  const path = privateBulkRelativePath(file)
+    .replace(/\.[^/.]+$/, "")
+    .toLowerCase();
+
+  return path
+    .split("/")
+    .map(part => part.replace(/[^a-z0-9]+/g, ""))
+    .filter(Boolean)
+    .join("/");
+}
+
+
+function privateBulkCategoryFromFile(file){
+  const path = privateBulkRelativePath(file);
+  if(!path.includes("/")) return "";
+
+  const parts = path
+    .split("/")
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  // webkitRelativePath is normally:
+  // Selected Folder / Optional Category / File.ext
+  if(parts.length < 3) return "";
+
+  return parts[1] || "";
+}
+
+
+function privateBulkIsVideo(file){
+  const name = String(file?.name || "").toLowerCase();
+  return (
+    String(file?.type || "").startsWith("video/") ||
+    /\.(mp4|webm|m4v|mov|mkv)$/i.test(name)
+  );
+}
+
+
+function privateBulkIsPoster(file){
+  const name = String(file?.name || "").toLowerCase();
+  return (
+    String(file?.type || "").startsWith("image/") ||
+    /\.(jpg|jpeg|png|webp)$/i.test(name)
+  );
+}
+
+
 function privateBulkTitleFromFilename(name){
   let title = privateBulkBaseName(name)
     .replace(/[._-]+/g, " ")
@@ -3363,13 +3433,30 @@ function privateBulkSizeText(bytes){
 
 
 function buildPrivateBulkQueue(){
-  const videos = Array.from($("privateBulkVideos")?.files || []);
-  const posters = Array.from($("privateBulkPosters")?.files || []);
+  const folderFiles = Array.from($("privateBulkFolder")?.files || []);
+  const chosenVideos = Array.from($("privateBulkVideos")?.files || []);
+  const chosenPosters = Array.from($("privateBulkPosters")?.files || []);
 
-  const posterMap = new Map();
+  const folderVideos = folderFiles.filter(privateBulkIsVideo);
+  const folderPosters = folderFiles.filter(privateBulkIsPoster);
+
+  const videos = [...folderVideos, ...chosenVideos];
+  const posters = [...folderPosters, ...chosenPosters];
+
+  const posterPathMap = new Map();
+  const posterNameMap = new Map();
+
   for(const poster of posters){
-    const key = privateBulkMatchKey(poster.name);
-    if(key && !posterMap.has(key)) posterMap.set(key, poster);
+    const pathKey = privateBulkPathMatchKey(poster);
+    const nameKey = privateBulkMatchKey(poster.name);
+
+    if(pathKey && !posterPathMap.has(pathKey)){
+      posterPathMap.set(pathKey, poster);
+    }
+
+    if(nameKey && !posterNameMap.has(nameKey)){
+      posterNameMap.set(nameKey, poster);
+    }
   }
 
   const existingTitles = new Set(
@@ -3379,10 +3466,30 @@ function buildPrivateBulkQueue(){
   );
 
   const skipDuplicates = $("privateBulkSkipDuplicates")?.checked !== false;
+  const useSubfolderCategory =
+    $("privateBulkUseSubfolderCategory")?.checked !== false;
+
+  const defaultCategory =
+    $("privateBulkCategory")?.value.trim() ||
+    "Private";
 
   privateBulkQueue = videos.map((video, index) => {
     const title = privateBulkTitleFromFilename(video.name);
-    const poster = posterMap.get(privateBulkMatchKey(video.name)) || null;
+
+    const poster =
+      posterPathMap.get(privateBulkPathMatchKey(video)) ||
+      posterNameMap.get(privateBulkMatchKey(video.name)) ||
+      null;
+
+    const folderCategory =
+      useSubfolderCategory
+        ? privateBulkCategoryFromFile(video)
+        : "";
+
+    const category =
+      folderCategory ||
+      defaultCategory;
+
     const duplicate = existingTitles.has(title.toLowerCase());
 
     return {
@@ -3390,6 +3497,7 @@ function buildPrivateBulkQueue(){
       video,
       poster,
       title,
+      category,
       duplicate,
       skipped: duplicate && skipDuplicates,
       state: duplicate && skipDuplicates ? "Skipped duplicate" : "Ready",
@@ -3400,7 +3508,6 @@ function buildPrivateBulkQueue(){
 
   renderPrivateBulkQueue();
 }
-
 
 function renderPrivateBulkQueue(){
   const host = $("privateBulkQueue");
@@ -3428,8 +3535,9 @@ function renderPrivateBulkQueue(){
       <div>
         <div class="private-bulk-title">${esc(item.title)}</div>
         <div class="private-bulk-meta">
-          ${esc(item.video.name)} · ${privateBulkSizeText(item.video.size)}
-          ${item.poster ? `<br>Poster: ${esc(item.poster.name)}` : `<br>No matching poster`}
+          ${esc(privateBulkRelativePath(item.video) || item.video.name)} · ${privateBulkSizeText(item.video.size)}
+          <br>Category: ${esc(item.category || "Private")}
+          ${item.poster ? `<br>Poster: ${esc(privateBulkRelativePath(item.poster) || item.poster.name)}` : `<br>No matching poster`}
           ${item.duplicate ? `<br>Title already exists in library` : ""}
           ${item.error ? `<br>${esc(item.error)}` : ""}
         </div>
@@ -3453,6 +3561,7 @@ function updatePrivateBulkItem(index, state, stateClass = "", error = ""){
 function clearPrivateBulkUpload(){
   if(privateBulkRunning) return;
   privateBulkQueue = [];
+  if($("privateBulkFolder")) $("privateBulkFolder").value = "";
   if($("privateBulkVideos")) $("privateBulkVideos").value = "";
   if($("privateBulkPosters")) $("privateBulkPosters").value = "";
   setStatus($("privateBulkStatus"), "");
@@ -3523,7 +3632,7 @@ async function startPrivateBulkUpload(){
           p_description: "",
           p_video_url: uploadedVideoUrl,
           p_poster_url: uploadedPosterUrl,
-          p_category: category,
+          p_category: item.category || category,
           p_creator: creator,
           p_licence: licence,
           p_attribution: "",
@@ -3571,8 +3680,11 @@ async function startPrivateBulkUpload(){
 }
 
 
+$("privateBulkFolder")?.addEventListener("change", buildPrivateBulkQueue);
 $("privateBulkVideos")?.addEventListener("change", buildPrivateBulkQueue);
 $("privateBulkPosters")?.addEventListener("change", buildPrivateBulkQueue);
+$("privateBulkCategory")?.addEventListener("input", buildPrivateBulkQueue);
+$("privateBulkUseSubfolderCategory")?.addEventListener("change", buildPrivateBulkQueue);
 $("privateBulkSkipDuplicates")?.addEventListener("change", buildPrivateBulkQueue);
 $("startPrivateBulkUploadBtn")?.addEventListener("click", startPrivateBulkUpload);
 $("clearPrivateBulkUploadBtn")?.addEventListener("click", clearPrivateBulkUpload);
