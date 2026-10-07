@@ -740,6 +740,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#groupsSection">Groups</a>
       <a href="#catalogCacheSection">Cache</a>
       <a href="#featuresSection">Features</a>
+      <a href="#homeScreenSection">Home Screen</a>
       <a href="#devicesSection">Devices</a>
       <a href="#announcementsSection">Announcements</a>
       <a href="#updatesSection">Updates</a>
@@ -804,10 +805,135 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickGroups" class="quick-action">📁 Groups</button>
     <button id="quickCatalogCache" class="quick-action">⚡ Catalog cache</button>
     <button id="quickFeatures" class="quick-action">⚙ App Features</button>
+    <button id="quickHomeScreen" class="quick-action">🏠 Home Screen</button>
     <button id="quickDevices" class="quick-action">📱 Devices</button>
     <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
     <button id="quickUpdates" class="quick-action">⬆ Updates</button>
   </div>
+
+  <details id="homeScreenSection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left">
+        <div class="section-icon">🏠</div>
+        <div class="section-title-text">
+          <h2>Home Screen Management</h2>
+          <div>Control Panther Home remotely without publishing another APK.</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+
+    <div class="collapse-content">
+
+      <div class="cache-explainer">
+        <strong>Remote Home Management</strong> overrides Home presentation only while it is enabled.
+        Turn it off at any time and every device returns to its own existing Home settings.
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="cache-form">
+
+        <div>
+          <div class="field-label">Remote Home Management</div>
+          <select id="homeConfigEnabled">
+            <option value="false">Disabled — use device settings</option>
+            <option value="true">Enabled — use panel settings</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="field-label">Featured area</div>
+          <select id="homeFeaturedMode">
+            <option value="top_rated">Top Rated</option>
+            <option value="live_stream">Live TV channel</option>
+            <option value="custom_image">Custom image</option>
+            <option value="slideshow">Slideshow</option>
+          </select>
+        </div>
+
+        <div class="wide">
+          <div class="field-label">Featured title</div>
+          <input id="homeFeaturedTitle" maxlength="120" placeholder="Optional — leave blank for Panther default">
+        </div>
+
+        <div id="homeLiveFields" class="wide cache-form">
+          <div>
+            <div class="field-label">Live channel ID</div>
+            <input id="homeLiveChannelId" placeholder="Xtream stream_id, e.g. 12345">
+          </div>
+          <div>
+            <div class="field-label">Live channel name</div>
+            <input id="homeLiveChannelName" maxlength="160" placeholder="e.g. Sky Sports Main Event">
+          </div>
+          <div class="wide">
+            <div class="field-label">Live channel logo URL</div>
+            <input id="homeLiveChannelIcon" placeholder="Optional https://...">
+          </div>
+        </div>
+
+        <div id="homeImageFields" class="wide">
+          <div class="field-label">Featured image URL</div>
+          <input id="homeImageUrl" placeholder="https://...">
+          <div class="update-help">Use a direct image URL. Panther caches the Home configuration locally.</div>
+        </div>
+
+        <div id="homeSlideshowFields" class="wide">
+          <div class="field-label">Slideshow image URLs</div>
+          <textarea id="homeSlideshowUrls" placeholder="One direct image URL per line"></textarea>
+          <div style="height:10px"></div>
+          <div class="field-label">Seconds per image</div>
+          <input id="homeSlideshowInterval" type="number" min="3" max="60" value="7">
+        </div>
+
+        <div class="wide">
+          <div class="field-label">Featured rows</div>
+          <div class="cache-switches">
+            <label class="cache-switch-card">
+              <input id="homeShowTopRatedMovies" type="checkbox" checked>
+              <span><span class="cache-switch-title">Top Rated Movies</span><div class="cache-switch-help">Shown when Featured mode is Top Rated.</div></span>
+            </label>
+            <label class="cache-switch-card">
+              <input id="homeShowTopRatedSeries" type="checkbox" checked>
+              <span><span class="cache-switch-title">Top Rated Series</span><div class="cache-switch-help">TV / Firestick series row.</div></span>
+            </label>
+            <label class="cache-switch-card">
+              <input id="homeShowContinueWatching" type="checkbox" checked>
+              <span><span class="cache-switch-title">Continue Watching</span><div class="cache-switch-help">Show the Continue Watching Home button.</div></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="wide">
+          <div class="field-label">Home buttons</div>
+          <div class="cache-switches">
+            <label class="cache-switch-card"><input id="homeShowLiveTv" type="checkbox" checked><span><span class="cache-switch-title">Live TV</span><div class="cache-switch-help">Main Live TV button.</div></span></label>
+            <label class="cache-switch-card"><input id="homeShowMovies" type="checkbox" checked><span><span class="cache-switch-title">Movies</span><div class="cache-switch-help">Main Movies button.</div></span></label>
+            <label class="cache-switch-card"><input id="homeShowSeries" type="checkbox" checked><span><span class="cache-switch-title">Series</span><div class="cache-switch-help">Main Series button.</div></span></label>
+            <label class="cache-switch-card"><input id="homeShowCatchup" type="checkbox" checked><span><span class="cache-switch-title">Catch-up</span><div class="cache-switch-help">Main Catch-up button.</div></span></label>
+            <label class="cache-switch-card"><input id="homeShowExtras" type="checkbox" checked><span><span class="cache-switch-title">Extras</span><div class="cache-switch-help">Extras entry point.</div></span></label>
+            <label class="cache-switch-card"><input id="homeShowSettings" type="checkbox" checked><span><span class="cache-switch-title">Settings</span><div class="cache-switch-help">Settings button on Home.</div></span></label>
+          </div>
+        </div>
+
+        <div class="wide cache-actions">
+          <button id="saveHomeConfigBtn" class="primary">Publish Home changes</button>
+          <button id="reloadHomeConfigBtn">Reload</button>
+        </div>
+
+      </div>
+
+      <div id="homeConfigStatus" class="status"></div>
+
+      <div class="update-summary">
+        <div class="field-label">Current remote Home state</div>
+        <div id="homeConfigSummary" class="update-summary-value">Loading…</div>
+        <div class="update-help">Panther uses the last successfully downloaded configuration if Supabase is temporarily unavailable.</div>
+      </div>
+
+    </div>
+  </details>
+
 
   <details id="servicesSection" class="section-anchor collapse-card">
     <summary>
@@ -1668,6 +1794,7 @@ async function boot() {
     await loadUpdateConfig();
     await loadCatalogCache();
     await loadFeatureFlags();
+    await loadHomeConfig();
     await loadDevices();
   } catch (e) {
     clearTokens();
@@ -1699,6 +1826,7 @@ $("loginBtn").onclick = async () => {
     await loadUpdateConfig();
     await loadCatalogCache();
     await loadFeatureFlags();
+    await loadHomeConfig();
     await loadDevices();
 
     setStatus($("loginStatus"), "");
@@ -2497,6 +2625,247 @@ $("reloadAnnouncementsBtn")?.addEventListener("click",loadAnnouncements);
 async function toggleAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a)return;try{await restMutation("announcements","PATCH",{enabled:!a.enabled},`id=eq.${encodeURIComponent(id)}`);await loadAnnouncements()}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
 async function deleteAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a||!confirm(`Delete "${a.title}"?`))return;try{await restMutation("announcements","DELETE",null,`id=eq.${encodeURIComponent(id)}`);if(editingAnnouncementId===id)resetAnnouncementForm();await loadAnnouncements();setStatus($("announcementStatus"),"Announcement deleted.",true)}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
 
+
+
+
+// ============================================================
+// HOME SCREEN MANAGEMENT
+// ============================================================
+
+let pantherHomeConfig = null;
+
+
+function updateHomeConfigModeFields(){
+  const mode = $("homeFeaturedMode")?.value || "top_rated";
+
+  $("homeLiveFields")?.classList.toggle(
+    "hidden",
+    mode !== "live_stream"
+  );
+
+  $("homeImageFields")?.classList.toggle(
+    "hidden",
+    mode !== "custom_image"
+  );
+
+  $("homeSlideshowFields")?.classList.toggle(
+    "hidden",
+    mode !== "slideshow"
+  );
+}
+
+
+function homeConfigDefaults(){
+  return {
+    enabled:false,
+    featured_mode:"top_rated",
+    featured_title:"",
+    live_channel_id:"",
+    live_channel_name:"Live TV",
+    live_channel_icon:"",
+    image_url:"",
+    slideshow_urls:[],
+    slideshow_interval_seconds:7,
+    show_top_rated_movies:true,
+    show_top_rated_series:true,
+    show_continue_watching:true,
+    show_live_tv:true,
+    show_movies:true,
+    show_series:true,
+    show_catchup:true,
+    show_extras:true,
+    show_settings:true
+  };
+}
+
+
+function applyHomeConfigToForm(row){
+  const config = {
+    ...homeConfigDefaults(),
+    ...(row || {})
+  };
+
+  pantherHomeConfig = config;
+
+  $("homeConfigEnabled").value = String(config.enabled === true);
+  $("homeFeaturedMode").value = config.featured_mode || "top_rated";
+  $("homeFeaturedTitle").value = config.featured_title || "";
+  $("homeLiveChannelId").value = config.live_channel_id || "";
+  $("homeLiveChannelName").value = config.live_channel_name || "Live TV";
+  $("homeLiveChannelIcon").value = config.live_channel_icon || "";
+  $("homeImageUrl").value = config.image_url || "";
+  $("homeSlideshowUrls").value = Array.isArray(config.slideshow_urls)
+    ? config.slideshow_urls.join("\n")
+    : "";
+  $("homeSlideshowInterval").value = String(config.slideshow_interval_seconds || 7);
+
+  $("homeShowTopRatedMovies").checked = config.show_top_rated_movies !== false;
+  $("homeShowTopRatedSeries").checked = config.show_top_rated_series !== false;
+  $("homeShowContinueWatching").checked = config.show_continue_watching !== false;
+  $("homeShowLiveTv").checked = config.show_live_tv !== false;
+  $("homeShowMovies").checked = config.show_movies !== false;
+  $("homeShowSeries").checked = config.show_series !== false;
+  $("homeShowCatchup").checked = config.show_catchup !== false;
+  $("homeShowExtras").checked = config.show_extras !== false;
+  $("homeShowSettings").checked = config.show_settings !== false;
+
+  updateHomeConfigModeFields();
+  updateHomeConfigSummary(config);
+}
+
+
+function updateHomeConfigSummary(config){
+  const host = $("homeConfigSummary");
+  if(!host) return;
+
+  if(config?.enabled !== true){
+    host.textContent = "Remote Home Management disabled — devices use their own Home settings";
+    return;
+  }
+
+  const labels = {
+    top_rated:"Top Rated",
+    live_stream:"Live TV channel",
+    custom_image:"Custom image",
+    slideshow:"Slideshow"
+  };
+
+  host.textContent = `Enabled · ${labels[config.featured_mode] || "Top Rated"}`;
+}
+
+
+async function loadHomeConfig(){
+  if(!$("homeScreenSection")) return;
+
+  setStatus(
+    $("homeConfigStatus"),
+    "Loading Home configuration..."
+  );
+
+  try{
+    const fields = [
+      "id",
+      "enabled",
+      "featured_mode",
+      "featured_title",
+      "live_channel_id",
+      "live_channel_name",
+      "live_channel_icon",
+      "image_url",
+      "slideshow_urls",
+      "slideshow_interval_seconds",
+      "show_top_rated_movies",
+      "show_top_rated_series",
+      "show_continue_watching",
+      "show_live_tv",
+      "show_movies",
+      "show_series",
+      "show_catchup",
+      "show_extras",
+      "show_settings",
+      "updated_at"
+    ].join(",");
+
+    const rows = await select(
+      "panther_home_config",
+      `select=${fields}&id=eq.1&limit=1`
+    );
+
+    applyHomeConfigToForm(rows[0] || homeConfigDefaults());
+    setStatus($("homeConfigStatus"), "");
+
+  }catch(e){
+    applyHomeConfigToForm(homeConfigDefaults());
+    setStatus(
+      $("homeConfigStatus"),
+      "Home Screen Management is not ready yet. Run Panther_Home_Screen_Management.sql in Supabase first. " +
+        (e?.message || String(e)),
+      false
+    );
+  }
+}
+
+
+function homeSlideshowUrlsFromForm(){
+  return ($("homeSlideshowUrls")?.value || "")
+    .split(/\r?\n/)
+    .map(value => value.trim())
+    .filter(Boolean);
+}
+
+
+$("homeFeaturedMode")?.addEventListener(
+  "change",
+  updateHomeConfigModeFields
+);
+
+
+$("saveHomeConfigBtn")?.addEventListener(
+  "click",
+  async () => {
+    const button = $("saveHomeConfigBtn");
+    const interval = Math.max(
+      3,
+      Math.min(
+        60,
+        Number.parseInt($("homeSlideshowInterval")?.value || "7", 10) || 7
+      )
+    );
+
+    button.disabled = true;
+    setStatus($("homeConfigStatus"), "Publishing Home changes...");
+
+    try{
+      const rows = await rpc(
+        "panther_admin_save_home_config",
+        {
+          p_enabled: $("homeConfigEnabled").value === "true",
+          p_featured_mode: $("homeFeaturedMode").value,
+          p_featured_title: $("homeFeaturedTitle").value.trim(),
+          p_live_channel_id: $("homeLiveChannelId").value.trim(),
+          p_live_channel_name: $("homeLiveChannelName").value.trim() || "Live TV",
+          p_live_channel_icon: $("homeLiveChannelIcon").value.trim(),
+          p_image_url: $("homeImageUrl").value.trim(),
+          p_slideshow_urls: homeSlideshowUrlsFromForm(),
+          p_slideshow_interval_seconds: interval,
+          p_show_top_rated_movies: $("homeShowTopRatedMovies").checked,
+          p_show_top_rated_series: $("homeShowTopRatedSeries").checked,
+          p_show_continue_watching: $("homeShowContinueWatching").checked,
+          p_show_live_tv: $("homeShowLiveTv").checked,
+          p_show_movies: $("homeShowMovies").checked,
+          p_show_series: $("homeShowSeries").checked,
+          p_show_catchup: $("homeShowCatchup").checked,
+          p_show_extras: $("homeShowExtras").checked,
+          p_show_settings: $("homeShowSettings").checked
+        }
+      );
+
+      const row = Array.isArray(rows) ? rows[0] : null;
+      applyHomeConfigToForm(row || homeConfigDefaults());
+
+      setStatus(
+        $("homeConfigStatus"),
+        "Home configuration published. Panther devices will pick it up when Home opens/resumes.",
+        true
+      );
+
+    }catch(e){
+      setStatus(
+        $("homeConfigStatus"),
+        e?.message || String(e),
+        false
+      );
+    }finally{
+      button.disabled = false;
+    }
+  }
+);
+
+
+$("reloadHomeConfigBtn")?.addEventListener(
+  "click",
+  loadHomeConfig
+);
 
 
 let pantherDevices = [];
@@ -3965,6 +4334,10 @@ $("quickCategories")?.addEventListener("click", () => openSection("categoriesSec
 $("quickGroups")?.addEventListener("click", () => openSection("groupsSection"));
 $("quickCatalogCache")?.addEventListener("click", () => openSection("catalogCacheSection"));
 $("quickFeatures")?.addEventListener("click", () => openSection("featuresSection"));
+$("quickHomeScreen")?.addEventListener("click", () => {
+  openSection("homeScreenSection");
+  loadHomeConfig();
+});
 $("quickDevices")?.addEventListener("click", () => {
   openSection("devicesSection");
   loadDevices();
