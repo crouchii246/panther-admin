@@ -717,6 +717,25 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   .cache-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
+
+/* ===== Private Library ===== */
+.private-library-grid{display:grid;grid-template-columns:minmax(320px,430px) 1fr;gap:14px;align-items:start}
+.private-library-form{display:grid;gap:10px}
+.private-content-list,.private-account-list{display:grid;gap:10px}
+.private-content-card,.private-account-card{border:1px solid var(--border);border-radius:14px;padding:13px;background:var(--panel2)}
+.private-content-head,.private-account-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.private-content-title,.private-account-title{font-weight:850;font-size:15px}
+.private-content-meta,.private-account-meta{font-size:11px;color:var(--muted);line-height:1.55;margin-top:4px;word-break:break-word}
+.private-account-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.private-account-controls .wide{grid-column:1/-1}
+.private-check-card{display:flex;gap:9px;align-items:flex-start;border:1px solid var(--border-soft);border-radius:11px;padding:10px;background:rgba(255,255,255,.018)}
+.private-check-card input{margin-top:3px}
+.private-title-access{margin-top:14px;border:1px solid var(--border);border-radius:14px;padding:14px;background:var(--panel3)}
+.private-title-access-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.private-title-access-item{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--border-soft);border-radius:10px;padding:9px;background:var(--panel2)}
+.private-title-access-item input{margin-top:3px}
+@media(max-width:900px){.private-library-grid{grid-template-columns:1fr}.private-account-controls,.private-title-access-list{grid-template-columns:1fr}}
+
 </style>
 
 </head>
@@ -741,6 +760,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#catalogCacheSection">Cache</a>
       <a href="#featuresSection">Features</a>
       <a href="#homeScreenSection">Home Screen</a>
+      <a href="#privateLibrarySection">Private Library</a>
       <a href="#devicesSection">Devices</a>
       <a href="#announcementsSection">Announcements</a>
       <a href="#updatesSection">Updates</a>
@@ -806,6 +826,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickCatalogCache" class="quick-action">⚡ Catalog cache</button>
     <button id="quickFeatures" class="quick-action">⚙ App Features</button>
     <button id="quickHomeScreen" class="quick-action">🏠 Home Screen</button>
+    <button id="quickPrivateLibrary" class="quick-action">🔒 Private Library</button>
     <button id="quickDevices" class="quick-action">📱 Devices</button>
     <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
     <button id="quickUpdates" class="quick-action">⬆ Updates</button>
@@ -1466,6 +1487,93 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   </details>
 
 
+  <details id="privateLibrarySection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left">
+        <div class="section-icon">🔒</div>
+        <div class="section-title-text">
+          <h2>Private Library</h2>
+          <div>Manage streaming content and choose exactly which IPTV accounts can access it.</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+
+    <div class="collapse-content">
+      <div class="cache-explainer">
+        <strong>Account-controlled library.</strong>
+        Panther only shows the Private Library button after the current registered device's IPTV account is approved here.
+        You can require a 4–8 digit PIN, set an expiry date, allow the whole library, or select individual titles.
+        Only add material you are legally permitted to store and stream, and only make explicit material available to adults.
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="private-library-grid">
+        <div class="card-flat">
+          <div class="section-heading">
+            <div class="section-heading-left">
+              <div class="section-title-text"><h2 id="privateContentFormTitle">Add content</h2><div>Direct streaming URL plus optional poster/licensing information.</div></div>
+            </div>
+          </div>
+
+          <div class="private-library-form">
+            <div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"></div>
+            <div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"></div>
+            <div><div class="field-label">Direct video URL</div><input id="privateContentVideoUrl" placeholder="https://.../video.mp4"></div>
+            <div><div class="field-label">Poster URL</div><input id="privateContentPosterUrl" placeholder="Optional https://.../poster.jpg"></div>
+            <div><div class="field-label">Description</div><textarea id="privateContentDescription" maxlength="3000" placeholder="Optional description"></textarea></div>
+            <div><div class="field-label">Creator / studio</div><input id="privateContentCreator" maxlength="180" placeholder="Optional"></div>
+            <div><div class="field-label">Licence</div><input id="privateContentLicence" maxlength="180" placeholder="e.g. CC0 / CC BY-SA 4.0"></div>
+            <div><div class="field-label">Attribution</div><input id="privateContentAttribution" maxlength="500" placeholder="Required attribution text if applicable"></div>
+            <div><div class="field-label">Source / licence page</div><input id="privateContentSourceUrl" placeholder="Optional https://..."></div>
+            <div><div class="field-label">Sort order</div><input id="privateContentSortOrder" type="number" value="100"></div>
+            <label class="private-check-card"><input id="privateContentEnabled" type="checkbox" checked><span><strong>Enabled</strong><div class="small-text">Disabled titles stay in the panel but are never returned to Panther.</div></span></label>
+            <div class="cache-actions">
+              <button id="savePrivateContentBtn" class="primary">Add title</button>
+              <button id="cancelPrivateContentEditBtn" class="hidden">Cancel edit</button>
+              <button id="reloadPrivateLibraryBtn">Reload</button>
+            </div>
+          </div>
+          <div id="privateContentStatus" class="status"></div>
+        </div>
+
+        <div class="card-flat">
+          <div class="section-heading">
+            <div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
+            <span id="privateContentCount" class="pill">0</span>
+          </div>
+          <div id="privateContentList" class="private-content-list"></div>
+        </div>
+      </div>
+
+      <div style="height:16px"></div>
+
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
+          <button id="reloadPrivateAccountsBtn" class="small">Reload accounts</button>
+        </div>
+        <div id="privateAccountStatus" class="status"></div>
+        <div id="privateAccountsList" class="private-account-list"></div>
+      </div>
+
+      <div id="privateTitleAccessPanel" class="private-title-access hidden">
+        <div class="section-heading">
+          <div class="section-heading-left"><div class="section-title-text"><h2>Individual title access</h2><div id="privateTitleAccessAccount">Select an account.</div></div></div>
+          <button id="closePrivateTitleAccessBtn" class="small">Close</button>
+        </div>
+        <div class="update-help">These selections are used when <strong>Allow all titles</strong> is turned off for the account.</div>
+        <div id="privateTitleAccessList" class="private-title-access-list"></div>
+        <div class="cache-actions" style="margin-top:12px">
+          <button id="savePrivateTitleAccessBtn" class="primary">Save title access</button>
+        </div>
+        <div id="privateTitleAccessStatus" class="status"></div>
+      </div>
+    </div>
+  </details>
+
+
   <details id="devicesSection" class="section-anchor collapse-card">
     <summary>
       <div class="section-summary-icon">📱</div>
@@ -1795,6 +1903,7 @@ async function boot() {
     await loadCatalogCache();
     await loadFeatureFlags();
     await loadHomeConfig();
+    await loadPrivateLibrary();
     await loadDevices();
   } catch (e) {
     clearTokens();
@@ -1827,6 +1936,7 @@ $("loginBtn").onclick = async () => {
     await loadCatalogCache();
     await loadFeatureFlags();
     await loadHomeConfig();
+    await loadPrivateLibrary();
     await loadDevices();
 
     setStatus($("loginStatus"), "");
@@ -2866,6 +2976,415 @@ $("reloadHomeConfigBtn")?.addEventListener(
   "click",
   loadHomeConfig
 );
+
+
+// ============================================================
+// PRIVATE LIBRARY
+// ============================================================
+
+let privateLibraryContent = [];
+let privateLibraryAccounts = [];
+let privateEditingContentId = null;
+let privateTitleAccessScope = null;
+let privateTitleAccessAllowed = new Set();
+
+
+function resetPrivateContentForm(){
+  privateEditingContentId = null;
+  $("privateContentFormTitle").textContent = "Add content";
+  $("savePrivateContentBtn").textContent = "Add title";
+  $("cancelPrivateContentEditBtn").classList.add("hidden");
+  $("privateContentTitle").value = "";
+  $("privateContentCategory").value = "Private";
+  $("privateContentVideoUrl").value = "";
+  $("privateContentPosterUrl").value = "";
+  $("privateContentDescription").value = "";
+  $("privateContentCreator").value = "";
+  $("privateContentLicence").value = "";
+  $("privateContentAttribution").value = "";
+  $("privateContentSourceUrl").value = "";
+  $("privateContentSortOrder").value = "100";
+  $("privateContentEnabled").checked = true;
+}
+
+
+function renderPrivateContent(){
+  const host = $("privateContentList");
+  if(!host) return;
+
+  $("privateContentCount").textContent = String(privateLibraryContent.length);
+
+  if(!privateLibraryContent.length){
+    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Add your first direct streaming URL.</div>';
+    renderPrivateTitleAccess();
+    return;
+  }
+
+  host.innerHTML = privateLibraryContent.map(item => `
+    <div class="private-content-card">
+      <div class="private-content-head">
+        <div>
+          <div class="private-content-title">${esc(item.title || "Untitled")}</div>
+          <div class="private-content-meta">
+            ${esc(item.category || "Private")} · Sort ${Number(item.sort_order ?? 100)}<br>
+            ${item.creator ? `Creator: ${esc(item.creator)}<br>` : ""}
+            ${item.licence ? `Licence: ${esc(item.licence)}<br>` : ""}
+            ${esc(item.video_url || "")}
+          </div>
+        </div>
+        <span class="pill ${item.enabled === false ? "disabled" : "enabled"}">${item.enabled === false ? "DISABLED" : "ENABLED"}</span>
+      </div>
+      <div class="device-actions">
+        <button class="small edit-private-content" data-id="${esc(item.id)}">Edit</button>
+        <button class="small danger delete-private-content" data-id="${esc(item.id)}">Delete</button>
+      </div>
+    </div>
+  `).join("");
+
+  document.querySelectorAll(".edit-private-content").forEach(button => {
+    button.onclick = () => editPrivateContent(button.dataset.id);
+  });
+
+  document.querySelectorAll(".delete-private-content").forEach(button => {
+    button.onclick = () => deletePrivateContent(button.dataset.id);
+  });
+
+  renderPrivateTitleAccess();
+}
+
+
+async function loadPrivateContent(){
+  if(!$("privateLibrarySection")) return;
+
+  setStatus($("privateContentStatus"), "Loading library titles...");
+
+  try{
+    const rows = await rpc("panther_admin_list_private_content", {});
+    privateLibraryContent = Array.isArray(rows) ? rows : [];
+    renderPrivateContent();
+    setStatus($("privateContentStatus"), "");
+  }catch(e){
+    privateLibraryContent = [];
+    renderPrivateContent();
+    setStatus(
+      $("privateContentStatus"),
+      "Private Library is not ready yet. Run Panther_Private_Library.txt in Supabase SQL Editor first. " +
+        (e?.message || String(e)),
+      false
+    );
+  }
+}
+
+
+function editPrivateContent(id){
+  const item = privateLibraryContent.find(x => x.id === id);
+  if(!item) return;
+
+  privateEditingContentId = id;
+  $("privateContentFormTitle").textContent = "Edit content";
+  $("savePrivateContentBtn").textContent = "Save changes";
+  $("cancelPrivateContentEditBtn").classList.remove("hidden");
+  $("privateContentTitle").value = item.title || "";
+  $("privateContentCategory").value = item.category || "Private";
+  $("privateContentVideoUrl").value = item.video_url || "";
+  $("privateContentPosterUrl").value = item.poster_url || "";
+  $("privateContentDescription").value = item.description || "";
+  $("privateContentCreator").value = item.creator || "";
+  $("privateContentLicence").value = item.licence || "";
+  $("privateContentAttribution").value = item.attribution || "";
+  $("privateContentSourceUrl").value = item.source_url || "";
+  $("privateContentSortOrder").value = String(item.sort_order ?? 100);
+  $("privateContentEnabled").checked = item.enabled !== false;
+  openSection("privateLibrarySection");
+  setTimeout(() => $("privateContentTitle")?.focus(), 100);
+}
+
+
+async function deletePrivateContent(id){
+  const item = privateLibraryContent.find(x => x.id === id);
+  if(!item) return;
+  if(!confirm(`Delete "${item.title}" from the Private Library?`)) return;
+
+  try{
+    await rpc("panther_admin_delete_private_content", {p_id:id});
+    if(privateEditingContentId === id) resetPrivateContentForm();
+    await loadPrivateContent();
+    setStatus($("privateContentStatus"), "Title deleted.", true);
+  }catch(e){
+    setStatus($("privateContentStatus"), e?.message || String(e), false);
+  }
+}
+
+
+$("savePrivateContentBtn")?.addEventListener("click", async () => {
+  const button = $("savePrivateContentBtn");
+  const title = $("privateContentTitle").value.trim();
+  const videoUrl = $("privateContentVideoUrl").value.trim();
+
+  if(!title){
+    setStatus($("privateContentStatus"), "Enter a title.", false);
+    return;
+  }
+
+  if(!videoUrl){
+    setStatus($("privateContentStatus"), "Enter a direct video URL.", false);
+    return;
+  }
+
+  button.disabled = true;
+  setStatus($("privateContentStatus"), privateEditingContentId ? "Saving title..." : "Adding title...");
+
+  try{
+    await rpc("panther_admin_save_private_content", {
+      p_id: privateEditingContentId || null,
+      p_title: title,
+      p_description: $("privateContentDescription").value.trim(),
+      p_video_url: videoUrl,
+      p_poster_url: $("privateContentPosterUrl").value.trim(),
+      p_category: $("privateContentCategory").value.trim() || "Private",
+      p_creator: $("privateContentCreator").value.trim(),
+      p_licence: $("privateContentLicence").value.trim(),
+      p_attribution: $("privateContentAttribution").value.trim(),
+      p_source_url: $("privateContentSourceUrl").value.trim(),
+      p_enabled: $("privateContentEnabled").checked,
+      p_sort_order: Number.parseInt($("privateContentSortOrder").value || "100",10) || 100
+    });
+
+    resetPrivateContentForm();
+    await loadPrivateContent();
+    setStatus($("privateContentStatus"), "Private Library title saved.", true);
+  }catch(e){
+    setStatus($("privateContentStatus"), e?.message || String(e), false);
+  }finally{
+    button.disabled = false;
+  }
+});
+
+
+$("cancelPrivateContentEditBtn")?.addEventListener("click", () => {
+  resetPrivateContentForm();
+  setStatus($("privateContentStatus"), "");
+});
+
+
+function privateAccountLabel(account){
+  return `${account.service_name || "Unknown service"} · ${account.username || "Unknown user"}`;
+}
+
+
+function renderPrivateAccounts(){
+  const host = $("privateAccountsList");
+  if(!host) return;
+
+  if(!privateLibraryAccounts.length){
+    host.innerHTML = '<div class="empty-note">No registered Panther accounts yet. Open Panther on a logged-in device first.</div>';
+    return;
+  }
+
+  host.innerHTML = privateLibraryAccounts.map(account => {
+    const scope = esc(account.account_scope_id || "");
+    const expiry = toLocalDateTimeValue(account.expires_at);
+
+    return `
+      <div class="private-account-card">
+        <div class="private-account-head">
+          <div>
+            <div class="private-account-title">${esc(privateAccountLabel(account))}</div>
+            <div class="private-account-meta">
+              ${Number(account.device_count || 0)} device${Number(account.device_count || 0) === 1 ? "" : "s"} · Last seen ${esc(formatDeviceLastSeen(account.last_seen_at))}<br>
+              Account ID: ${scope}
+            </div>
+          </div>
+          <span class="pill ${account.enabled === true ? "enabled" : "disabled"}">${account.enabled === true ? "ACCESS ON" : "ACCESS OFF"}</span>
+        </div>
+
+        <div class="private-account-controls">
+          <label class="private-check-card">
+            <input type="checkbox" data-private-enabled="${scope}" ${account.enabled === true ? "checked" : ""}>
+            <span><strong>Private Library access</strong><div class="small-text">Show the library on every registered device using this IPTV account.</div></span>
+          </label>
+
+          <label class="private-check-card">
+            <input type="checkbox" data-private-all="${scope}" ${account.allow_all_content !== false ? "checked" : ""}>
+            <span><strong>Allow all titles</strong><div class="small-text">Turn off to choose individual titles.</div></span>
+          </label>
+
+          <div>
+            <div class="field-label">Set / change PIN</div>
+            <input data-private-pin="${scope}" type="password" inputmode="numeric" maxlength="8" placeholder="${account.pin_required ? "PIN already set — blank keeps it" : "Optional 4–8 digits"}">
+          </div>
+
+          <div>
+            <div class="field-label">Access expires</div>
+            <input data-private-expiry="${scope}" type="datetime-local" value="${esc(expiry)}">
+          </div>
+
+          <label class="private-check-card wide">
+            <input type="checkbox" data-private-clear-pin="${scope}">
+            <span><strong>Remove current PIN</strong><div class="small-text">Check this and Save account access to remove the PIN.</div></span>
+          </label>
+        </div>
+
+        <div class="device-actions">
+          <button class="small primary save-private-account" data-scope="${scope}">Save account access</button>
+          <button class="small manage-private-titles" data-scope="${scope}">Choose individual titles</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  document.querySelectorAll(".save-private-account").forEach(button => {
+    button.onclick = () => savePrivateAccount(button.dataset.scope);
+  });
+
+  document.querySelectorAll(".manage-private-titles").forEach(button => {
+    button.onclick = () => openPrivateTitleAccess(button.dataset.scope);
+  });
+}
+
+
+async function loadPrivateAccounts(){
+  if(!$("privateLibrarySection")) return;
+
+  setStatus($("privateAccountStatus"), "Loading registered accounts...");
+
+  try{
+    const rows = await rpc("panther_admin_list_private_accounts", {});
+    privateLibraryAccounts = Array.isArray(rows) ? rows : [];
+    renderPrivateAccounts();
+    setStatus($("privateAccountStatus"), "");
+  }catch(e){
+    privateLibraryAccounts = [];
+    renderPrivateAccounts();
+    setStatus($("privateAccountStatus"), e?.message || String(e), false);
+  }
+}
+
+
+function privateSelector(prefix,scope){
+  return document.querySelector(`[${prefix}="${scope}"]`);
+}
+
+
+async function savePrivateAccount(scope){
+  const enabled = !!privateSelector("data-private-enabled",scope)?.checked;
+  const allowAll = !!privateSelector("data-private-all",scope)?.checked;
+  const pin = privateSelector("data-private-pin",scope)?.value?.trim() || "";
+  const clearPin = !!privateSelector("data-private-clear-pin",scope)?.checked;
+  const expiryValue = privateSelector("data-private-expiry",scope)?.value || "";
+
+  if(pin && !/^\d{4,8}$/.test(pin)){
+    setStatus($("privateAccountStatus"), "PIN must contain 4–8 digits.", false);
+    return;
+  }
+
+  const expiresAt = expiryValue ? new Date(expiryValue).toISOString() : null;
+
+  setStatus($("privateAccountStatus"), "Saving account access...");
+
+  try{
+    await rpc("panther_admin_set_private_account_access", {
+      p_account_scope_id: scope,
+      p_enabled: enabled,
+      p_pin: pin || null,
+      p_clear_pin: clearPin,
+      p_expires_at: expiresAt,
+      p_allow_all_content: allowAll
+    });
+
+    await loadPrivateAccounts();
+    setStatus($("privateAccountStatus"), "Account access saved. Panther will update the Private Library button next time Extras checks access.", true);
+  }catch(e){
+    setStatus($("privateAccountStatus"), e?.message || String(e), false);
+  }
+}
+
+
+async function openPrivateTitleAccess(scope){
+  privateTitleAccessScope = scope;
+  privateTitleAccessAllowed = new Set();
+
+  const account = privateLibraryAccounts.find(x => x.account_scope_id === scope);
+  $("privateTitleAccessAccount").textContent = account ? privateAccountLabel(account) : scope;
+  $("privateTitleAccessPanel").classList.remove("hidden");
+  setStatus($("privateTitleAccessStatus"), "Loading title access...");
+
+  try{
+    const rows = await rpc("panther_admin_list_private_content_access", {p_account_scope_id:scope});
+    (Array.isArray(rows) ? rows : []).forEach(row => {
+      if(row.allowed === true) privateTitleAccessAllowed.add(row.content_id);
+    });
+    renderPrivateTitleAccess();
+    setStatus($("privateTitleAccessStatus"), "");
+    $("privateTitleAccessPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){
+    renderPrivateTitleAccess();
+    setStatus($("privateTitleAccessStatus"), e?.message || String(e), false);
+  }
+}
+
+
+function renderPrivateTitleAccess(){
+  const host = $("privateTitleAccessList");
+  if(!host || !privateTitleAccessScope) return;
+
+  if(!privateLibraryContent.length){
+    host.innerHTML = '<div class="empty-note">Add Private Library titles first.</div>';
+    return;
+  }
+
+  host.innerHTML = privateLibraryContent.map(item => `
+    <label class="private-title-access-item">
+      <input class="private-title-check" type="checkbox" value="${esc(item.id)}" ${privateTitleAccessAllowed.has(item.id) ? "checked" : ""}>
+      <span><strong>${esc(item.title || "Untitled")}</strong><div class="small-text">${esc(item.category || "Private")}</div></span>
+    </label>
+  `).join("");
+}
+
+
+$("savePrivateTitleAccessBtn")?.addEventListener("click", async () => {
+  if(!privateTitleAccessScope) return;
+
+  const ids = [...document.querySelectorAll(".private-title-check:checked")].map(input => input.value);
+  const button = $("savePrivateTitleAccessBtn");
+  button.disabled = true;
+  setStatus($("privateTitleAccessStatus"), "Saving title access...");
+
+  try{
+    await rpc("panther_admin_set_private_content_access_bulk", {
+      p_account_scope_id: privateTitleAccessScope,
+      p_content_ids: ids
+    });
+
+    privateTitleAccessAllowed = new Set(ids);
+    setStatus($("privateTitleAccessStatus"), `${ids.length} title${ids.length === 1 ? "" : "s"} selected for this account.`, true);
+  }catch(e){
+    setStatus($("privateTitleAccessStatus"), e?.message || String(e), false);
+  }finally{
+    button.disabled = false;
+  }
+});
+
+
+$("closePrivateTitleAccessBtn")?.addEventListener("click", () => {
+  privateTitleAccessScope = null;
+  privateTitleAccessAllowed = new Set();
+  $("privateTitleAccessPanel")?.classList.add("hidden");
+  setStatus($("privateTitleAccessStatus"), "");
+});
+
+
+async function loadPrivateLibrary(){
+  if(!$("privateLibrarySection")) return;
+  await Promise.all([
+    loadPrivateContent(),
+    loadPrivateAccounts()
+  ]);
+}
+
+
+$("reloadPrivateLibraryBtn")?.addEventListener("click", loadPrivateLibrary);
+$("reloadPrivateAccountsBtn")?.addEventListener("click", loadPrivateAccounts);
 
 
 let pantherDevices = [];
@@ -4337,6 +4856,10 @@ $("quickFeatures")?.addEventListener("click", () => openSection("featuresSection
 $("quickHomeScreen")?.addEventListener("click", () => {
   openSection("homeScreenSection");
   loadHomeConfig();
+});
+$("quickPrivateLibrary")?.addEventListener("click", () => {
+  openSection("privateLibrarySection");
+  loadPrivateLibrary();
 });
 $("quickDevices")?.addEventListener("click", () => {
   openSection("devicesSection");
