@@ -1547,6 +1547,57 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 
       <div style="height:14px"></div>
 
+
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left">
+            <div class="section-title-text">
+              <h2>Catalogue import</h2>
+              <div>Import a licensed provider catalogue from CSV or JSON without uploading each title manually.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="private-bulk-grid">
+          <div class="wide">
+            <div class="field-label">Catalogue file</div>
+            <input id="privateCatalogueFile" type="file" accept=".csv,.json,text/csv,application/json">
+            <div class="small-text">Supported: CSV or JSON. JSON may be an array or an object containing an <strong>items</strong> array.</div>
+          </div>
+
+          <div class="wide">
+            <div class="field-label">Or paste CSV / JSON</div>
+            <textarea id="privateCatalogueText" rows="7" placeholder="title,video_url,poster_url,category&#10;Example Title,https://example.com/video.mp4,https://example.com/poster.jpg,Private"></textarea>
+          </div>
+
+          <label class="private-check-card">
+            <input id="privateCatalogueEnabled" type="checkbox" checked>
+            <span><strong>Enable imported titles</strong><div class="small-text">Turn off if you want to review the imported catalogue first.</div></span>
+          </label>
+
+          <label class="private-check-card">
+            <input id="privateCatalogueSkipDuplicates" type="checkbox" checked>
+            <span><strong>Skip duplicate titles</strong><div class="small-text">Existing Private Library titles with the same name will not be added again.</div></span>
+          </label>
+        </div>
+
+        <div class="cache-actions" style="margin-top:12px">
+          <button id="previewPrivateCatalogueBtn">Preview catalogue</button>
+          <button id="importPrivateCatalogueBtn" class="primary">Import catalogue</button>
+          <button id="clearPrivateCatalogueBtn">Clear</button>
+        </div>
+
+        <div id="privateCatalogueStatus" class="status"></div>
+        <div id="privateCatalogueSummary" class="private-bulk-summary">Choose a CSV/JSON file or paste a catalogue to preview it.</div>
+        <div id="privateCatalogueQueue" class="private-bulk-queue"></div>
+
+        <div class="small-text" style="margin-top:10px">
+          Recognised fields: title, video_url, poster_url, category, description, creator, licence, attribution, source_url, enabled and sort_order.
+          Common aliases such as video, url, poster, image and studio are also accepted.
+        </div>
+      </div>
+
+      <div style="height:14px"></div>
       <div class="card-flat">
         <div class="section-heading">
           <div class="section-heading-left">
@@ -3322,6 +3373,504 @@ $("uploadPrivatePosterBtn")?.addEventListener(
   "click",
   uploadSelectedPrivatePoster
 );
+
+
+
+// ============================================================
+// PRIVATE LIBRARY CATALOGUE IMPORT (CSV / JSON)
+// ============================================================
+
+let privateCatalogueQueue = [];
+let privateCatalogueRunning = false;
+
+
+function privateCatalogueNormaliseKey(value){
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^\uFEFF/, "")
+    .replace(/[\s.-]+/g, "_");
+}
+
+
+function privateCatalogueValue(row, aliases, fallback = ""){
+  if(!row || typeof row !== "object") return fallback;
+
+  const keys = Object.keys(row);
+  const normalised = new Map(
+    keys.map(key => [privateCatalogueNormaliseKey(key), key])
+  );
+
+  for(const alias of aliases){
+    const actual = normalised.get(privateCatalogueNormaliseKey(alias));
+    if(actual !== undefined){
+      const value = row[actual];
+      if(value !== undefined && value !== null){
+        return value;
+      }
+    }
+  }
+
+  return fallback;
+}
+
+
+function privateCatalogueBool(value, fallback = true){
+  if(value === undefined || value === null || value === "") return fallback;
+  if(typeof value === "boolean") return value;
+  if(typeof value === "number") return value !== 0;
+
+  const text = String(value).trim().toLowerCase();
+  if(["1","true","yes","y","on","enabled"].includes(text)) return true;
+  if(["0","false","no","n","off","disabled"].includes(text)) return false;
+  return fallback;
+}
+
+
+function parsePrivateCatalogueCsv(text){
+  const source = String(text || "").replace(/^\uFEFF/, "");
+  const rows = [];
+  let row = [];
+  let field = "";
+  let quoted = false;
+
+  for(let i = 0; i < source.length; i++){
+    const ch = source[i];
+
+    if(quoted){
+      if(ch === '"'){
+        if(source[i + 1] === '"'){
+          field += '"';
+          i++;
+        }else{
+          quoted = false;
+        }
+      }else{
+        field += ch;
+      }
+      continue;
+    }
+
+    if(ch === '"'){
+      quoted = true;
+      continue;
+    }
+
+    if(ch === ","){
+      row.push(field);
+      field = "";
+      continue;
+    }
+
+    if(ch === "\r"){
+      if(source[i + 1] === "\n") i++;
+      row.push(field);
+      field = "";
+      if(row.some(value => String(value).trim() !== "")) rows.push(row);
+      row = [];
+      continue;
+    }
+
+    if(ch === "\n"){
+      row.push(field);
+      field = "";
+      if(row.some(value => String(value).trim() !== "")) rows.push(row);
+      row = [];
+      continue;
+    }
+
+    field += ch;
+  }
+
+  row.push(field);
+  if(row.some(value => String(value).trim() !== "")) rows.push(row);
+
+  if(!rows.length) return [];
+
+  const headers = rows[0].map(privateCatalogueNormaliseKey);
+
+  return rows.slice(1).map(values => {
+    const item = {};
+    headers.forEach((header, index) => {
+      if(header) item[header] = values[index] ?? "";
+    });
+    return item;
+  });
+}
+
+
+function parsePrivateCatalogueText(text, filename = ""){
+  const raw = String(text || "").trim();
+  if(!raw) return [];
+
+  const looksJson =
+    /\.json$/i.test(filename) ||
+    raw.startsWith("[") ||
+    raw.startsWith("{");
+
+  if(looksJson){
+    const parsed = JSON.parse(raw);
+    if(Array.isArray(parsed)) return parsed;
+    if(Array.isArray(parsed?.items)) return parsed.items;
+    if(Array.isArray(parsed?.content)) return parsed.content;
+    if(Array.isArray(parsed?.catalogue)) return parsed.catalogue;
+    throw new Error("JSON must be an array, or contain an items/content/catalogue array.");
+  }
+
+  return parsePrivateCatalogueCsv(raw);
+}
+
+
+function normalisePrivateCatalogueRow(row, index){
+  const title = String(
+    privateCatalogueValue(row, ["title","name"], "")
+  ).trim();
+
+  const videoUrl = String(
+    privateCatalogueValue(
+      row,
+      ["video_url","video","stream_url","stream","url","playback_url"],
+      ""
+    )
+  ).trim();
+
+  const posterUrl = String(
+    privateCatalogueValue(
+      row,
+      ["poster_url","poster","image_url","image","thumbnail","thumb"],
+      ""
+    )
+  ).trim();
+
+  const category = String(
+    privateCatalogueValue(row, ["category","genre"], "Private")
+  ).trim() || "Private";
+
+  const description = String(
+    privateCatalogueValue(row, ["description","summary","plot","overview"], "")
+  ).trim();
+
+  const creator = String(
+    privateCatalogueValue(row, ["creator","studio","publisher","provider"], "")
+  ).trim();
+
+  const licence = String(
+    privateCatalogueValue(row, ["licence","license"], "")
+  ).trim();
+
+  const attribution = String(
+    privateCatalogueValue(row, ["attribution","credit","credits"], "")
+  ).trim();
+
+  const sourceUrl = String(
+    privateCatalogueValue(row, ["source_url","source","license_url","licence_url"], "")
+  ).trim();
+
+  const sortRaw = privateCatalogueValue(row, ["sort_order","sort","order"], 100 + index);
+  const parsedSort = Number.parseInt(String(sortRaw), 10);
+
+  const rowEnabled = privateCatalogueBool(
+    privateCatalogueValue(row, ["enabled","active"], ""),
+    true
+  );
+
+  return {
+    index,
+    title,
+    videoUrl,
+    posterUrl,
+    category,
+    description,
+    creator,
+    licence,
+    attribution,
+    sourceUrl,
+    sortOrder: Number.isFinite(parsedSort) ? parsedSort : 100 + index,
+    rowEnabled,
+    duplicate: false,
+    skipped: false,
+    state: "Ready",
+    stateClass: "",
+    error: ""
+  };
+}
+
+
+async function readPrivateCatalogueInput(){
+  const file = $("privateCatalogueFile")?.files?.[0] || null;
+  const pasted = $("privateCatalogueText")?.value || "";
+
+  if(file){
+    return {
+      text: await file.text(),
+      filename: file.name || ""
+    };
+  }
+
+  if(String(pasted).trim()){
+    return {
+      text: pasted,
+      filename: ""
+    };
+  }
+
+  throw new Error("Choose a CSV/JSON file or paste catalogue data first.");
+}
+
+
+async function buildPrivateCatalogueQueue(){
+  if(privateCatalogueRunning) return;
+
+  try{
+    setStatus($("privateCatalogueStatus"), "Reading catalogue...");
+
+    const input = await readPrivateCatalogueInput();
+    const rows = parsePrivateCatalogueText(input.text, input.filename);
+
+    if(!rows.length){
+      throw new Error("No catalogue rows were found.");
+    }
+
+    const existingTitles = new Set(
+      privateLibraryContent
+        .map(item => String(item?.title || "").trim().toLowerCase())
+        .filter(Boolean)
+    );
+
+    const skipDuplicates =
+      $("privateCatalogueSkipDuplicates")?.checked !== false;
+
+    privateCatalogueQueue = rows.map((row, index) => {
+      const item = normalisePrivateCatalogueRow(row, index);
+
+      if(!item.title){
+        item.state = "Invalid";
+        item.stateClass = "fail";
+        item.error = "Missing title";
+        return item;
+      }
+
+      if(!item.videoUrl){
+        item.state = "Invalid";
+        item.stateClass = "fail";
+        item.error = "Missing video URL";
+        return item;
+      }
+
+      item.duplicate =
+        existingTitles.has(item.title.toLowerCase());
+
+      if(item.duplicate && skipDuplicates){
+        item.skipped = true;
+        item.state = "Skipped duplicate";
+        item.stateClass = "fail";
+      }
+
+      return item;
+    });
+
+    renderPrivateCatalogueQueue();
+
+    const valid = privateCatalogueQueue.filter(
+      item => item.title && item.videoUrl && !item.skipped
+    ).length;
+
+    setStatus(
+      $("privateCatalogueStatus"),
+      `${privateCatalogueQueue.length} row${privateCatalogueQueue.length === 1 ? "" : "s"} found · ${valid} ready to import.`,
+      true
+    );
+
+  }catch(e){
+    privateCatalogueQueue = [];
+    renderPrivateCatalogueQueue();
+    setStatus(
+      $("privateCatalogueStatus"),
+      e?.message || String(e),
+      false
+    );
+  }
+}
+
+
+function renderPrivateCatalogueQueue(){
+  const host = $("privateCatalogueQueue");
+  const summary = $("privateCatalogueSummary");
+  if(!host || !summary) return;
+
+  if(!privateCatalogueQueue.length){
+    host.innerHTML = "";
+    summary.textContent =
+      "Choose a CSV/JSON file or paste a catalogue to preview it.";
+    return;
+  }
+
+  const ready = privateCatalogueQueue.filter(
+    item => item.title && item.videoUrl && !item.skipped && item.state !== "Invalid"
+  ).length;
+
+  const duplicates = privateCatalogueQueue.filter(item => item.duplicate).length;
+  const invalid = privateCatalogueQueue.filter(
+    item => !item.title || !item.videoUrl
+  ).length;
+
+  summary.textContent =
+    `${privateCatalogueQueue.length} row${privateCatalogueQueue.length === 1 ? "" : "s"} · ` +
+    `${ready} ready · ${duplicates} duplicate${duplicates === 1 ? "" : "s"} · ${invalid} invalid`;
+
+  host.innerHTML = privateCatalogueQueue.map((item, i) => `
+    <div class="private-bulk-row">
+      <div>
+        <div class="private-bulk-title">${esc(item.title || `Row ${i + 1}`)}</div>
+        <div class="private-bulk-meta">
+          Category: ${esc(item.category || "Private")}
+          ${item.videoUrl ? `<br>Video: ${esc(item.videoUrl)}` : `<br>Missing video URL`}
+          ${item.posterUrl ? `<br>Poster: ${esc(item.posterUrl)}` : ""}
+          ${item.creator ? `<br>Creator/studio: ${esc(item.creator)}` : ""}
+          ${item.duplicate ? `<br>Title already exists in library` : ""}
+          ${item.error ? `<br>${esc(item.error)}` : ""}
+        </div>
+      </div>
+      <div id="privateCatalogueState${i}" class="private-bulk-state ${esc(item.stateClass || "")}">
+        ${esc(item.state || "Ready")}
+      </div>
+    </div>
+  `).join("");
+}
+
+
+function updatePrivateCatalogueItem(index, state, stateClass = "", error = ""){
+  const item = privateCatalogueQueue[index];
+  if(!item) return;
+
+  item.state = state;
+  item.stateClass = stateClass;
+  item.error = error || "";
+  renderPrivateCatalogueQueue();
+}
+
+
+function clearPrivateCatalogue(){
+  if(privateCatalogueRunning) return;
+
+  privateCatalogueQueue = [];
+  if($("privateCatalogueFile")) $("privateCatalogueFile").value = "";
+  if($("privateCatalogueText")) $("privateCatalogueText").value = "";
+
+  setStatus($("privateCatalogueStatus"), "");
+  renderPrivateCatalogueQueue();
+}
+
+
+async function importPrivateCatalogue(){
+  if(privateCatalogueRunning) return;
+
+  await buildPrivateCatalogueQueue();
+
+  if(!privateCatalogueQueue.length) return;
+
+  const importButton = $("importPrivateCatalogueBtn");
+  const previewButton = $("previewPrivateCatalogueBtn");
+  const clearButton = $("clearPrivateCatalogueBtn");
+
+  privateCatalogueRunning = true;
+  if(importButton) importButton.disabled = true;
+  if(previewButton) previewButton.disabled = true;
+  if(clearButton) clearButton.disabled = true;
+
+  const globalEnabled =
+    $("privateCatalogueEnabled")?.checked !== false;
+
+  let added = 0;
+  let skipped = 0;
+  let failed = 0;
+  let invalid = 0;
+
+  try{
+    for(let i = 0; i < privateCatalogueQueue.length; i++){
+      const item = privateCatalogueQueue[i];
+
+      if(!item.title || !item.videoUrl){
+        invalid++;
+        updatePrivateCatalogueItem(
+          i,
+          "Invalid",
+          "fail",
+          item.error || "Title and video URL are required"
+        );
+        continue;
+      }
+
+      if(item.skipped){
+        skipped++;
+        updatePrivateCatalogueItem(i, "Skipped duplicate", "fail");
+        continue;
+      }
+
+      try{
+        setStatus(
+          $("privateCatalogueStatus"),
+          `Importing ${i + 1} of ${privateCatalogueQueue.length}: ${item.title}`
+        );
+
+        updatePrivateCatalogueItem(i, "Saving…", "work");
+
+        await rpc("panther_admin_save_private_content", {
+          p_id: null,
+          p_title: item.title,
+          p_description: item.description,
+          p_video_url: item.videoUrl,
+          p_poster_url: item.posterUrl,
+          p_category: item.category || "Private",
+          p_creator: item.creator,
+          p_licence: item.licence,
+          p_attribution: item.attribution,
+          p_source_url: item.sourceUrl,
+          p_enabled: globalEnabled && item.rowEnabled,
+          p_sort_order: item.sortOrder
+        });
+
+        added++;
+        updatePrivateCatalogueItem(i, "Added", "ok");
+
+      }catch(e){
+        failed++;
+        updatePrivateCatalogueItem(
+          i,
+          "Failed",
+          "fail",
+          e?.message || String(e)
+        );
+      }
+    }
+
+    await loadPrivateContent();
+
+    const parts = [`${added} added`];
+    if(skipped) parts.push(`${skipped} skipped`);
+    if(invalid) parts.push(`${invalid} invalid`);
+    if(failed) parts.push(`${failed} failed`);
+
+    setStatus(
+      $("privateCatalogueStatus"),
+      `Catalogue import finished: ${parts.join(" · ")}.`,
+      failed === 0
+    );
+
+  }finally{
+    privateCatalogueRunning = false;
+    if(importButton) importButton.disabled = false;
+    if(previewButton) previewButton.disabled = false;
+    if(clearButton) clearButton.disabled = false;
+  }
+}
+
+
+$("privateCatalogueFile")?.addEventListener("change", buildPrivateCatalogueQueue);
+$("privateCatalogueSkipDuplicates")?.addEventListener("change", buildPrivateCatalogueQueue);
+$("previewPrivateCatalogueBtn")?.addEventListener("click", buildPrivateCatalogueQueue);
+$("importPrivateCatalogueBtn")?.addEventListener("click", importPrivateCatalogue);
+$("clearPrivateCatalogueBtn")?.addEventListener("click", clearPrivateCatalogue);
 
 
 // ============================================================
