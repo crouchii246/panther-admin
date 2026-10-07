@@ -1129,6 +1129,31 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         </label>
 
         <div>
+          <div class="field-label">Theme intensity</div>
+          <select id="seasonalThemeIntensity">
+            <option value="subtle">Subtle</option>
+            <option value="full">Full</option>
+          </select>
+          <div class="update-help">Full makes the Home background and header more strongly themed.</div>
+        </div>
+
+        <label class="cache-switch-card">
+          <input id="seasonalApplyButtonColors" type="checkbox">
+          <span>
+            <span class="cache-switch-title">Apply seasonal colours to Home buttons</span>
+            <div class="cache-switch-help">Recolour Live TV, Movies, Series, Catch Up, Continue Watching, Extras and Settings while the theme is active.</div>
+          </span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="seasonalDecorateHeader" type="checkbox" checked>
+          <span>
+            <span class="cache-switch-title">Decorate Panther header</span>
+            <div class="cache-switch-help">In Full mode the header gets a seasonal gradient and a small seasonal badge beside the Panther logo.</div>
+          </span>
+        </label>
+
+        <div>
           <div class="field-label">Start date & time</div>
           <input id="seasonalStartAt" type="datetime-local">
         </div>
@@ -3666,6 +3691,9 @@ function seasonalDefaults(){
     secondary_color: "#0A7A3D",
     background_url: "",
     show_banner: true,
+    theme_intensity: "subtle",
+    apply_button_colors: false,
+    decorate_header: true,
     start_at: null,
     end_at: null
   };
@@ -3734,6 +3762,9 @@ function seasonalConfigFromForm(){
     secondary_color: ($("seasonalSecondaryColor")?.value || "#101828").toUpperCase(),
     background_url: ($("seasonalBackgroundUrl")?.value || "").trim(),
     show_banner: $("seasonalShowBanner")?.checked !== false,
+    theme_intensity: $("seasonalThemeIntensity")?.value || "subtle",
+    apply_button_colors: $("seasonalApplyButtonColors")?.checked === true,
+    decorate_header: $("seasonalDecorateHeader")?.checked !== false,
     start_at: seasonalLocalInputToIso($("seasonalStartAt")?.value || ""),
     end_at: seasonalLocalInputToIso($("seasonalEndAt")?.value || "")
   };
@@ -3755,6 +3786,9 @@ function applySeasonalConfigToForm(config){
   $("seasonalSecondaryColor").value = value.secondary_color || "#101828";
   $("seasonalBackgroundUrl").value = value.background_url || "";
   $("seasonalShowBanner").checked = value.show_banner !== false;
+  $("seasonalThemeIntensity").value = value.theme_intensity || "subtle";
+  $("seasonalApplyButtonColors").checked = value.apply_button_colors === true;
+  $("seasonalDecorateHeader").checked = value.decorate_header !== false;
   $("seasonalStartAt").value = seasonalIsoToLocalInput(value.start_at);
   $("seasonalEndAt").value = seasonalIsoToLocalInput(value.end_at);
 
@@ -3815,6 +3849,16 @@ function updateSeasonalPreview(){
   }
 
   $("seasonalPreviewSchedule").textContent = schedule;
+
+  preview.style.boxShadow =
+    config.theme_intensity === "full"
+      ? `inset 0 0 0 2px ${accent}, 0 14px 34px rgba(0,0,0,.34)`
+      : `inset 0 0 0 1px rgba(255,255,255,.10)`;
+
+  card.style.opacity =
+    config.theme_intensity === "full"
+      ? "1"
+      : ".90";
 }
 
 
@@ -3885,6 +3929,9 @@ async function loadSeasonalTheme(){
       "secondary_color",
       "background_url",
       "show_banner",
+      "theme_intensity",
+      "apply_button_colors",
+      "decorate_header",
       "start_at",
       "end_at",
       "updated_at"
@@ -3956,6 +4003,9 @@ async function saveSeasonalTheme(){
         p_secondary_color: config.secondary_color,
         p_background_url: config.background_url,
         p_show_banner: config.show_banner,
+        p_theme_intensity: config.theme_intensity,
+        p_apply_button_colors: config.apply_button_colors,
+        p_decorate_header: config.decorate_header,
         p_start_at: config.start_at,
         p_end_at: config.end_at
       }
@@ -3992,6 +4042,9 @@ $("seasonalThemeKey")?.addEventListener(
   "seasonalEnabled",
   "seasonalForceActive",
   "seasonalShowBanner",
+  "seasonalThemeIntensity",
+  "seasonalApplyButtonColors",
+  "seasonalDecorateHeader",
   "seasonalStartAt",
   "seasonalEndAt",
   "seasonalTitle",
@@ -6956,4 +7009,4 @@ boot();
 </script>
 
 </body>
-          </html>
+                                                              </html>
