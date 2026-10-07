@@ -845,6 +845,58 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   .seasonal-grid{grid-template-columns:1fr}
 }
 
+
+/* ===== Remote App Settings ===== */
+
+.remote-settings-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.remote-settings-grid .wide{
+  grid-column:1 / -1;
+}
+
+.remote-setting-card{
+  background:#101722;
+  border:1px solid #2d3a52;
+  border-radius:14px;
+  padding:14px;
+}
+
+.remote-setting-help{
+  margin-top:6px;
+  color:#93a3bd;
+  font-size:11px;
+  line-height:1.45;
+}
+
+.remote-target-summary{
+  background:#0b111c;
+  border:1px solid #2d3a52;
+  border-radius:14px;
+  padding:14px;
+  color:#cbd5e1;
+  line-height:1.55;
+}
+
+.remote-managed-count{
+  display:inline-flex;
+  margin-top:9px;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#172238;
+  border:1px solid #3e5276;
+  color:#d9e8ff;
+  font-size:11px;
+  font-weight:800;
+}
+
+@media (max-width:760px){
+  .remote-settings-grid{grid-template-columns:1fr}
+}
+
 </style>
 
 </head>
@@ -869,6 +921,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#catalogCacheSection">Cache</a>
       <a href="#featuresSection">Features</a>
       <a href="#homeScreenSection">Home Screen</a>
+      <a href="#remoteAppSettingsSection">Remote Settings</a>
       <a href="#seasonalThemesSection">Seasonal Themes</a>
       <a href="#privateLibrarySection">Private Library</a>
       <a href="#devicesSection">Devices</a>
@@ -936,6 +989,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickCatalogCache" class="quick-action">⚡ Catalog cache</button>
     <button id="quickFeatures" class="quick-action">⚙ App Features</button>
     <button id="quickHomeScreen" class="quick-action">🏠 Home Screen</button>
+    <button id="quickRemoteAppSettings" class="quick-action">🎛️ Remote Settings</button>
     <button id="quickSeasonalThemes" class="quick-action">🎄 Seasonal Themes</button>
     <button id="quickPrivateLibrary" class="quick-action">🔒 Private Library</button>
     <button id="quickDevices" class="quick-action">📱 Devices</button>
@@ -1066,6 +1120,189 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     </div>
   </details>
 
+
+
+
+  <details id="remoteAppSettingsSection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left">
+        <div class="section-icon">🎛️</div>
+        <div class="section-title-text">
+          <h2>Remote App Settings</h2>
+          <div>Push important Panther preferences globally or to one IPTV account.</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+
+    <div class="collapse-content">
+
+      <div class="cache-explainer">
+        <strong>Global</strong> values can apply to every Panther account.
+        Account-specific values override Global values. Leave a setting as
+        <strong>Use local setting</strong> when Panther should not control it remotely.
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="remote-settings-grid">
+
+        <div class="wide">
+          <div class="field-label">Target</div>
+          <select id="remoteSettingsTarget">
+            <option value="__global__">🌍 Global — all Panther accounts</option>
+          </select>
+          <div id="remoteSettingsTargetInfo" class="remote-setting-help">
+            Loading registered Panther accounts…
+          </div>
+        </div>
+
+        <label class="cache-switch-card">
+          <input id="remoteSettingsEnabled" type="checkbox">
+          <span>
+            <span class="cache-switch-title">Enable this remote settings target</span>
+            <div class="cache-switch-help">
+              When disabled, this target contributes no remote values.
+            </div>
+          </span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="remoteSettingsLock" type="checkbox" checked>
+          <span>
+            <span class="cache-switch-title">Lock managed settings in Panther</span>
+            <div class="cache-switch-help">
+              ON = Panther Admin enforces the selected values. OFF = push once, then the user can change them locally.
+            </div>
+          </span>
+        </label>
+
+        <label id="remoteSettingsIgnoreGlobalCard" class="cache-switch-card wide" style="display:none">
+          <input id="remoteSettingsIgnoreGlobal" type="checkbox">
+          <span>
+            <span class="cache-switch-title">Ignore Global settings for this account</span>
+            <div class="cache-switch-help">
+              The selected account will use only its own remote values plus any remaining local settings.
+            </div>
+          </span>
+        </label>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Live TV layout</div>
+          <select id="remoteLiveTvViewMode">
+            <option value="__local__">Use local setting</option>
+            <option value="smarters">Panel View</option>
+            <option value="card">Card View</option>
+            <option value="list">List View</option>
+            <option value="epg">EPG View</option>
+          </select>
+          <div class="remote-setting-help">
+            Controls the Live TV category/channel presentation.
+          </div>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Movies layout</div>
+          <select id="remoteMovieViewMode">
+            <option value="__local__">Use local setting</option>
+            <option value="card">Card View</option>
+            <option value="list">List View</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Series layout</div>
+          <select id="remoteSeriesViewMode">
+            <option value="__local__">Use local setting</option>
+            <option value="card">Card View</option>
+            <option value="list">List View</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Firestick Up / Down channel switching</div>
+          <select id="remoteSwipeNavigation">
+            <option value="__local__">Use local setting</option>
+            <option value="true">On</option>
+            <option value="false">Off</option>
+          </select>
+          <div class="remote-setting-help">
+            This is Panther's Swipe / Remote Navigation setting used for Up/Down Live TV channel changes.
+          </div>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Play next episode prompt</div>
+          <select id="remoteAutoPlayNext">
+            <option value="__local__">Use local setting</option>
+            <option value="true">On</option>
+            <option value="false">Off</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Show EPG in channel list</div>
+          <select id="remoteShowEpg">
+            <option value="__local__">Use local setting</option>
+            <option value="true">On</option>
+            <option value="false">Off</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Show Continue Watching</div>
+          <select id="remoteShowContinue">
+            <option value="__local__">Use local setting</option>
+            <option value="true">On</option>
+            <option value="false">Off</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Default Live TV player</div>
+          <select id="remoteDefaultPlayerLive">
+            <option value="__local__">Use local setting</option>
+            <option value="panther">Panther Player</option>
+            <option value="external:org.videolan.vlc">VLC</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Default Movies player</div>
+          <select id="remoteDefaultPlayerMovies">
+            <option value="__local__">Use local setting</option>
+            <option value="panther">Panther Player</option>
+            <option value="external:org.videolan.vlc">VLC</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Default Series player</div>
+          <select id="remoteDefaultPlayerSeries">
+            <option value="__local__">Use local setting</option>
+            <option value="panther">Panther Player</option>
+            <option value="external:org.videolan.vlc">VLC</option>
+          </select>
+        </div>
+
+        <div class="wide">
+          <div id="remoteSettingsSummary" class="remote-target-summary">
+            Select a target to view its settings.
+          </div>
+        </div>
+
+        <div class="wide cache-actions">
+          <button id="saveRemoteSettingsBtn" class="primary">Save remote settings</button>
+          <button id="reloadRemoteSettingsBtn">Reload</button>
+          <button id="resetRemoteSettingsBtn">Reset target</button>
+        </div>
+
+      </div>
+
+      <div id="remoteSettingsStatus" class="status"></div>
+
+    </div>
+  </details>
 
 
   <details id="seasonalThemesSection" class="section-anchor collapse-card">
@@ -2352,6 +2589,7 @@ async function boot() {
     await loadCatalogCache();
     await loadFeatureFlags();
     await loadHomeConfig();
+    await loadRemoteSettingsPanel();
     await loadSeasonalTheme();
     await loadPrivateLibrary();
     await loadDevices();
@@ -2386,6 +2624,7 @@ $("loginBtn").onclick = async () => {
     await loadCatalogCache();
     await loadFeatureFlags();
     await loadHomeConfig();
+    await loadRemoteSettingsPanel();
     await loadSeasonalTheme();
     await loadPrivateLibrary();
     await loadDevices();
@@ -3637,6 +3876,520 @@ $("uploadPrivatePosterBtn")?.addEventListener(
   uploadSelectedPrivatePoster
 );
 
+
+
+
+
+// ============================================================
+// REMOTE APP SETTINGS
+// ============================================================
+
+let remoteSettingsAccounts = [];
+
+
+function remoteSettingsTargetAccountScope(){
+  const value = $("remoteSettingsTarget")?.value || "__global__";
+  return value === "__global__" ? null : value;
+}
+
+
+function remoteNullableString(value){
+  const text = String(value ?? "").trim();
+  if(!text || text === "__local__") return null;
+  return text;
+}
+
+
+function remoteNullableBoolean(value){
+  const text = String(value ?? "").trim();
+  if(!text || text === "__local__") return null;
+  return text === "true";
+}
+
+
+function remoteSelectValue(value){
+  return value === null || value === undefined || value === ""
+    ? "__local__"
+    : String(value);
+}
+
+
+function remoteBooleanSelectValue(value){
+  if(value === null || value === undefined) return "__local__";
+  return value === true ? "true" : "false";
+}
+
+
+function remoteSettingsLabelForAccount(account){
+  if(!account) return "Unknown account";
+
+  const service = String(account.service_name || "").trim();
+  const username = String(account.username || "").trim();
+
+  if(service && username) return `${service} — ${username}`;
+  if(username) return username;
+  if(service) return service;
+
+  return account.account_scope_id || "Unknown account";
+}
+
+
+function remoteSettingsManagedCount(config){
+  const values = [
+    config?.live_tv_view_mode,
+    config?.movie_view_mode,
+    config?.series_view_mode,
+    config?.swipe_remote_navigation,
+    config?.auto_play_next_episode,
+    config?.show_epg_channel_list,
+    config?.show_continue_watching,
+    config?.default_player_live,
+    config?.default_player_movies,
+    config?.default_player_series
+  ];
+
+  return values.filter(value => value !== null && value !== undefined && value !== "").length;
+}
+
+
+function remoteSettingsConfigFromForm(){
+  return {
+    enabled: $("remoteSettingsEnabled")?.checked === true,
+    ignore_global: $("remoteSettingsIgnoreGlobal")?.checked === true,
+    lock_settings: $("remoteSettingsLock")?.checked === true,
+
+    live_tv_view_mode:
+      remoteNullableString($("remoteLiveTvViewMode")?.value),
+
+    movie_view_mode:
+      remoteNullableString($("remoteMovieViewMode")?.value),
+
+    series_view_mode:
+      remoteNullableString($("remoteSeriesViewMode")?.value),
+
+    swipe_remote_navigation:
+      remoteNullableBoolean($("remoteSwipeNavigation")?.value),
+
+    auto_play_next_episode:
+      remoteNullableBoolean($("remoteAutoPlayNext")?.value),
+
+    show_epg_channel_list:
+      remoteNullableBoolean($("remoteShowEpg")?.value),
+
+    show_continue_watching:
+      remoteNullableBoolean($("remoteShowContinue")?.value),
+
+    default_player_live:
+      remoteNullableString($("remoteDefaultPlayerLive")?.value),
+
+    default_player_movies:
+      remoteNullableString($("remoteDefaultPlayerMovies")?.value),
+
+    default_player_series:
+      remoteNullableString($("remoteDefaultPlayerSeries")?.value)
+  };
+}
+
+
+function applyRemoteSettingsToForm(config){
+  const value = config || {};
+
+  $("remoteSettingsEnabled").checked = value.enabled === true;
+  $("remoteSettingsIgnoreGlobal").checked = value.ignore_global === true;
+  $("remoteSettingsLock").checked = value.lock_settings !== false;
+
+  $("remoteLiveTvViewMode").value =
+    remoteSelectValue(value.live_tv_view_mode);
+
+  $("remoteMovieViewMode").value =
+    remoteSelectValue(value.movie_view_mode);
+
+  $("remoteSeriesViewMode").value =
+    remoteSelectValue(value.series_view_mode);
+
+  $("remoteSwipeNavigation").value =
+    remoteBooleanSelectValue(value.swipe_remote_navigation);
+
+  $("remoteAutoPlayNext").value =
+    remoteBooleanSelectValue(value.auto_play_next_episode);
+
+  $("remoteShowEpg").value =
+    remoteBooleanSelectValue(value.show_epg_channel_list);
+
+  $("remoteShowContinue").value =
+    remoteBooleanSelectValue(value.show_continue_watching);
+
+  $("remoteDefaultPlayerLive").value =
+    remoteSelectValue(value.default_player_live);
+
+  $("remoteDefaultPlayerMovies").value =
+    remoteSelectValue(value.default_player_movies);
+
+  $("remoteDefaultPlayerSeries").value =
+    remoteSelectValue(value.default_player_series);
+
+  updateRemoteSettingsSummary(value);
+}
+
+
+function updateRemoteSettingsTargetUi(){
+  const accountScopeId = remoteSettingsTargetAccountScope();
+  const isGlobal = accountScopeId === null;
+
+  $("remoteSettingsIgnoreGlobalCard").style.display =
+    isGlobal ? "none" : "";
+
+  if(isGlobal){
+    $("remoteSettingsTargetInfo").textContent =
+      "Global values are inherited by all accounts unless an account override replaces them or ignores Global.";
+    return;
+  }
+
+  const account =
+    remoteSettingsAccounts.find(
+      item => item.account_scope_id === accountScopeId
+    );
+
+  if(!account){
+    $("remoteSettingsTargetInfo").textContent =
+      `Account scope: ${accountScopeId}`;
+    return;
+  }
+
+  const deviceCount = Number(account.device_count || 0);
+  const overrideText = account.has_override
+    ? (
+        account.override_enabled
+          ? "Account override exists and is enabled"
+          : "Account override exists but is disabled"
+      )
+    : "No account override saved yet";
+
+  $("remoteSettingsTargetInfo").textContent =
+    `${remoteSettingsLabelForAccount(account)} · ${deviceCount} device${deviceCount === 1 ? "" : "s"} · ${overrideText}`;
+}
+
+
+function updateRemoteSettingsSummary(config){
+  const host = $("remoteSettingsSummary");
+  if(!host) return;
+
+  const targetAccountScopeId = remoteSettingsTargetAccountScope();
+  const isGlobal = targetAccountScopeId === null;
+  const managedCount = remoteSettingsManagedCount(config);
+
+  let title = "🌍 Global";
+  if(!isGlobal){
+    const account =
+      remoteSettingsAccounts.find(
+        item => item.account_scope_id === targetAccountScopeId
+      );
+
+    title =
+      `👤 ${remoteSettingsLabelForAccount(account)}`;
+  }
+
+  const enabledText =
+    config?.enabled === true ? "Enabled" : "Disabled";
+
+  const behaviourText =
+    config?.lock_settings === false
+      ? "Push once — user can change locally afterwards"
+      : "Locked — Panther Admin enforces managed values";
+
+  const inheritedText =
+    !isGlobal && config?.ignore_global === true
+      ? "Global settings ignored"
+      : (
+          !isGlobal
+            ? "Inherits Global values where this override is Local"
+            : "Applies to accounts unless overridden"
+        );
+
+  host.innerHTML =
+    `<strong>${escapeHtml(title)}</strong><br>` +
+    `${escapeHtml(enabledText)} · ${escapeHtml(behaviourText)}<br>` +
+    `${escapeHtml(inheritedText)}<br>` +
+    `<span class="remote-managed-count">${managedCount} setting${managedCount === 1 ? "" : "s"} configured on this target</span>`;
+}
+
+
+async function loadRemoteSettingsAccounts(){
+  const rows =
+    await rpc(
+      "panther_admin_list_remote_setting_accounts",
+      {}
+    );
+
+  remoteSettingsAccounts =
+    Array.isArray(rows) ? rows : [];
+
+  const target = $("remoteSettingsTarget");
+  const previous = target.value || "__global__";
+
+  target.innerHTML =
+    `<option value="__global__">🌍 Global — all Panther accounts</option>`;
+
+  remoteSettingsAccounts.forEach(account => {
+    const option = document.createElement("option");
+    option.value = account.account_scope_id;
+    option.textContent =
+      `👤 ${remoteSettingsLabelForAccount(account)} (${Number(account.device_count || 0)} device${Number(account.device_count || 0) === 1 ? "" : "s"})`;
+    target.appendChild(option);
+  });
+
+  if(
+    previous === "__global__" ||
+    remoteSettingsAccounts.some(
+      item => item.account_scope_id === previous
+    )
+  ){
+    target.value = previous;
+  }
+
+  updateRemoteSettingsTargetUi();
+}
+
+
+async function loadRemoteSettingsForTarget(){
+  const accountScopeId =
+    remoteSettingsTargetAccountScope();
+
+  setStatus(
+    $("remoteSettingsStatus"),
+    "Loading remote settings..."
+  );
+
+  try{
+    const result =
+      await rpc(
+        "panther_admin_get_remote_app_settings",
+        {
+          p_account_scope_id: accountScopeId
+        }
+      );
+
+    applyRemoteSettingsToForm(
+      result || {}
+    );
+
+    updateRemoteSettingsTargetUi();
+
+    setStatus(
+      $("remoteSettingsStatus"),
+      ""
+    );
+
+  }catch(e){
+    setStatus(
+      $("remoteSettingsStatus"),
+      e?.message || String(e),
+      false
+    );
+  }
+}
+
+
+async function loadRemoteSettingsPanel(){
+  if(!$("remoteAppSettingsSection")) return;
+
+  try{
+    await loadRemoteSettingsAccounts();
+    await loadRemoteSettingsForTarget();
+
+  }catch(e){
+    setStatus(
+      $("remoteSettingsStatus"),
+      "Remote App Settings is not ready yet. Run Panther_Remote_App_Settings_V1.txt in Supabase first. " +
+        (e?.message || String(e)),
+      false
+    );
+  }
+}
+
+
+async function saveRemoteSettings(){
+  const button = $("saveRemoteSettingsBtn");
+  const accountScopeId =
+    remoteSettingsTargetAccountScope();
+
+  try{
+    button.disabled = true;
+
+    const config =
+      remoteSettingsConfigFromForm();
+
+    setStatus(
+      $("remoteSettingsStatus"),
+      "Saving remote settings..."
+    );
+
+    await rpc(
+      "panther_admin_save_remote_app_settings",
+      {
+        p_account_scope_id: accountScopeId,
+        p_enabled: config.enabled,
+        p_ignore_global:
+          accountScopeId === null
+            ? false
+            : config.ignore_global,
+        p_lock_settings: config.lock_settings,
+        p_live_tv_view_mode: config.live_tv_view_mode,
+        p_movie_view_mode: config.movie_view_mode,
+        p_series_view_mode: config.series_view_mode,
+        p_swipe_remote_navigation: config.swipe_remote_navigation,
+        p_auto_play_next_episode: config.auto_play_next_episode,
+        p_show_epg_channel_list: config.show_epg_channel_list,
+        p_show_continue_watching: config.show_continue_watching,
+        p_default_player_live: config.default_player_live,
+        p_default_player_movies: config.default_player_movies,
+        p_default_player_series: config.default_player_series
+      }
+    );
+
+    setStatus(
+      $("remoteSettingsStatus"),
+      accountScopeId === null
+        ? "Global remote settings saved."
+        : "Account remote settings saved.",
+      true
+    );
+
+    await loadRemoteSettingsAccounts();
+    await loadRemoteSettingsForTarget();
+
+  }catch(e){
+    setStatus(
+      $("remoteSettingsStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+async function resetRemoteSettingsTarget(){
+  const accountScopeId =
+    remoteSettingsTargetAccountScope();
+
+  try{
+    $("resetRemoteSettingsBtn").disabled = true;
+
+    if(accountScopeId === null){
+      await rpc(
+        "panther_admin_save_remote_app_settings",
+        {
+          p_account_scope_id: null,
+          p_enabled: false,
+          p_ignore_global: false,
+          p_lock_settings: true,
+          p_live_tv_view_mode: null,
+          p_movie_view_mode: null,
+          p_series_view_mode: null,
+          p_swipe_remote_navigation: null,
+          p_auto_play_next_episode: null,
+          p_show_epg_channel_list: null,
+          p_show_continue_watching: null,
+          p_default_player_live: null,
+          p_default_player_movies: null,
+          p_default_player_series: null
+        }
+      );
+
+      setStatus(
+        $("remoteSettingsStatus"),
+        "Global remote settings reset to local-device control.",
+        true
+      );
+
+    }else{
+      await rpc(
+        "panther_admin_delete_remote_app_settings",
+        {
+          p_account_scope_id: accountScopeId
+        }
+      );
+
+      setStatus(
+        $("remoteSettingsStatus"),
+        "Account override removed. It will inherit Global settings again.",
+        true
+      );
+    }
+
+    await loadRemoteSettingsAccounts();
+    await loadRemoteSettingsForTarget();
+
+  }catch(e){
+    setStatus(
+      $("remoteSettingsStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    $("resetRemoteSettingsBtn").disabled = false;
+  }
+}
+
+
+$("remoteSettingsTarget")?.addEventListener(
+  "change",
+  async () => {
+    updateRemoteSettingsTargetUi();
+    await loadRemoteSettingsForTarget();
+  }
+);
+
+
+[
+  "remoteSettingsEnabled",
+  "remoteSettingsLock",
+  "remoteSettingsIgnoreGlobal",
+  "remoteLiveTvViewMode",
+  "remoteMovieViewMode",
+  "remoteSeriesViewMode",
+  "remoteSwipeNavigation",
+  "remoteAutoPlayNext",
+  "remoteShowEpg",
+  "remoteShowContinue",
+  "remoteDefaultPlayerLive",
+  "remoteDefaultPlayerMovies",
+  "remoteDefaultPlayerSeries"
+].forEach(id => {
+  $(id)?.addEventListener(
+    "change",
+    () => {
+      try{
+        updateRemoteSettingsSummary(
+          remoteSettingsConfigFromForm()
+        );
+      }catch{
+      }
+    }
+  );
+});
+
+
+$("saveRemoteSettingsBtn")?.addEventListener(
+  "click",
+  saveRemoteSettings
+);
+
+
+$("reloadRemoteSettingsBtn")?.addEventListener(
+  "click",
+  loadRemoteSettingsForTarget
+);
+
+
+$("resetRemoteSettingsBtn")?.addEventListener(
+  "click",
+  resetRemoteSettingsTarget
+);
 
 
 
@@ -7046,6 +7799,10 @@ $("quickHomeScreen")?.addEventListener("click", () => {
   openSection("homeScreenSection");
   loadHomeConfig();
 });
+$("quickRemoteAppSettings")?.addEventListener("click", () => {
+  openSection("remoteAppSettingsSection");
+  loadRemoteSettingsPanel();
+});
 $("quickSeasonalThemes")?.addEventListener("click", () => {
   openSection("seasonalThemesSection");
   loadSeasonalTheme();
@@ -7067,4 +7824,4 @@ boot();
 </script>
 
 </body>
-      </html>
+  </html>
