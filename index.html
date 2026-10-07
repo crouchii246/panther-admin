@@ -1183,11 +1183,21 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
           <input id="seasonalSecondaryColor" type="color" value="#0A7A3D">
         </div>
 
+        <label class="cache-switch-card wide">
+          <input id="seasonalUseBuiltinArtwork" type="checkbox" checked>
+          <span>
+            <span class="cache-switch-title">Use built-in seasonal artwork</span>
+            <div class="cache-switch-help">
+              Uses Panther's built-in snow, Halloween, hearts, fireworks or Easter artwork when no custom background URL is supplied.
+            </div>
+          </span>
+        </label>
+
         <div class="wide">
           <div class="field-label">Optional background image URL</div>
           <input id="seasonalBackgroundUrl" type="url" inputmode="url" placeholder="https://...">
           <div class="update-help">
-            Leave blank to use Panther's generated seasonal gradient. Use a direct image URL if you want a custom festive background.
+            A direct image URL overrides the built-in artwork. Leave this blank to use Panther's native seasonal artwork.
           </div>
         </div>
 
@@ -3694,6 +3704,7 @@ function seasonalDefaults(){
     theme_intensity: "subtle",
     apply_button_colors: false,
     decorate_header: true,
+    use_builtin_artwork: true,
     start_at: null,
     end_at: null
   };
@@ -3765,6 +3776,7 @@ function seasonalConfigFromForm(){
     theme_intensity: $("seasonalThemeIntensity")?.value || "subtle",
     apply_button_colors: $("seasonalApplyButtonColors")?.checked === true,
     decorate_header: $("seasonalDecorateHeader")?.checked !== false,
+    use_builtin_artwork: $("seasonalUseBuiltinArtwork")?.checked !== false,
     start_at: seasonalLocalInputToIso($("seasonalStartAt")?.value || ""),
     end_at: seasonalLocalInputToIso($("seasonalEndAt")?.value || "")
   };
@@ -3789,11 +3801,50 @@ function applySeasonalConfigToForm(config){
   $("seasonalThemeIntensity").value = value.theme_intensity || "subtle";
   $("seasonalApplyButtonColors").checked = value.apply_button_colors === true;
   $("seasonalDecorateHeader").checked = value.decorate_header !== false;
+  $("seasonalUseBuiltinArtwork").checked = value.use_builtin_artwork !== false;
   $("seasonalStartAt").value = seasonalIsoToLocalInput(value.start_at);
   $("seasonalEndAt").value = seasonalIsoToLocalInput(value.end_at);
 
   updateSeasonalPreview();
   updateSeasonalSummary(value);
+}
+
+
+function seasonalBuiltInPreview(themeKey, accent, secondary){
+  switch(themeKey){
+    case "christmas":
+      return [
+        "radial-gradient(circle at 12% 18%, rgba(255,255,255,.75) 0 2px, transparent 3px)",
+        "radial-gradient(circle at 72% 22%, rgba(255,255,255,.55) 0 2px, transparent 3px)",
+        "radial-gradient(circle at 32% 66%, rgba(255,255,255,.45) 0 2px, transparent 3px)",
+        `linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`
+      ].join(",");
+    case "halloween":
+      return [
+        "radial-gradient(circle at 82% 18%, rgba(255,184,77,.55) 0 9%, transparent 20%)",
+        `linear-gradient(135deg, ${secondary}, #08030d 52%, ${accent})`
+      ].join(",");
+    case "valentine":
+      return [
+        "radial-gradient(circle at 18% 22%, rgba(255,180,200,.25) 0 8%, transparent 18%)",
+        "radial-gradient(circle at 78% 68%, rgba(255,120,160,.18) 0 10%, transparent 22%)",
+        `linear-gradient(135deg, ${secondary}, #090408 50%, ${accent})`
+      ].join(",");
+    case "new_year":
+      return [
+        "radial-gradient(circle at 20% 20%, rgba(255,215,0,.30) 0 2%, transparent 14%)",
+        "radial-gradient(circle at 76% 32%, rgba(255,255,255,.22) 0 2%, transparent 16%)",
+        `linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`
+      ].join(",");
+    case "easter":
+      return [
+        "radial-gradient(ellipse at 20% 30%, rgba(255,180,210,.28) 0 7%, transparent 8%)",
+        "radial-gradient(ellipse at 72% 62%, rgba(180,220,255,.26) 0 8%, transparent 9%)",
+        `linear-gradient(135deg, ${secondary}, #08080b 50%, ${accent})`
+      ].join(",");
+    default:
+      return `radial-gradient(circle at 20% 20%, rgba(255,255,255,.12), transparent 35%), linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`;
+  }
 }
 
 
@@ -3820,7 +3871,11 @@ function updateSeasonalPreview(){
 
   preview.style.backgroundImage = config.background_url
     ? `linear-gradient(rgba(4,7,14,.45),rgba(4,7,14,.68)), url("${config.background_url.replace(/"/g, '\\"')}")`
-    : `radial-gradient(circle at 20% 20%, rgba(255,255,255,.12), transparent 35%), linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`;
+    : (
+        config.use_builtin_artwork
+          ? seasonalBuiltInPreview(config.theme_key, accent, secondary)
+          : `linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`
+      );
 
   preview.style.backgroundSize = "cover";
   preview.style.backgroundPosition = "center";
@@ -3932,6 +3987,7 @@ async function loadSeasonalTheme(){
       "theme_intensity",
       "apply_button_colors",
       "decorate_header",
+      "use_builtin_artwork",
       "start_at",
       "end_at",
       "updated_at"
@@ -4006,6 +4062,7 @@ async function saveSeasonalTheme(){
         p_theme_intensity: config.theme_intensity,
         p_apply_button_colors: config.apply_button_colors,
         p_decorate_header: config.decorate_header,
+        p_use_builtin_artwork: config.use_builtin_artwork,
         p_start_at: config.start_at,
         p_end_at: config.end_at
       }
@@ -4045,6 +4102,7 @@ $("seasonalThemeKey")?.addEventListener(
   "seasonalThemeIntensity",
   "seasonalApplyButtonColors",
   "seasonalDecorateHeader",
+  "seasonalUseBuiltinArtwork",
   "seasonalStartAt",
   "seasonalEndAt",
   "seasonalTitle",
@@ -7009,4 +7067,4 @@ boot();
 </script>
 
 </body>
-                                                              </html>
+      </html>
