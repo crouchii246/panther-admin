@@ -736,6 +736,31 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 .private-title-access-item input{margin-top:3px}
 @media(max-width:900px){.private-library-grid{grid-template-columns:1fr}.private-account-controls,.private-title-access-list{grid-template-columns:1fr}}
 
+
+/* ===== Private Library uploads ===== */
+.private-upload-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.private-upload-row input[type="file"]{
+  flex:1 1 260px;
+  min-width:0;
+}
+.private-upload-row button{
+  flex:0 0 auto;
+}
+.private-upload-row button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+.private-upload-progress{
+  margin-top:6px;
+  color:#b8c2cf;
+  font-size:12px;
+}
+
 </style>
 
 </head>
@@ -1513,15 +1538,32 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         <div class="card-flat">
           <div class="section-heading">
             <div class="section-heading-left">
-              <div class="section-title-text"><h2 id="privateContentFormTitle">Add content</h2><div>Direct streaming URL plus optional poster/licensing information.</div></div>
+              <div class="section-title-text"><h2 id="privateContentFormTitle">Add content</h2><div>Upload your own video/poster or paste an existing direct URL.</div></div>
             </div>
           </div>
 
           <div class="private-library-form">
             <div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"></div>
             <div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"></div>
-            <div><div class="field-label">Direct video URL</div><input id="privateContentVideoUrl" placeholder="https://.../video.mp4"></div>
-            <div><div class="field-label">Poster URL</div><input id="privateContentPosterUrl" placeholder="Optional https://.../poster.jpg"></div>
+            <div class="wide">
+              <div class="field-label">Video</div>
+              <div class="private-upload-row">
+                <input id="privateContentVideoFile" type="file" accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
+                <button id="uploadPrivateVideoBtn" type="button">Upload video</button>
+              </div>
+              <div id="privateVideoUploadStatus" class="small-text"></div>
+              <input id="privateContentVideoUrl" style="margin-top:8px" placeholder="Or paste a direct video URL">
+            </div>
+
+            <div class="wide">
+              <div class="field-label">Poster</div>
+              <div class="private-upload-row">
+                <input id="privateContentPosterFile" type="file" accept="image/*,.jpg,.jpeg,.png,.webp">
+                <button id="uploadPrivatePosterBtn" type="button">Upload poster</button>
+              </div>
+              <div id="privatePosterUploadStatus" class="small-text"></div>
+              <input id="privateContentPosterUrl" style="margin-top:8px" placeholder="Optional poster URL">
+            </div>
             <div><div class="field-label">Description</div><textarea id="privateContentDescription" maxlength="3000" placeholder="Optional description"></textarea></div>
             <div><div class="field-label">Creator / studio</div><input id="privateContentCreator" maxlength="180" placeholder="Optional"></div>
             <div><div class="field-label">Licence</div><input id="privateContentLicence" maxlength="180" placeholder="e.g. CC0 / CC BY-SA 4.0"></div>
@@ -1657,6 +1699,11 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 
 const SUPABASE_URL = 'https://yjjrokhbapsehorfgnfz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_VjFzBu44Dq2eBx5Ve76j5A_vQ4f8jTC';
+
+const PRIVATE_MEDIA_BUCKET = "panther-private-media";
+const PRIVATE_MEDIA_PUBLIC_BASE =
+  `${SUPABASE_URL}/storage/v1/object/public/${PRIVATE_MEDIA_BUCKET}/`;
+
 
 const $ = id => document.getElementById(id);
 
@@ -2979,6 +3026,215 @@ $("reloadHomeConfigBtn")?.addEventListener(
 
 
 // ============================================================
+// PRIVATE LIBRARY STORAGE UPLOADS
+// ============================================================
+
+function privateSafeExtension(file, fallback){
+  const name = String(file?.name || "");
+  const match = name.match(/\.([a-zA-Z0-9]{1,8})$/);
+  const ext = match ? match[1].toLowerCase() : fallback;
+  return ext.replace(/[^a-z0-9]/g, "") || fallback;
+}
+
+
+function privateStorageObjectPath(kind, file){
+  const folder = kind === "poster" ? "posters" : "videos";
+  const fallback = kind === "poster" ? "jpg" : "mp4";
+  const ext = privateSafeExtension(file, fallback);
+  const id =
+    (globalThis.crypto?.randomUUID?.() ||
+      `${Date.now()}-${Math.random().toString(16).slice(2)}`)
+      .replace(/[^a-zA-Z0-9-]/g, "");
+
+  return `${folder}/${Date.now()}-${id}.${ext}`;
+}
+
+
+function privateEncodeStoragePath(path){
+  return String(path || "")
+    .split("/")
+    .map(part => encodeURIComponent(part))
+    .join("/");
+}
+
+
+function privatePublicStorageUrl(path){
+  return PRIVATE_MEDIA_PUBLIC_BASE + privateEncodeStoragePath(path);
+}
+
+
+function privateStoragePathFromPublicUrl(url){
+  const prefix = PRIVATE_MEDIA_PUBLIC_BASE;
+  if(!url || !String(url).startsWith(prefix)) return null;
+
+  const encoded = String(url).slice(prefix.length);
+  try{
+    return encoded
+      .split("/")
+      .map(part => decodeURIComponent(part))
+      .join("/");
+  }catch(_){
+    return null;
+  }
+}
+
+
+async function uploadPrivateMedia(file, kind){
+  if(!file) throw new Error(`Choose a ${kind === "poster" ? "poster image" : "video"} first.`);
+
+  const type = String(file.type || "").toLowerCase();
+
+  if(kind === "poster"){
+    if(type && !type.startsWith("image/")){
+      throw new Error("Poster must be an image file.");
+    }
+  }else{
+    if(type && !type.startsWith("video/")){
+      const name = String(file.name || "").toLowerCase();
+      if(!/\.(mp4|webm|m4v|mov|mkv)$/.test(name)){
+        throw new Error("Choose a video file.");
+      }
+    }
+  }
+
+  if(!accessToken){
+    throw new Error("Admin sign-in is required.");
+  }
+
+  const path = privateStorageObjectPath(kind, file);
+  const encodedPath = privateEncodeStoragePath(path);
+
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${PRIVATE_MEDIA_BUCKET}/${encodedPath}`,
+    {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": file.type || "application/octet-stream",
+        "x-upsert": "false"
+      },
+      body: file
+    }
+  );
+
+  if(response.status === 401 && refreshToken){
+    const refreshed = await refreshSession();
+    if(refreshed){
+      return uploadPrivateMedia(file, kind);
+    }
+  }
+
+  if(!response.ok){
+    const data = await readJson(response);
+    throw new Error(
+      data?.message ||
+      data?.error ||
+      `Upload failed (HTTP ${response.status})`
+    );
+  }
+
+  return {
+    path,
+    url: privatePublicStorageUrl(path)
+  };
+}
+
+
+async function deletePrivateStorageUrl(url){
+  const path = privateStoragePathFromPublicUrl(url);
+  if(!path || !accessToken) return;
+
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${PRIVATE_MEDIA_BUCKET}/${privateEncodeStoragePath(path)}`,
+    {
+      method: "DELETE",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${accessToken}`
+      }
+    }
+  );
+
+  if(!response.ok && response.status !== 404){
+    const data = await readJson(response);
+    throw new Error(
+      data?.message ||
+      data?.error ||
+      `Storage delete failed (HTTP ${response.status})`
+    );
+  }
+}
+
+
+async function uploadSelectedPrivateVideo(){
+  const file = $("privateContentVideoFile")?.files?.[0];
+  const button = $("uploadPrivateVideoBtn");
+
+  if(!file){
+    setStatus($("privateContentStatus"), "Choose a video file first.", false);
+    return;
+  }
+
+  button.disabled = true;
+  $("privateVideoUploadStatus").textContent =
+    `Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)...`;
+
+  try{
+    const result = await uploadPrivateMedia(file, "video");
+    $("privateContentVideoUrl").value = result.url;
+    $("privateContentVideoFile").value = "";
+    $("privateVideoUploadStatus").textContent = "Video uploaded.";
+    setStatus($("privateContentStatus"), "Video uploaded. Save the title when ready.", true);
+  }catch(e){
+    $("privateVideoUploadStatus").textContent = "";
+    setStatus($("privateContentStatus"), e?.message || String(e), false);
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+async function uploadSelectedPrivatePoster(){
+  const file = $("privateContentPosterFile")?.files?.[0];
+  const button = $("uploadPrivatePosterBtn");
+
+  if(!file){
+    setStatus($("privateContentStatus"), "Choose a poster image first.", false);
+    return;
+  }
+
+  button.disabled = true;
+  $("privatePosterUploadStatus").textContent =
+    `Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)...`;
+
+  try{
+    const result = await uploadPrivateMedia(file, "poster");
+    $("privateContentPosterUrl").value = result.url;
+    $("privateContentPosterFile").value = "";
+    $("privatePosterUploadStatus").textContent = "Poster uploaded.";
+    setStatus($("privateContentStatus"), "Poster uploaded. Save the title when ready.", true);
+  }catch(e){
+    $("privatePosterUploadStatus").textContent = "";
+    setStatus($("privateContentStatus"), e?.message || String(e), false);
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+$("uploadPrivateVideoBtn")?.addEventListener(
+  "click",
+  uploadSelectedPrivateVideo
+);
+
+$("uploadPrivatePosterBtn")?.addEventListener(
+  "click",
+  uploadSelectedPrivatePoster
+);
+
+
+// ============================================================
 // PRIVATE LIBRARY
 // ============================================================
 
@@ -2998,6 +3254,10 @@ function resetPrivateContentForm(){
   $("privateContentCategory").value = "Private";
   $("privateContentVideoUrl").value = "";
   $("privateContentPosterUrl").value = "";
+  if($("privateContentVideoFile")) $("privateContentVideoFile").value = "";
+  if($("privateContentPosterFile")) $("privateContentPosterFile").value = "";
+  if($("privateVideoUploadStatus")) $("privateVideoUploadStatus").textContent = "";
+  if($("privatePosterUploadStatus")) $("privatePosterUploadStatus").textContent = "";
   $("privateContentDescription").value = "";
   $("privateContentCreator").value = "";
   $("privateContentLicence").value = "";
@@ -3015,7 +3275,7 @@ function renderPrivateContent(){
   $("privateContentCount").textContent = String(privateLibraryContent.length);
 
   if(!privateLibraryContent.length){
-    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Add your first direct streaming URL.</div>';
+    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Upload a video or add a direct streaming URL.</div>';
     renderPrivateTitleAccess();
     return;
   }
@@ -3107,6 +3367,20 @@ async function deletePrivateContent(id){
 
   try{
     await rpc("panther_admin_delete_private_content", {p_id:id});
+
+    const storageUrls = [
+      item.video_url || "",
+      item.poster_url || ""
+    ].filter(url => privateStoragePathFromPublicUrl(url));
+
+    for(const url of storageUrls){
+      try{
+        await deletePrivateStorageUrl(url);
+      }catch(storageError){
+        console.warn("Private storage cleanup failed:", storageError);
+      }
+    }
+
     if(privateEditingContentId === id) resetPrivateContentForm();
     await loadPrivateContent();
     setStatus($("privateContentStatus"), "Title deleted.", true);
@@ -3119,28 +3393,60 @@ async function deletePrivateContent(id){
 $("savePrivateContentBtn")?.addEventListener("click", async () => {
   const button = $("savePrivateContentBtn");
   const title = $("privateContentTitle").value.trim();
-  const videoUrl = $("privateContentVideoUrl").value.trim();
 
   if(!title){
     setStatus($("privateContentStatus"), "Enter a title.", false);
     return;
   }
 
-  if(!videoUrl){
-    setStatus($("privateContentStatus"), "Enter a direct video URL.", false);
-    return;
-  }
-
   button.disabled = true;
-  setStatus($("privateContentStatus"), privateEditingContentId ? "Saving title..." : "Adding title...");
+
+  const editingItem =
+    privateEditingContentId
+      ? privateLibraryContent.find(x => x.id === privateEditingContentId)
+      : null;
+
+  const oldVideoUrl = editingItem?.video_url || "";
+  const oldPosterUrl = editingItem?.poster_url || "";
 
   try{
+    const selectedVideo = $("privateContentVideoFile")?.files?.[0] || null;
+    const selectedPoster = $("privateContentPosterFile")?.files?.[0] || null;
+
+    if(selectedVideo){
+      setStatus($("privateContentStatus"), `Uploading video: ${selectedVideo.name}...`);
+      const uploaded = await uploadPrivateMedia(selectedVideo, "video");
+      $("privateContentVideoUrl").value = uploaded.url;
+      $("privateContentVideoFile").value = "";
+      $("privateVideoUploadStatus").textContent = "Video uploaded.";
+    }
+
+    if(selectedPoster){
+      setStatus($("privateContentStatus"), `Uploading poster: ${selectedPoster.name}...`);
+      const uploaded = await uploadPrivateMedia(selectedPoster, "poster");
+      $("privateContentPosterUrl").value = uploaded.url;
+      $("privateContentPosterFile").value = "";
+      $("privatePosterUploadStatus").textContent = "Poster uploaded.";
+    }
+
+    const videoUrl = $("privateContentVideoUrl").value.trim();
+    const posterUrl = $("privateContentPosterUrl").value.trim();
+
+    if(!videoUrl){
+      throw new Error("Upload a video or enter a direct video URL.");
+    }
+
+    setStatus(
+      $("privateContentStatus"),
+      privateEditingContentId ? "Saving title..." : "Adding title..."
+    );
+
     await rpc("panther_admin_save_private_content", {
       p_id: privateEditingContentId || null,
       p_title: title,
       p_description: $("privateContentDescription").value.trim(),
       p_video_url: videoUrl,
-      p_poster_url: $("privateContentPosterUrl").value.trim(),
+      p_poster_url: posterUrl,
       p_category: $("privateContentCategory").value.trim() || "Private",
       p_creator: $("privateContentCreator").value.trim(),
       p_licence: $("privateContentLicence").value.trim(),
@@ -3149,6 +3455,22 @@ $("savePrivateContentBtn")?.addEventListener("click", async () => {
       p_enabled: $("privateContentEnabled").checked,
       p_sort_order: Number.parseInt($("privateContentSortOrder").value || "100",10) || 100
     });
+
+    if(
+      oldVideoUrl &&
+      oldVideoUrl !== videoUrl &&
+      privateStoragePathFromPublicUrl(oldVideoUrl)
+    ){
+      try{ await deletePrivateStorageUrl(oldVideoUrl); }catch(_){}
+    }
+
+    if(
+      oldPosterUrl &&
+      oldPosterUrl !== posterUrl &&
+      privateStoragePathFromPublicUrl(oldPosterUrl)
+    ){
+      try{ await deletePrivateStorageUrl(oldPosterUrl); }catch(_){}
+    }
 
     resetPrivateContentForm();
     await loadPrivateContent();
