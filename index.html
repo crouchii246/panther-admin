@@ -1560,9 +1560,27 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 
         <div class="private-bulk-grid">
           <div class="wide">
+            <div class="field-label">Feed URL</div>
+            <input
+              id="privateCatalogueFeedUrl"
+              type="url"
+              inputmode="url"
+              placeholder="https://provider.example/catalogue.json">
+            <div class="small-text">
+              Paste a JSON/CSV catalogue URL from a provider you are authorised to use.
+              The feed must include a direct playable <strong>video_url</strong>,
+              <strong>stream_url</strong> or <strong>playback_url</strong> for each title.
+            </div>
+          </div>
+
+          <div class="wide">
             <div class="field-label">Catalogue file</div>
             <input id="privateCatalogueFile" type="file" accept=".csv,.json,text/csv,application/json">
-            <div class="small-text">Supported: CSV or JSON. JSON may be an array or an object containing an <strong>items</strong> array.</div>
+            <div class="small-text">
+              Supported: CSV or JSON. JSON may be an array or an object containing an
+              <strong>items</strong>, <strong>content</strong>, <strong>catalogue</strong> or
+              <strong>videos</strong> array.
+            </div>
           </div>
 
           <div class="wide">
@@ -1582,6 +1600,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         </div>
 
         <div class="cache-actions" style="margin-top:12px">
+          <button id="loadPrivateCatalogueFeedBtn">Load feed</button>
           <button id="previewPrivateCatalogueBtn">Preview catalogue</button>
           <button id="importPrivateCatalogueBtn" class="primary">Import catalogue</button>
           <button id="clearPrivateCatalogueBtn">Clear</button>
@@ -1592,8 +1611,9 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         <div id="privateCatalogueQueue" class="private-bulk-queue"></div>
 
         <div class="small-text" style="margin-top:10px">
-          Recognised fields: title, video_url, poster_url, category, description, creator, licence, attribution, source_url, enabled and sort_order.
-          Common aliases such as video, url, poster, image and studio are also accepted.
+          Recognised fields: title, video_url, stream_url, playback_url, poster_url, category,
+          description, creator, licence, attribution, source_url, enabled and sort_order.
+          A normal web-page URL or embed URL is not treated as a playable video URL.
         </div>
       </div>
 
@@ -3514,7 +3534,10 @@ function parsePrivateCatalogueText(text, filename = ""){
     if(Array.isArray(parsed?.items)) return parsed.items;
     if(Array.isArray(parsed?.content)) return parsed.content;
     if(Array.isArray(parsed?.catalogue)) return parsed.catalogue;
-    throw new Error("JSON must be an array, or contain an items/content/catalogue array.");
+    if(Array.isArray(parsed?.videos)) return parsed.videos;
+    throw new Error(
+      "JSON must be an array, or contain an items/content/catalogue/videos array."
+    );
   }
 
   return parsePrivateCatalogueCsv(raw);
@@ -3529,7 +3552,7 @@ function normalisePrivateCatalogueRow(row, index){
   const videoUrl = String(
     privateCatalogueValue(
       row,
-      ["video_url","video","stream_url","stream","url","playback_url"],
+      ["video_url","video","stream_url","stream","playback_url","file_url","media_url"],
       ""
     )
   ).trim();
@@ -3574,6 +3597,10 @@ function normalisePrivateCatalogueRow(row, index){
     true
   );
 
+  const providerPageUrl = String(
+    privateCatalogueValue(row, ["url","page_url","web_url","link","embed"], "")
+  ).trim();
+
   return {
     index,
     title,
@@ -3587,6 +3614,7 @@ function normalisePrivateCatalogueRow(row, index){
     sourceUrl,
     sortOrder: Number.isFinite(parsedSort) ? parsedSort : 100 + index,
     rowEnabled,
+    providerPageUrl,
     duplicate: false,
     skipped: false,
     state: "Ready",
@@ -3597,24 +3625,86 @@ function normalisePrivateCatalogueRow(row, index){
 
 
 async function readPrivateCatalogueInput(){
+  const feedUrl = String(
+    $("privateCatalogueFeedUrl")?.value || ""
+  ).trim();
+
   const file = $("privateCatalogueFile")?.files?.[0] || null;
   const pasted = $("privateCatalogueText")?.value || "";
+
+  if(feedUrl){
+    let parsedUrl;
+
+    try{
+      parsedUrl = new URL(feedUrl);
+    }catch{
+      throw new Error("Feed URL is not valid.");
+    }
+
+    if(!["https:","http:"].includes(parsedUrl.protocol)){
+      throw new Error("Feed URL must start with http:// or https://");
+    }
+
+    setStatus(
+      $("privateCatalogueStatus"),
+      "Loading catalogue feed..."
+    );
+
+    let response;
+
+    try{
+      response = await fetch(feedUrl, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json,text/csv,text/plain,*/*"
+        },
+        cache: "no-store"
+      });
+    }catch(e){
+      throw new Error(
+        "Unable to read that feed URL. The provider may block browser requests (CORS), " +
+        "or the URL may be unavailable. You can still download the JSON/CSV and choose the file instead."
+      );
+    }
+
+    if(!response.ok){
+      throw new Error(
+        `Feed request failed (HTTP ${response.status}).`
+      );
+    }
+
+    const text = await response.text();
+
+    if(!String(text).trim()){
+      throw new Error("The feed returned an empty response.");
+    }
+
+    return {
+      text,
+      filename: parsedUrl.pathname || "feed.json",
+      sourceUrl: feedUrl
+    };
+  }
 
   if(file){
     return {
       text: await file.text(),
-      filename: file.name || ""
+      filename: file.name || "",
+      sourceUrl: ""
     };
   }
 
   if(String(pasted).trim()){
     return {
       text: pasted,
-      filename: ""
+      filename: "",
+      sourceUrl: ""
     };
   }
 
-  throw new Error("Choose a CSV/JSON file or paste catalogue data first.");
+  throw new Error(
+    "Paste a feed URL, choose a CSV/JSON file, or paste catalogue data first."
+  );
 }
 
 
@@ -3653,7 +3743,9 @@ async function buildPrivateCatalogueQueue(){
       if(!item.videoUrl){
         item.state = "Invalid";
         item.stateClass = "fail";
-        item.error = "Missing video URL";
+        item.error = item.providerPageUrl
+          ? "Provider supplied a page/embed URL but no direct playable video URL."
+          : "Missing direct playable video URL";
         return item;
       }
 
@@ -3754,6 +3846,7 @@ function clearPrivateCatalogue(){
   if(privateCatalogueRunning) return;
 
   privateCatalogueQueue = [];
+  if($("privateCatalogueFeedUrl")) $("privateCatalogueFeedUrl").value = "";
   if($("privateCatalogueFile")) $("privateCatalogueFile").value = "";
   if($("privateCatalogueText")) $("privateCatalogueText").value = "";
 
@@ -3868,9 +3961,17 @@ async function importPrivateCatalogue(){
 
 $("privateCatalogueFile")?.addEventListener("change", buildPrivateCatalogueQueue);
 $("privateCatalogueSkipDuplicates")?.addEventListener("change", buildPrivateCatalogueQueue);
+$("loadPrivateCatalogueFeedBtn")?.addEventListener("click", buildPrivateCatalogueQueue);
 $("previewPrivateCatalogueBtn")?.addEventListener("click", buildPrivateCatalogueQueue);
 $("importPrivateCatalogueBtn")?.addEventListener("click", importPrivateCatalogue);
 $("clearPrivateCatalogueBtn")?.addEventListener("click", clearPrivateCatalogue);
+
+$("privateCatalogueFeedUrl")?.addEventListener("keydown", event => {
+  if(event.key === "Enter"){
+    event.preventDefault();
+    buildPrivateCatalogueQueue();
+  }
+});
 
 
 // ============================================================
