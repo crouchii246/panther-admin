@@ -1815,8 +1815,14 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <input id="adultMagnetTitle" maxlength="180" placeholder="Auto-filled from TorBox"/>
 </div>
 <div>
-<div class="field-label">Category</div>
-<input id="adultMagnetCategory" maxlength="100" placeholder="Adult" value="Adult"/>
+<div class="field-label">Folder</div>
+<select id="adultMagnetFolder"><option value="Adult">Adult</option></select>
+<div class="small-text">Choose the folder for this video before publishing.</div>
+</div>
+<div>
+<div class="field-label">Create new folder</div>
+<div class="private-upload-row"><input id="adultNewFolderName" maxlength="100" placeholder="New folder name"><button id="adultCreateFolderBtn" type="button">Create folder</button></div>
+<input id="adultMagnetCategory" type="hidden" value="Adult"/>
 </div>
 <div class="wide">
 <div class="field-label">Poster URL</div>
@@ -1913,6 +1919,10 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <div class="section-heading">
 <div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
 <span class="pill" id="privateContentCount">0</span>
+</div>
+<div class="private-upload-row" style="margin-bottom:12px">
+<label for="adultLibraryFolderFilter" class="field-label" style="margin:0">Show folder</label>
+<select id="adultLibraryFolderFilter" style="flex:1;min-width:160px"><option value="">All folders</option></select>
 </div>
 <div class="private-content-list" id="privateContentList"></div>
 </div>
@@ -5697,7 +5707,7 @@ function resetAdultMagnetForm(){
 
   if($("adultMagnetLink")) $("adultMagnetLink").value = "";
   if($("adultMagnetTitle")) $("adultMagnetTitle").value = "";
-  if($("adultMagnetCategory")) $("adultMagnetCategory").value = "Adult";
+  if($("adultMagnetCategory")) $("adultMagnetCategory").value = $("adultMagnetFolder")?.value || "Adult";
   if($("adultMagnetPosterUrl")) $("adultMagnetPosterUrl").value = "";
   if($("adultMagnetDescription")) $("adultMagnetDescription").value = "";
   if($("adultMagnetSortOrder")) $("adultMagnetSortOrder").value = "100";
@@ -6295,7 +6305,7 @@ async function publishAdultMagnet(){
 
           category:
             String(
-              $("adultMagnetCategory")?.value || "Adult"
+              $("adultMagnetFolder")?.value || "Adult"
             ).trim() || "Adult",
 
           poster_url:
@@ -6428,6 +6438,50 @@ function resetPrivateContentForm(){
 }
 
 
+// Folders use the existing category field; no change to TorBox playback.
+// Empty folders are remembered by this browser until content is published in them.
+const adultFolderStorageKey = "panther_adult_folder_names_v1";
+function getAdultFolders(){
+  let saved = [];
+  try { saved = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]"); } catch(_) {}
+  const names = ["Adult", ...saved, ...privateLibraryContent.map(x => x.category || "Adult")];
+  return [...new Set(names.map(x => String(x || "").trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+}
+function renderAdultFolderChoices(){
+  const folderSelect = $("adultMagnetFolder");
+  const filter = $("adultLibraryFolderFilter");
+  const folders = getAdultFolders();
+  if(folderSelect){
+    const current = folderSelect.value || "Adult";
+    folderSelect.innerHTML = folders.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
+    folderSelect.value = folders.includes(current) ? current : "Adult";
+    if($("adultMagnetCategory")) $("adultMagnetCategory").value = folderSelect.value;
+  }
+  if(filter){
+    const current = filter.value;
+    filter.innerHTML = '<option value="">All folders</option>' + folders.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
+    filter.value = folders.includes(current) ? current : "";
+  }
+}
+$("adultCreateFolderBtn")?.addEventListener("click", () => {
+  const name = String($("adultNewFolderName")?.value || "").trim();
+  if(!name){ alert("Enter a folder name."); return; }
+  const folders = getAdultFolders();
+  if(!folders.includes(name)){
+    try { localStorage.setItem(adultFolderStorageKey, JSON.stringify([...folders,name])); }
+    catch(_) { alert("Could not remember empty folder in this browser."); }
+  }
+  renderAdultFolderChoices();
+  $("adultMagnetFolder").value = name;
+  $("adultMagnetCategory").value = name;
+  $("adultNewFolderName").value = "";
+  setStatus($("adultMagnetStatus"), `Folder "${name}" selected. Publish a video into it to store the folder in Supabase.`, true);
+});
+$("adultMagnetFolder")?.addEventListener("change", () => {
+  $("adultMagnetCategory").value = $("adultMagnetFolder").value;
+});
+$("adultLibraryFolderFilter")?.addEventListener("change", renderPrivateContent);
+
 function renderPrivateContent(){
   const host = $("privateContentList");
   if(!host) return;
@@ -6435,12 +6489,18 @@ function renderPrivateContent(){
   $("privateContentCount").textContent = String(privateLibraryContent.length);
 
   if(!privateLibraryContent.length){
+    renderAdultFolderChoices();
     host.innerHTML = '<div class="empty-note">No Private Library titles yet. Add a magnet link above.</div>';
     renderPrivateTitleAccess();
     return;
   }
 
-  host.innerHTML = privateLibraryContent.map(item => `
+  renderAdultFolderChoices();
+  const selectedFolder = $("adultLibraryFolderFilter")?.value || "";
+  const visibleItems = selectedFolder
+    ? privateLibraryContent.filter(item => (item.category || "Adult") === selectedFolder)
+    : privateLibraryContent;
+  host.innerHTML = visibleItems.length ? visibleItems.map(item => `
     <div class="private-content-card">
       <div class="private-content-head">
         <div>
@@ -6463,7 +6523,7 @@ function renderPrivateContent(){
         <button class="small danger delete-private-content" data-id="${esc(item.id)}">Delete</button>
       </div>
     </div>
-  `).join("");
+  `).join("") : '<div class="empty-note">No titles in this folder.</div>';
 
   document.querySelectorAll(".edit-private-content").forEach(button => {
     button.onclick = () => editPrivateContent(button.dataset.id);
