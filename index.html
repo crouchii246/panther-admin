@@ -1764,438 +1764,182 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   </details>
 
 
-  <details id="privateLibrarySection" class="section-anchor collapse-card">
-    <summary>
-      <div class="section-heading-left">
-        <div class="section-icon">🔒</div>
-        <div class="section-title-text">
-          <h2>Private Library</h2>
-          <div>Manage streaming content and choose exactly which IPTV accounts can access it.</div>
-        </div>
-      </div>
-      <span class="collapse-arrow">▼</span>
-    </summary>
-
-    <div class="collapse-content">
-      <div class="cache-explainer">
-        <strong>Account-controlled library.</strong>
+ <details class="section-anchor collapse-card" id="privateLibrarySection">
+<summary>
+<div class="section-heading-left">
+<div class="section-icon">🔒</div>
+<div class="section-title-text">
+<h2>Private Library</h2>
+<div>Add content through Magnet Link / TorBox and control account access.</div>
+</div>
+</div>
+<span class="collapse-arrow">▼</span>
+</summary>
+<div class="collapse-content">
+<div class="cache-explainer">
+<strong>Account-controlled library.</strong>
         Panther only shows the Private Library button after the current registered device's IPTV account is approved here.
         You can require a 4–8 digit PIN, set an expiry date, allow the whole library, or select individual titles.
         Only add material you are legally permitted to store and stream, and only make explicit material available to adults.
       </div>
+<div style="height:14px"></div>
 
-      <div style="height:14px"></div>
-
-
-      <div class="card-flat">
-        <div class="section-heading">
-          <div class="section-heading-left">
-            <div class="section-title-text">
-              <h2>Adult M3U Sources</h2>
-              <div>Add an M3U URL or upload an M3U file. Entries are added to Panther's existing PIN-protected Private Library.</div>
-            </div>
-          </div>
-          <span id="adultM3uSourceCount" class="pill">0</span>
-        </div>
-
-        <div class="cache-explainer">
-          <strong>Server-side source.</strong>
-          Panther devices never receive the original M3U playlist URL. Stream requests are sent through Panther's protected Adult stream endpoint.
-          Only accounts with Private Library access can receive these entries. Accounts using individual-title mode do not receive M3U content.
-        </div>
-
-        <div style="height:12px"></div>
-
-        <div class="private-library-form">
-          <div>
-            <div class="field-label">Source name</div>
-            <input id="adultM3uName" maxlength="120" placeholder="e.g. Adult Library">
-          </div>
-
-          <div>
-            <div class="field-label">Default category</div>
-            <input id="adultM3uDefaultCategory" maxlength="100" value="Adult" placeholder="Adult">
-          </div>
-
-          <div class="wide">
-            <div class="field-label">M3U URL</div>
-            <input id="adultM3uUrl" type="url" inputmode="url" placeholder="https://provider.example/playlist.m3u">
-            <div class="small-text">
-              Use this for a remote M3U/M3U8 playlist. The URL stays in Supabase and is never returned to Panther clients.
-            </div>
-          </div>
-
-          <div class="wide">
-            <div class="field-label">Or upload an M3U file</div>
-            <input
-              id="adultM3uFile"
-              type="file"
-              accept=".m3u,.m3u8,text/plain,application/x-mpegURL,application/vnd.apple.mpegurl,audio/x-mpegurl">
-            <div class="small-text">
-              Uploaded playlists are parsed during import. To refresh an uploaded source later, choose the updated M3U file again.
-            </div>
-          </div>
-
-          <div>
-            <div class="field-label">Sort order</div>
-            <input id="adultM3uSortOrder" type="number" value="100">
-          </div>
-
-          <label class="private-check-card">
-            <input id="adultM3uEnabled" type="checkbox" checked>
-            <span>
-              <strong>Enabled</strong>
-              <div class="small-text">Disabled sources remain stored but are not returned to Panther.</div>
-            </span>
-          </label>
-
-          <div class="cache-actions wide">
-            <button id="saveAdultM3uBtn" class="primary">Save &amp; Import</button>
-            <button id="cancelAdultM3uEditBtn" class="hidden">Cancel edit</button>
-            <button id="reloadAdultM3uBtn">Reload sources</button>
-          </div>
-        </div>
-
-        <div id="adultM3uStatus" class="status"></div>
-
-        <div style="height:12px"></div>
-
-        <div id="adultM3uSourceList" class="private-content-list">
-          <div class="empty-note">No Adult M3U sources configured yet.</div>
-        </div>
-      </div>
-
-      <div style="height:14px"></div>
-
-
-
-      <div class="card-flat">
-        <div class="section-heading">
-          <div class="section-heading-left">
-            <div class="section-title-text">
-              <h2>Adult Magnet / TorBox</h2>
-              <div>Paste a magnet link, add it to TorBox, choose the video file, then publish it into Panther's existing Adult / Private Library.</div>
-            </div>
-          </div>
-          <span id="adultMagnetStatePill" class="pill">NOT ADDED</span>
-        </div>
-
-        <div class="cache-explainer">
-          <strong>Server-side TorBox import.</strong>
+<div style="height:14px"></div>
+<div class="card-flat">
+<div class="section-heading">
+<div class="section-heading-left">
+<div class="section-title-text">
+<h2>Adult Magnet / TorBox</h2>
+<div>Paste a magnet link, add it to TorBox, choose the video file, then publish it into Panther's existing Adult / Private Library.</div>
+</div>
+</div>
+<span class="pill" id="adultMagnetStatePill">NOT ADDED</span>
+</div>
+<div class="cache-explainer">
+<strong>Server-side TorBox import.</strong>
           The magnet link and TorBox API token are never sent to Panther devices.
           When a user presses Play, Panther receives a temporary protected playback URL and the Adult stream function redirects to TorBox's temporary CDN link.
           This keeps TorBox credentials out of the APK and avoids sending the video itself through Supabase.
         </div>
-
-        <div style="height:12px"></div>
-
-        <div class="private-library-form">
-          <div class="wide">
-            <div class="field-label">Magnet link</div>
-            <textarea
-              id="adultMagnetLink"
-              rows="4"
-              spellcheck="false"
-              placeholder="magnet:?xt=urn:btih:..."></textarea>
-            <div class="small-text">
+<div style="height:12px"></div>
+<div class="private-library-form">
+<div class="wide">
+<div class="field-label">Magnet link</div>
+<textarea id="adultMagnetLink" placeholder="magnet:?xt=urn:btih:..." rows="4" spellcheck="false"></textarea>
+<div class="small-text">
               Paste a standard magnet URI. Panther does not scrape torrent websites; it only processes the magnet you supply.
             </div>
-          </div>
-
-          <div>
-            <div class="field-label">Title</div>
-            <input id="adultMagnetTitle" maxlength="180" placeholder="Auto-filled from TorBox">
-          </div>
-
-          <div>
-            <div class="field-label">Category</div>
-            <input id="adultMagnetCategory" maxlength="100" value="Adult" placeholder="Adult">
-          </div>
-
-          <div class="wide">
-            <div class="field-label">Poster URL</div>
-            <input id="adultMagnetPosterUrl" type="url" inputmode="url" placeholder="https://example.com/poster.jpg">
-            <div class="small-text">Optional. You can also edit the title later in the normal Private Library content editor.</div>
-          </div>
-
-          <div class="wide">
-            <div class="field-label">Description</div>
-            <textarea id="adultMagnetDescription" rows="3" placeholder="Optional description"></textarea>
-          </div>
-
-          <div>
-            <div class="field-label">Sort order</div>
-            <input id="adultMagnetSortOrder" type="number" value="100">
-          </div>
-
-          <label class="private-check-card">
-            <input id="adultMagnetEnabled" type="checkbox" checked>
-            <span>
-              <strong>Enable after publishing</strong>
-              <div class="small-text">Turn this off if you want to review the item before it appears in Panther.</div>
-            </span>
-          </label>
-
-          <label class="private-check-card wide">
-            <input id="adultMagnetCachedOnly" type="checkbox">
-            <span>
-              <strong>Cached only</strong>
-              <div class="small-text">When enabled, TorBox refuses the import unless it is already cached. Leave off to allow TorBox to download an uncached torrent.</div>
-            </span>
-          </label>
-
-          <div class="cache-actions wide">
-            <button id="inspectAdultMagnetBtn">Inspect magnet</button>
-            <button id="addAdultMagnetBtn" class="primary">Add to TorBox</button>
-            <button id="refreshAdultMagnetBtn" disabled>Refresh status</button>
-            <button id="publishAdultMagnetBtn" class="primary" disabled>Publish to Adult</button>
-            <button id="resetAdultMagnetBtn">Clear</button>
-          </div>
-        </div>
-
-        <div id="adultMagnetStatus" class="status"></div>
-
-        <div style="height:12px"></div>
-
-        <div id="adultMagnetSummary" class="private-bulk-summary">
+</div>
+<div>
+<div class="field-label">Title</div>
+<input id="adultMagnetTitle" maxlength="180" placeholder="Auto-filled from TorBox"/>
+</div>
+<div>
+<div class="field-label">Category</div>
+<input id="adultMagnetCategory" maxlength="100" placeholder="Adult" value="Adult"/>
+</div>
+<div class="wide">
+<div class="field-label">Poster URL</div>
+<input id="adultMagnetPosterUrl" inputmode="url" placeholder="https://example.com/poster.jpg" type="url"/>
+<div class="small-text">Optional. You can also edit the title later in the normal Private Library content editor.</div>
+</div>
+<div class="wide">
+<div class="field-label">Description</div>
+<textarea id="adultMagnetDescription" placeholder="Optional description" rows="3"></textarea>
+</div>
+<div>
+<div class="field-label">Sort order</div>
+<input id="adultMagnetSortOrder" type="number" value="100"/>
+</div>
+<label class="private-check-card">
+<input checked="" id="adultMagnetEnabled" type="checkbox"/>
+<span>
+<strong>Enable after publishing</strong>
+<div class="small-text">Turn this off if you want to review the item before it appears in Panther.</div>
+</span>
+</label>
+<label class="private-check-card wide">
+<input id="adultMagnetCachedOnly" type="checkbox"/>
+<span>
+<strong>Cached only</strong>
+<div class="small-text">When enabled, TorBox refuses the import unless it is already cached. Leave off to allow TorBox to download an uncached torrent.</div>
+</span>
+</label>
+<div class="cache-actions wide">
+<button id="inspectAdultMagnetBtn">Inspect magnet</button>
+<button class="primary" id="addAdultMagnetBtn">Add to TorBox</button>
+<button disabled="" id="refreshAdultMagnetBtn">Refresh status</button>
+<button class="primary" disabled="" id="publishAdultMagnetBtn">Publish to Adult</button>
+<button id="resetAdultMagnetBtn">Clear</button>
+</div>
+</div>
+<div class="status" id="adultMagnetStatus"></div>
+<div style="height:12px"></div>
+<div class="private-bulk-summary" id="adultMagnetSummary">
           Paste a magnet and press Inspect magnet or Add to TorBox.
         </div>
+<div style="height:10px"></div>
+<div class="private-content-list" id="adultMagnetFiles"></div>
+</div>
+<div style="height:14px"></div>
 
-        <div style="height:10px"></div>
+<div style="height:14px"></div>
 
-        <div id="adultMagnetFiles" class="private-content-list"></div>
-      </div>
-
-      <div style="height:14px"></div>
-
-
-      <div class="card-flat">
-        <div class="section-heading">
-          <div class="section-heading-left">
-            <div class="section-title-text">
-              <h2>Catalogue import</h2>
-              <div>Import a licensed provider catalogue from CSV or JSON without uploading each title manually.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="private-bulk-grid">
-          <div class="wide">
-            <div class="field-label">Feed URL</div>
-            <input
-              id="privateCatalogueFeedUrl"
-              type="url"
-              inputmode="url"
-              placeholder="https://provider.example/catalogue.json">
-            <div class="small-text">
-              Paste a JSON/CSV catalogue URL from a provider you are authorised to use.
-              The feed must include a direct playable <strong>video_url</strong>,
-              <strong>stream_url</strong> or <strong>playback_url</strong> for each title.
-            </div>
-          </div>
-
-          <div class="wide">
-            <div class="field-label">Catalogue file</div>
-            <input id="privateCatalogueFile" type="file" accept=".csv,.json,text/csv,application/json">
-            <div class="small-text">
-              Supported: CSV or JSON. JSON may be an array or an object containing an
-              <strong>items</strong>, <strong>content</strong>, <strong>catalogue</strong> or
-              <strong>videos</strong> array.
-            </div>
-          </div>
-
-          <div class="wide">
-            <div class="field-label">Or paste CSV / JSON</div>
-            <textarea id="privateCatalogueText" rows="7" placeholder="title,video_url,poster_url,category&#10;Example Title,https://example.com/video.mp4,https://example.com/poster.jpg,Private"></textarea>
-          </div>
-
-          <label class="private-check-card">
-            <input id="privateCatalogueEnabled" type="checkbox" checked>
-            <span><strong>Enable imported titles</strong><div class="small-text">Turn off if you want to review the imported catalogue first.</div></span>
-          </label>
-
-          <label class="private-check-card">
-            <input id="privateCatalogueSkipDuplicates" type="checkbox" checked>
-            <span><strong>Skip duplicate titles</strong><div class="small-text">Existing Private Library titles with the same name will not be added again.</div></span>
-          </label>
-        </div>
-
-        <div class="cache-actions" style="margin-top:12px">
-          <button id="loadPrivateCatalogueFeedBtn">Load feed</button>
-          <button id="previewPrivateCatalogueBtn">Preview catalogue</button>
-          <button id="importPrivateCatalogueBtn" class="primary">Import catalogue</button>
-          <button id="clearPrivateCatalogueBtn">Clear</button>
-        </div>
-
-        <div id="privateCatalogueStatus" class="status"></div>
-        <div id="privateCatalogueSummary" class="private-bulk-summary">Choose a CSV/JSON file or paste a catalogue to preview it.</div>
-        <div id="privateCatalogueQueue" class="private-bulk-queue"></div>
-
-        <div class="small-text" style="margin-top:10px">
-          Recognised fields: title, video_url, stream_url, playback_url, poster_url, category,
-          description, creator, licence, attribution, source_url, enabled and sort_order.
-          A normal web-page URL or embed URL is not treated as a playable video URL.
-        </div>
-      </div>
-
-      <div style="height:14px"></div>
-      <div class="card-flat">
-        <div class="section-heading">
-          <div class="section-heading-left">
-            <div class="section-title-text">
-              <h2>Bulk upload</h2>
-              <div>Select multiple videos at once. Matching posters are paired automatically by filename.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="private-bulk-grid">
-          <div class="wide">
-            <div class="field-label">Import a whole folder</div>
-            <input id="privateBulkFolder" type="file" webkitdirectory directory multiple>
-            <div class="small-text">Choose one folder containing videos and optional matching posters. Subfolders can automatically become categories.</div>
-          </div>
-
-          <label class="private-check-card wide">
-            <input id="privateBulkUseSubfolderCategory" type="checkbox" checked>
-            <span><strong>Use subfolder names as categories</strong><div class="small-text">Example: My Library/Category Name/Video.mp4 will import into “Category Name”. Files in the main folder use the default category below.</div></span>
-          </label>
-
-          <div class="wide">
-            <div class="field-label">Or choose videos</div>
-            <input id="privateBulkVideos" type="file" multiple accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
-            <div class="small-text">Example: My Movie.mp4</div>
-          </div>
-
-          <div class="wide">
-            <div class="field-label">Optional posters</div>
-            <input id="privateBulkPosters" type="file" multiple accept="image/*,.jpg,.jpeg,.png,.webp">
-            <div class="small-text">Use the same base filename, for example My Movie.jpg, and Panther will match it to My Movie.mp4.</div>
-          </div>
-
-          <div>
-            <div class="field-label">Category</div>
-            <input id="privateBulkCategory" maxlength="100" value="Private" placeholder="Private">
-          </div>
-
-          <div>
-            <div class="field-label">Creator / studio</div>
-            <input id="privateBulkCreator" maxlength="180" placeholder="Optional default for the whole batch">
-          </div>
-
-          <div>
-            <div class="field-label">Licence</div>
-            <input id="privateBulkLicence" maxlength="180" placeholder="Optional default for the whole batch">
-          </div>
-
-          <div>
-            <div class="field-label">Starting sort order</div>
-            <input id="privateBulkSortOrder" type="number" value="100">
-          </div>
-
-          <label class="private-check-card">
-            <input id="privateBulkEnabled" type="checkbox" checked>
-            <span><strong>Enable imported titles</strong><div class="small-text">Turn off if you want to review everything before it appears in Panther.</div></span>
-          </label>
-
-          <label class="private-check-card">
-            <input id="privateBulkSkipDuplicates" type="checkbox" checked>
-            <span><strong>Skip duplicate titles</strong><div class="small-text">Prevents a filename from creating another title when that title already exists.</div></span>
-          </label>
-        </div>
-
-        <div class="cache-actions" style="margin-top:12px">
-          <button id="startPrivateBulkUploadBtn" class="primary">Upload batch</button>
-          <button id="clearPrivateBulkUploadBtn">Clear</button>
-        </div>
-
-        <div id="privateBulkStatus" class="status"></div>
-        <div id="privateBulkSummary" class="private-bulk-summary">Choose one or more videos to build the upload queue.</div>
-        <div id="privateBulkQueue" class="private-bulk-queue"></div>
-      </div>
-
-      <div style="height:14px"></div>
-
-      <div class="private-library-grid">
-        <div class="card-flat">
-          <div class="section-heading">
-            <div class="section-heading-left">
-              <div class="section-title-text"><h2 id="privateContentFormTitle">Add content</h2><div>Upload your own video/poster or paste an existing direct URL.</div></div>
-            </div>
-          </div>
-
-          <div class="private-library-form">
-            <div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"></div>
-            <div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"></div>
-            <div class="wide">
-              <div class="field-label">Video</div>
-              <div class="private-upload-row">
-                <input id="privateContentVideoFile" type="file" accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
-                <button id="uploadPrivateVideoBtn" type="button">Upload video</button>
-              </div>
-              <div id="privateVideoUploadStatus" class="small-text"></div>
-              <input id="privateContentVideoUrl" style="margin-top:8px" placeholder="Or paste a direct video URL">
-            </div>
-
-            <div class="wide">
-              <div class="field-label">Poster</div>
-              <div class="private-upload-row">
-                <input id="privateContentPosterFile" type="file" accept="image/*,.jpg,.jpeg,.png,.webp">
-                <button id="uploadPrivatePosterBtn" type="button">Upload poster</button>
-              </div>
-              <div id="privatePosterUploadStatus" class="small-text"></div>
-              <input id="privateContentPosterUrl" style="margin-top:8px" placeholder="Optional poster URL">
-            </div>
-            <div><div class="field-label">Description</div><textarea id="privateContentDescription" maxlength="3000" placeholder="Optional description"></textarea></div>
-            <div><div class="field-label">Creator / studio</div><input id="privateContentCreator" maxlength="180" placeholder="Optional"></div>
-            <div><div class="field-label">Licence</div><input id="privateContentLicence" maxlength="180" placeholder="e.g. CC0 / CC BY-SA 4.0"></div>
-            <div><div class="field-label">Attribution</div><input id="privateContentAttribution" maxlength="500" placeholder="Required attribution text if applicable"></div>
-            <div><div class="field-label">Source / licence page</div><input id="privateContentSourceUrl" placeholder="Optional https://..."></div>
-            <div><div class="field-label">Sort order</div><input id="privateContentSortOrder" type="number" value="100"></div>
-            <label class="private-check-card"><input id="privateContentEnabled" type="checkbox" checked><span><strong>Enabled</strong><div class="small-text">Disabled titles stay in the panel but are never returned to Panther.</div></span></label>
-            <div class="cache-actions">
-              <button id="savePrivateContentBtn" class="primary">Add title</button>
-              <button id="cancelPrivateContentEditBtn" class="hidden">Cancel edit</button>
-              <button id="reloadPrivateLibraryBtn">Reload</button>
-            </div>
-          </div>
-          <div id="privateContentStatus" class="status"></div>
-        </div>
-
-        <div class="card-flat">
-          <div class="section-heading">
-            <div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
-            <span id="privateContentCount" class="pill">0</span>
-          </div>
-          <div id="privateContentList" class="private-content-list"></div>
-        </div>
-      </div>
-
-      <div style="height:16px"></div>
-
-      <div class="card-flat">
-        <div class="section-heading">
-          <div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
-          <button id="reloadPrivateAccountsBtn" class="small">Reload accounts</button>
-        </div>
-        <div id="privateAccountStatus" class="status"></div>
-        <div id="privateAccountsList" class="private-account-list"></div>
-      </div>
-
-      <div id="privateTitleAccessPanel" class="private-title-access hidden">
-        <div class="section-heading">
-          <div class="section-heading-left"><div class="section-title-text"><h2>Individual title access</h2><div id="privateTitleAccessAccount">Select an account.</div></div></div>
-          <button id="closePrivateTitleAccessBtn" class="small">Close</button>
-        </div>
-        <div class="update-help">These selections are used when <strong>Allow all titles</strong> is turned off for the account.</div>
-        <div id="privateTitleAccessList" class="private-title-access-list"></div>
-        <div class="cache-actions" style="margin-top:12px">
-          <button id="savePrivateTitleAccessBtn" class="primary">Save title access</button>
-        </div>
-        <div id="privateTitleAccessStatus" class="status"></div>
-      </div>
-    </div>
-  </details>
+<div style="height:14px"></div>
+<div class="private-library-grid">
+<div class="card-flat hidden" id="privateContentEditorCard">
+<div class="section-heading">
+<div class="section-heading-left">
+<div class="section-title-text"><h2 id="privateContentFormTitle">Edit existing title</h2><div>Edit the title and metadata of an existing entry.</div></div>
+</div>
+</div>
+<div class="private-library-form">
+<div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"/></div>
+<div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"/></div>
+<div class="wide hidden">
+<div class="field-label">Video</div>
+<div class="private-upload-row">
+<input accept="video/*,.mp4,.webm,.m4v,.mov,.mkv" disabled="" id="privateContentVideoFile" type="file"/>
+<button disabled="" id="uploadPrivateVideoBtn" type="button">Upload video</button>
+</div>
+<div class="small-text" id="privateVideoUploadStatus"></div>
+<input id="privateContentVideoUrl" placeholder="Or paste a direct video URL" style="margin-top:8px"/>
+</div>
+<div class="wide">
+<div class="field-label">Poster</div>
+<div class="private-upload-row hidden">
+<input accept="image/*,.jpg,.jpeg,.png,.webp" disabled="" id="privateContentPosterFile" type="file"/>
+<button disabled="" id="uploadPrivatePosterBtn" type="button">Upload poster</button>
+</div>
+<div class="small-text" id="privatePosterUploadStatus"></div>
+<input id="privateContentPosterUrl" placeholder="Optional poster URL" style="margin-top:8px"/>
+</div>
+<div><div class="field-label">Description</div><textarea id="privateContentDescription" maxlength="3000" placeholder="Optional description"></textarea></div>
+<div><div class="field-label">Creator / studio</div><input id="privateContentCreator" maxlength="180" placeholder="Optional"/></div>
+<div><div class="field-label">Licence</div><input id="privateContentLicence" maxlength="180" placeholder="e.g. CC0 / CC BY-SA 4.0"/></div>
+<div><div class="field-label">Attribution</div><input id="privateContentAttribution" maxlength="500" placeholder="Required attribution text if applicable"/></div>
+<div><div class="field-label">Source / licence page</div><input id="privateContentSourceUrl" placeholder="Optional https://..."/></div>
+<div><div class="field-label">Sort order</div><input id="privateContentSortOrder" type="number" value="100"/></div>
+<label class="private-check-card"><input checked="" id="privateContentEnabled" type="checkbox"/><span><strong>Enabled</strong><div class="small-text">Disabled titles stay in the panel but are never returned to Panther.</div></span></label>
+<div class="cache-actions">
+<button class="primary" id="savePrivateContentBtn">Add title</button>
+<button class="hidden" id="cancelPrivateContentEditBtn">Cancel edit</button>
+<button id="reloadPrivateLibraryBtn">Reload</button>
+</div>
+</div>
+<div class="status" id="privateContentStatus"></div>
+</div>
+<div class="card-flat">
+<div class="section-heading">
+<div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
+<span class="pill" id="privateContentCount">0</span>
+</div>
+<div class="private-content-list" id="privateContentList"></div>
+</div>
+</div>
+<div style="height:16px"></div>
+<div class="card-flat">
+<div class="section-heading">
+<div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
+<button class="small" id="reloadPrivateAccountsBtn">Reload accounts</button>
+</div>
+<div class="status" id="privateAccountStatus"></div>
+<div class="private-account-list" id="privateAccountsList"></div>
+</div>
+<div class="private-title-access hidden" id="privateTitleAccessPanel">
+<div class="section-heading">
+<div class="section-heading-left"><div class="section-title-text"><h2>Individual title access</h2><div id="privateTitleAccessAccount">Select an account.</div></div></div>
+<button class="small" id="closePrivateTitleAccessBtn">Close</button>
+</div>
+<div class="update-help">These selections are used when <strong>Allow all titles</strong> is turned off for the account.</div>
+<div class="private-title-access-list" id="privateTitleAccessList"></div>
+<div class="cache-actions" style="margin-top:12px">
+<button class="primary" id="savePrivateTitleAccessBtn">Save title access</button>
+</div>
+<div class="status" id="privateTitleAccessStatus"></div>
+</div>
+</div>
+</details>
 
 
   <details id="devicesSection" class="section-anchor collapse-card">
@@ -6662,7 +6406,8 @@ let privateTitleAccessAllowed = new Set();
 
 function resetPrivateContentForm(){
   privateEditingContentId = null;
-  $("privateContentFormTitle").textContent = "Add content";
+  $("privateContentEditorCard")?.classList.add("hidden");
+  $("privateContentFormTitle").textContent = "Edit existing title";
   $("savePrivateContentBtn").textContent = "Add title";
   $("cancelPrivateContentEditBtn").classList.add("hidden");
   $("privateContentTitle").value = "";
@@ -6690,7 +6435,7 @@ function renderPrivateContent(){
   $("privateContentCount").textContent = String(privateLibraryContent.length);
 
   if(!privateLibraryContent.length){
-    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Upload a video or add a direct streaming URL.</div>';
+    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Add a magnet link above.</div>';
     renderPrivateTitleAccess();
     return;
   }
@@ -6760,6 +6505,8 @@ function editPrivateContent(id){
   if(!item) return;
 
   privateEditingContentId = id;
+  $("privateContentEditorCard")?.classList.remove("hidden");
+  $("privateContentEditorCard")?.scrollIntoView({behavior:"smooth",block:"start"});
   $("privateContentFormTitle").textContent = "Edit content";
   $("savePrivateContentBtn").textContent = "Save changes";
   $("cancelPrivateContentEditBtn").classList.remove("hidden");
@@ -7119,8 +6866,7 @@ async function loadPrivateLibrary(){
   if(!$("privateLibrarySection")) return;
   await Promise.all([
     loadPrivateContent(),
-    loadPrivateAccounts(),
-    loadAdultM3uSources()
+    loadPrivateAccounts()
   ]);
 }
 
