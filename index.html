@@ -1823,11 +1823,33 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <div class="field-label">Create new folder</div>
 <div class="private-upload-row"><input id="adultNewFolderName" maxlength="100" placeholder="New folder name"><button id="adultCreateFolderBtn" type="button">Create folder</button></div>
 <input id="adultMagnetCategory" type="hidden" value="Adult"/>
+<div class="card-flat" style="margin-top:12px">
+  <div class="field-label">Folder image — upload or URL</div>
+  <div class="small-text">Select a folder above. Upload an image from your device OR paste a direct image URL.</div>
+  <input id="adultFolderImageUrl" type="url" inputmode="url" placeholder="https://example.com/folder.jpg" style="margin-top:10px"/>
+  <button id="adultSaveFolderImageUrlBtn" type="button" style="margin-top:8px">Use image URL</button>
+  <div class="private-upload-row" style="margin-top:10px">
+    <input id="adultFolderImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/>
+    <button id="adultUploadFolderImageBtn" type="button">Upload folder image</button>
+    <button id="adultRemoveFolderImageBtn" type="button" class="danger">Remove image</button>
+  </div>
+  <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <img id="adultFolderImagePreview" alt="Selected folder artwork" style="display:none;object-fit:cover;width:140px;height:90px;border-radius:10px;border:1px solid #33404c"/>
+    <span id="adultFolderImageLabel" class="small-text">No folder image assigned</span>
+  </div>
+  <div id="adultFolderImageStatus" class="status"></div>
+  <div class="small-text">The uploaded image is stored in Supabase Storage. Folder-to-image assignments in this version are remembered in this browser; showing them on other devices or in Panther requires a shared folder-metadata source.</div>
+</div>
 </div>
 <div class="wide">
-<div class="field-label">Poster URL</div>
+<div class="field-label">Video poster — upload or URL</div>
 <input id="adultMagnetPosterUrl" inputmode="url" placeholder="https://example.com/poster.jpg" type="url"/>
-<div class="small-text">Optional. You can also edit the title later in the normal Private Library content editor.</div>
+<div class="private-upload-row" style="margin-top:10px">
+  <input id="adultMagnetPosterFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/>
+  <button id="adultUploadMagnetPosterBtn" type="button">Upload poster</button>
+</div>
+<div id="adultMagnetPosterUploadStatus" class="status"></div>
+<div class="small-text">Choose either a direct image URL or attach an image. Uploaded images automatically fill in the URL field.</div>
 </div>
 <div class="wide">
 <div class="field-label">Description</div>
@@ -1894,9 +1916,9 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 </div>
 <div class="wide">
 <div class="field-label">Poster</div>
-<div class="private-upload-row hidden">
-<input accept="image/*,.jpg,.jpeg,.png,.webp" disabled="" id="privateContentPosterFile" type="file"/>
-<button disabled="" id="uploadPrivatePosterBtn" type="button">Upload poster</button>
+<div class="private-upload-row">
+<input accept="image/*,.jpg,.jpeg,.png,.webp" id="privateContentPosterFile" type="file"/>
+<button id="uploadPrivatePosterBtn" type="button">Upload poster</button>
 </div>
 <div class="small-text" id="privatePosterUploadStatus"></div>
 <input id="privateContentPosterUrl" placeholder="Optional poster URL" style="margin-top:8px"/>
@@ -6511,6 +6533,92 @@ function resetPrivateContentForm(){
 // Folders use the existing category field; no change to TorBox playback.
 // Empty folders are remembered by this browser until content is published in them.
 const adultFolderStorageKey = "panther_adult_folder_names_v1";
+const adultFolderImagesKey = "panther_adult_folder_images_v1";
+function getAdultFolderImages(){
+  try {
+    const data = JSON.parse(localStorage.getItem(adultFolderImagesKey) || "{}");
+    return data && typeof data === "object" && !Array.isArray(data) ? data : {};
+  } catch(_) { return {}; }
+}
+function updateAdultFolderImagePreview(){
+  const folder = $("adultMagnetFolder")?.value || "Adult";
+  const url = getAdultFolderImages()[folder] || "";
+  const preview = $("adultFolderImagePreview");
+  const label = $("adultFolderImageLabel");
+  if(preview){
+    preview.style.display = url ? "block" : "none";
+    if(url) preview.src = url; else preview.removeAttribute("src");
+  }
+  if(label) label.textContent = url ? `Image set for ${folder}` : `No image for ${folder}`;
+  const urlInput = $("adultFolderImageUrl");
+  if(urlInput) urlInput.value = url;
+}
+$("adultSaveFolderImageUrlBtn")?.addEventListener("click", () => {
+  const folder = $("adultMagnetFolder")?.value || "Adult";
+  const url = String($("adultFolderImageUrl")?.value || "").trim();
+  const status = $("adultFolderImageStatus");
+  if(!/^https:\/\/[^\s]+$/i.test(url)) {
+    setStatus(status, "Enter a valid HTTPS image URL.", false); return;
+  }
+  try {
+    const images = getAdultFolderImages();
+    images[folder] = url;
+    localStorage.setItem(adultFolderImagesKey, JSON.stringify(images));
+    updateAdultFolderImagePreview();
+    setStatus(status, `Image URL saved for ${folder}.`, true);
+  } catch(error) { setStatus(status, error?.message || "Could not save folder image URL.", false); }
+});
+$("adultUploadMagnetPosterBtn")?.addEventListener("click", async () => {
+  const file = $("adultMagnetPosterFile")?.files?.[0];
+  const button = $("adultUploadMagnetPosterBtn");
+  const status = $("adultMagnetPosterUploadStatus");
+  if(!file) { setStatus(status, "Choose a poster image first.", false); return; }
+  if(!/\.(jpe?g|png|webp|gif)$/i.test(file.name) || (file.type && !["image/jpeg","image/png","image/webp","image/gif"].includes(file.type))){
+    setStatus(status, "Choose a JPG, PNG, WebP or GIF image.", false); return;
+  }
+  if(file.size > 8 * 1024 * 1024){ setStatus(status, "Poster must be smaller than 8 MB.", false); return; }
+  button.disabled = true;
+  setStatus(status, "Uploading poster…");
+  try {
+    const result = await uploadPrivateMedia(file, "poster");
+    $("adultMagnetPosterUrl").value = result.url;
+    $("adultMagnetPosterFile").value = "";
+    setStatus(status, "Poster uploaded. Its URL will be used when publishing.", true);
+  } catch(error){ setStatus(status, error?.message || "Poster upload failed.", false); }
+  finally { button.disabled = false; }
+});
+$("adultUploadFolderImageBtn")?.addEventListener("click", async () => {
+  const file = $("adultFolderImageFile")?.files?.[0];
+  const status = $("adultFolderImageStatus");
+  const button = $("adultUploadFolderImageBtn");
+  const folder = $("adultMagnetFolder")?.value || "Adult";
+  if(!file){ setStatus(status, "Choose an image attachment first.", false); return; }
+  if(!/\.(jpe?g|png|webp|gif)$/i.test(file.name) || (file.type && !["image/jpeg","image/png","image/webp","image/gif"].includes(file.type))){
+    setStatus(status, "Use a JPG, PNG, WebP or GIF image.", false); return;
+  }
+  if(file.size > 8 * 1024 * 1024){ setStatus(status, "Folder image must be smaller than 8 MB.", false); return; }
+  button.disabled = true;
+  setStatus(status, `Uploading image for ${folder}…`);
+  try {
+    const result = await uploadPrivateMedia(file, "poster");
+    const images = getAdultFolderImages();
+    images[folder] = result.url;
+    localStorage.setItem(adultFolderImagesKey, JSON.stringify(images));
+    updateAdultFolderImagePreview();
+    setStatus(status, `Image uploaded for ${folder}.`, true);
+  } catch(error) {
+    setStatus(status, error?.message || "Image upload failed.", false);
+  } finally { button.disabled = false; }
+});
+$("adultRemoveFolderImageBtn")?.addEventListener("click", () => {
+  const folder = $("adultMagnetFolder")?.value || "Adult";
+  const images = getAdultFolderImages();
+  delete images[folder];
+  try { localStorage.setItem(adultFolderImagesKey, JSON.stringify(images)); }
+  catch(error){ setStatus($("adultFolderImageStatus"), "Unable to save this change in the browser.", false); return; }
+  updateAdultFolderImagePreview();
+  setStatus($("adultFolderImageStatus"), `Folder image removed for ${folder} (uploaded file left untouched).`, true);
+});
 function getAdultFolders(){
   let saved = [];
   try { saved = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]"); } catch(_) {}
@@ -6526,6 +6634,7 @@ function renderAdultFolderChoices(){
     folderSelect.innerHTML = folders.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
     folderSelect.value = folders.includes(current) ? current : "Adult";
     if($("adultMagnetCategory")) $("adultMagnetCategory").value = folderSelect.value;
+    updateAdultFolderImagePreview();
   }
   if(filter){
     const current = filter.value;
@@ -6544,11 +6653,13 @@ $("adultCreateFolderBtn")?.addEventListener("click", () => {
   renderAdultFolderChoices();
   $("adultMagnetFolder").value = name;
   $("adultMagnetCategory").value = name;
+  updateAdultFolderImagePreview();
   $("adultNewFolderName").value = "";
   setStatus($("adultMagnetStatus"), `Folder "${name}" selected. Publish a video into it to store the folder in Supabase.`, true);
 });
 $("adultMagnetFolder")?.addEventListener("change", () => {
   $("adultMagnetCategory").value = $("adultMagnetFolder").value;
+  updateAdultFolderImagePreview();
 });
 $("adultLibraryFolderFilter")?.addEventListener("change", renderPrivateContent);
 
