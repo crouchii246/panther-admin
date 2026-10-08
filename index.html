@@ -774,129 +774,6 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   font-size:12px;
 }
 
-
-/* ===== Seasonal Themes ===== */
-
-.seasonal-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px;
-}
-
-.seasonal-grid .wide{
-  grid-column:1 / -1;
-}
-
-.seasonal-preview{
-  min-height:180px;
-  border-radius:16px;
-  border:1px solid #39455f;
-  overflow:hidden;
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,.10), transparent 35%),
-    linear-gradient(135deg,#111827,#050505);
-}
-
-.seasonal-preview::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.45));
-  pointer-events:none;
-}
-
-.seasonal-preview-card{
-  position:relative;
-  z-index:1;
-  padding:14px 20px;
-  border-radius:14px;
-  color:#fff;
-  font-size:20px;
-  font-weight:800;
-  letter-spacing:.02em;
-  border:2px solid rgba(255,255,255,.85);
-  box-shadow:0 10px 28px rgba(0,0,0,.35);
-  text-align:center;
-}
-
-.seasonal-state{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:10px;
-}
-
-.seasonal-pill{
-  border-radius:999px;
-  padding:6px 10px;
-  font-size:11px;
-  font-weight:700;
-  background:#161d2c;
-  border:1px solid #35415d;
-  color:#d9e1f2;
-}
-
-@media (max-width:760px){
-  .seasonal-grid{grid-template-columns:1fr}
-}
-
-
-/* ===== Remote App Settings ===== */
-
-.remote-settings-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px;
-}
-
-.remote-settings-grid .wide{
-  grid-column:1 / -1;
-}
-
-.remote-setting-card{
-  background:#101722;
-  border:1px solid #2d3a52;
-  border-radius:14px;
-  padding:14px;
-}
-
-.remote-setting-help{
-  margin-top:6px;
-  color:#93a3bd;
-  font-size:11px;
-  line-height:1.45;
-}
-
-.remote-target-summary{
-  background:#0b111c;
-  border:1px solid #2d3a52;
-  border-radius:14px;
-  padding:14px;
-  color:#cbd5e1;
-  line-height:1.55;
-}
-
-.remote-managed-count{
-  display:inline-flex;
-  margin-top:9px;
-  padding:5px 9px;
-  border-radius:999px;
-  background:#172238;
-  border:1px solid #3e5276;
-  color:#d9e8ff;
-  font-size:11px;
-  font-weight:800;
-}
-
-@media (max-width:760px){
-  .remote-settings-grid{grid-template-columns:1fr}
-}
-
 </style>
 
 </head>
@@ -921,8 +798,6 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#catalogCacheSection">Cache</a>
       <a href="#featuresSection">Features</a>
       <a href="#homeScreenSection">Home Screen</a>
-      <a href="#remoteAppSettingsSection">Remote Settings</a>
-      <a href="#seasonalThemesSection">Seasonal Themes</a>
       <a href="#privateLibrarySection">Private Library</a>
       <a href="#devicesSection">Devices</a>
       <a href="#announcementsSection">Announcements</a>
@@ -989,8 +864,6 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickCatalogCache" class="quick-action">⚡ Catalog cache</button>
     <button id="quickFeatures" class="quick-action">⚙ App Features</button>
     <button id="quickHomeScreen" class="quick-action">🏠 Home Screen</button>
-    <button id="quickRemoteAppSettings" class="quick-action">🎛️ Remote Settings</button>
-    <button id="quickSeasonalThemes" class="quick-action">🎄 Seasonal Themes</button>
     <button id="quickPrivateLibrary" class="quick-action">🔒 Private Library</button>
     <button id="quickDevices" class="quick-action">📱 Devices</button>
     <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
@@ -1115,357 +988,6 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         <div class="field-label">Current remote Home state</div>
         <div id="homeConfigSummary" class="update-summary-value">Loading…</div>
         <div class="update-help">Panther uses the last successfully downloaded configuration if Supabase is temporarily unavailable.</div>
-      </div>
-
-    </div>
-  </details>
-
-
-
-
-  <details id="remoteAppSettingsSection" class="section-anchor collapse-card">
-    <summary>
-      <div class="section-heading-left">
-        <div class="section-icon">🎛️</div>
-        <div class="section-title-text">
-          <h2>Remote App Settings</h2>
-          <div>Push important Panther preferences globally or to one IPTV account.</div>
-        </div>
-      </div>
-      <span class="collapse-arrow">▼</span>
-    </summary>
-
-    <div class="collapse-content">
-
-      <div class="cache-explainer">
-        <strong>Global</strong> values can apply to every Panther account.
-        Account-specific values override Global values. Leave a setting as
-        <strong>Use local setting</strong> when Panther should not control it remotely.
-      </div>
-
-      <div style="height:14px"></div>
-
-      <div class="remote-settings-grid">
-
-        <div class="wide">
-          <div class="field-label">Target</div>
-          <select id="remoteSettingsTarget">
-            <option value="__global__">🌍 Global — all Panther accounts</option>
-          </select>
-          <div id="remoteSettingsTargetInfo" class="remote-setting-help">
-            Loading registered Panther accounts…
-          </div>
-        </div>
-
-        <label class="cache-switch-card">
-          <input id="remoteSettingsEnabled" type="checkbox">
-          <span>
-            <span class="cache-switch-title">Enable this remote settings target</span>
-            <div class="cache-switch-help">
-              When disabled, this target contributes no remote values.
-            </div>
-          </span>
-        </label>
-
-        <label class="cache-switch-card">
-          <input id="remoteSettingsLock" type="checkbox" checked>
-          <span>
-            <span class="cache-switch-title">Lock managed settings in Panther</span>
-            <div class="cache-switch-help">
-              ON = Panther Admin enforces the selected values. OFF = push once, then the user can change them locally.
-            </div>
-          </span>
-        </label>
-
-        <label id="remoteSettingsIgnoreGlobalCard" class="cache-switch-card wide" style="display:none">
-          <input id="remoteSettingsIgnoreGlobal" type="checkbox">
-          <span>
-            <span class="cache-switch-title">Ignore Global settings for this account</span>
-            <div class="cache-switch-help">
-              The selected account will use only its own remote values plus any remaining local settings.
-            </div>
-          </span>
-        </label>
-
-        <div class="remote-setting-card">
-          <div class="field-label">Live TV layout</div>
-          <select id="remoteLiveTvViewMode">
-            <option value="__local__">Use local setting</option>
-            <option value="smarters">Panel View</option>
-            <option value="card">Card View</option>
-            <option value="list">List View</option>
-            <option value="epg">EPG View</option>
-          </select>
-          <div class="remote-setting-help">
-            Controls the Live TV category/channel presentation.
-          </div>
-        </div>
-
-        <div class="remote-setting-card">
-          <div class="field-label">Movies layout</div>
-          <select id="remoteMovieViewMode">
-            <option value="__local__">Use local setting</option>
-            <option value="card">Card View</option>
-            <option value="list">List View</option>
-          </select>
-        </div>
-
-        <div class="remote-setting-card">
-          <div class="field-label">Series layout</div>
-          <select id="remoteSeriesViewMode">
-            <option value="__local__">Use local setting</option>
-            <option value="card">Card View</option>
-            <option value="list">List View</option>
-          </select>
-        </div>
-
-        <div class="remote-setting-card">
-          <div class="field-label">Firestick Up / Down channel switching</div>
-          <select id="remoteSwipeNavigation">
-            <option value="__local__">Use local setting</option>
-            <option value="true">On</option>
-            <option value="false">Off</option>
-          </select>
-          <div class="remote-setting-help">
-            This is Panther's Swipe / Remote Navigation setting used for Up/Down Live TV channel changes.
-          </div>
-        </div>
-
-        <div class="remote-setting-card">
-          <div class="field-label">Play next episode prompt</div>
-          <select id="remoteAutoPlayNext">
-            <option value="__local__">Use local setting</option>
-            <option value="true">On</option>
-            <option value="false">Off</option>
-          </select>
-        </div>
-
-        <div class="remote-setting-card">
-          <div class="field-label">Show EPG in channel list</div>
-          <select id="remoteShowEpg">
-            <option value="__local__">Use local setting</option>
-            <option value="true">On</option>
-            <option value="false">Off</option>
-          </select>
-        </div>
-
-        <div class="remote-setting-card">
-          <div class="field-label">Show Continue Watching</div>
-          <select id="remoteShowContinue">
-            <option value="__local__">Use local setting</option>
-            <option value="true">On</option>
-            <option value="false">Off</option>
-          </select>
-        </div>
-
-        <div class="remote-setting-card">
-          <div class="field-label">Default Live TV player</div>
-          <select id="remoteDefaultPlayerLive">
-            <option value="__local__">Use local setting</option>
-            <option value="panther">Panther Player</option>
-            <option value="external:org.videolan.vlc">VLC</option>
-          </select>
-        </div>
-
-        <div class="remote-setting-card">
-          <div class="field-label">Default Movies player</div>
-          <select id="remoteDefaultPlayerMovies">
-            <option value="__local__">Use local setting</option>
-            <option value="panther">Panther Player</option>
-            <option value="external:org.videolan.vlc">VLC</option>
-          </select>
-        </div>
-
-        <div class="remote-setting-card">
-          <div class="field-label">Default Series player</div>
-          <select id="remoteDefaultPlayerSeries">
-            <option value="__local__">Use local setting</option>
-            <option value="panther">Panther Player</option>
-            <option value="external:org.videolan.vlc">VLC</option>
-          </select>
-        </div>
-
-        <div class="wide">
-          <div id="remoteSettingsSummary" class="remote-target-summary">
-            Select a target to view its settings.
-          </div>
-        </div>
-
-        <div class="wide cache-actions">
-          <button id="saveRemoteSettingsBtn" class="primary">Save remote settings</button>
-          <button id="reloadRemoteSettingsBtn">Reload</button>
-          <button id="resetRemoteSettingsBtn">Reset target</button>
-        </div>
-
-      </div>
-
-      <div id="remoteSettingsStatus" class="status"></div>
-
-    </div>
-  </details>
-
-
-  <details id="seasonalThemesSection" class="section-anchor collapse-card">
-    <summary>
-      <div class="section-heading-left">
-        <div class="section-icon">🎄</div>
-        <div class="section-title-text">
-          <h2>Seasonal Themes</h2>
-          <div>Schedule festive Panther Home themes without releasing another APK.</div>
-        </div>
-      </div>
-      <span class="collapse-arrow">▼</span>
-    </summary>
-
-    <div class="collapse-content">
-
-      <div class="cache-explainer">
-        <strong>Seasonal Themes</strong> change the Panther Home background and add an optional
-        seasonal banner while the schedule is active. When the end date passes, Panther
-        automatically returns to the normal Home appearance.
-      </div>
-
-      <div style="height:14px"></div>
-
-      <div class="seasonal-grid">
-
-        <div>
-          <div class="field-label">Seasonal themes</div>
-          <select id="seasonalEnabled">
-            <option value="false">Disabled</option>
-            <option value="true">Enabled</option>
-          </select>
-        </div>
-
-        <div>
-          <div class="field-label">Preset</div>
-          <select id="seasonalThemeKey">
-            <option value="christmas">🎄 Christmas</option>
-            <option value="halloween">🎃 Halloween</option>
-            <option value="valentine">❤ Valentine's</option>
-            <option value="new_year">✨ New Year</option>
-            <option value="easter">🐣 Easter</option>
-            <option value="custom">🎨 Custom</option>
-          </select>
-        </div>
-
-        <label class="cache-switch-card">
-          <input id="seasonalForceActive" type="checkbox">
-          <span>
-            <span class="cache-switch-title">Force active now</span>
-            <div class="cache-switch-help">Ignore the schedule and show the theme immediately on every Panther Home screen.</div>
-          </span>
-        </label>
-
-        <label class="cache-switch-card">
-          <input id="seasonalShowBanner" type="checkbox" checked>
-          <span>
-            <span class="cache-switch-title">Show seasonal banner</span>
-            <div class="cache-switch-help">Show the badge and message over the Home screen.</div>
-          </span>
-        </label>
-
-        <div>
-          <div class="field-label">Theme intensity</div>
-          <select id="seasonalThemeIntensity">
-            <option value="subtle">Subtle</option>
-            <option value="full">Full</option>
-          </select>
-          <div class="update-help">Full makes the Home background and header more strongly themed.</div>
-        </div>
-
-        <label class="cache-switch-card">
-          <input id="seasonalApplyButtonColors" type="checkbox">
-          <span>
-            <span class="cache-switch-title">Apply seasonal colours to Home buttons</span>
-            <div class="cache-switch-help">Recolour Live TV, Movies, Series, Catch Up, Continue Watching, Extras and Settings while the theme is active.</div>
-          </span>
-        </label>
-
-        <label class="cache-switch-card">
-          <input id="seasonalDecorateHeader" type="checkbox" checked>
-          <span>
-            <span class="cache-switch-title">Decorate Panther header</span>
-            <div class="cache-switch-help">In Full mode the header gets a seasonal gradient and a small seasonal badge beside the Panther logo.</div>
-          </span>
-        </label>
-
-        <div>
-          <div class="field-label">Start date & time</div>
-          <input id="seasonalStartAt" type="datetime-local">
-        </div>
-
-        <div>
-          <div class="field-label">End date & time</div>
-          <input id="seasonalEndAt" type="datetime-local">
-        </div>
-
-        <div>
-          <div class="field-label">Theme message</div>
-          <input id="seasonalTitle" maxlength="120" placeholder="e.g. Merry Christmas">
-        </div>
-
-        <div>
-          <div class="field-label">Badge / emoji</div>
-          <input id="seasonalBadgeText" maxlength="24" placeholder="🎄">
-        </div>
-
-        <div>
-          <div class="field-label">Accent colour</div>
-          <input id="seasonalAccentColor" type="color" value="#D62839">
-        </div>
-
-        <div>
-          <div class="field-label">Secondary colour</div>
-          <input id="seasonalSecondaryColor" type="color" value="#0A7A3D">
-        </div>
-
-        <label class="cache-switch-card wide">
-          <input id="seasonalUseBuiltinArtwork" type="checkbox" checked>
-          <span>
-            <span class="cache-switch-title">Use built-in seasonal artwork</span>
-            <div class="cache-switch-help">
-              Uses Panther's built-in snow, Halloween, hearts, fireworks or Easter artwork when no custom background URL is supplied.
-            </div>
-          </span>
-        </label>
-
-        <div class="wide">
-          <div class="field-label">Optional background image URL</div>
-          <input id="seasonalBackgroundUrl" type="url" inputmode="url" placeholder="https://...">
-          <div class="update-help">
-            A direct image URL overrides the built-in artwork. Leave this blank to use Panther's native seasonal artwork.
-          </div>
-        </div>
-
-        <div class="wide">
-          <div class="field-label">Preview</div>
-          <div id="seasonalPreview" class="seasonal-preview">
-            <div id="seasonalPreviewCard" class="seasonal-preview-card">🎄 &nbsp; Merry Christmas</div>
-          </div>
-          <div class="seasonal-state">
-            <span id="seasonalPreviewPreset" class="seasonal-pill">Christmas</span>
-            <span id="seasonalPreviewSchedule" class="seasonal-pill">No schedule</span>
-          </div>
-        </div>
-
-        <div class="wide cache-actions">
-          <button id="saveSeasonalThemeBtn" class="primary">Publish seasonal theme</button>
-          <button id="reloadSeasonalThemeBtn">Reload</button>
-          <button id="seasonalActivateNowBtn">Activate now</button>
-          <button id="seasonalDisableBtn">Turn off</button>
-        </div>
-
-      </div>
-
-      <div id="seasonalThemeStatus" class="status"></div>
-
-      <div class="update-summary">
-        <div class="field-label">Current seasonal state</div>
-        <div id="seasonalThemeSummary" class="update-summary-value">Loading…</div>
-        <div class="update-help">
-          Panther caches the last successful theme configuration, so a temporary network issue does not remove an active theme.
-        </div>
       </div>
 
     </div>
@@ -2021,6 +1543,188 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         Panther only shows the Private Library button after the current registered device's IPTV account is approved here.
         You can require a 4–8 digit PIN, set an expiry date, allow the whole library, or select individual titles.
         Only add material you are legally permitted to store and stream, and only make explicit material available to adults.
+      </div>
+
+      <div style="height:14px"></div>
+
+
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left">
+            <div class="section-title-text">
+              <h2>Adult M3U Sources</h2>
+              <div>Add an M3U URL or upload an M3U file. Entries are added to Panther's existing PIN-protected Private Library.</div>
+            </div>
+          </div>
+          <span id="adultM3uSourceCount" class="pill">0</span>
+        </div>
+
+        <div class="cache-explainer">
+          <strong>Server-side source.</strong>
+          Panther devices never receive the original M3U playlist URL. Stream requests are sent through Panther's protected Adult stream endpoint.
+          Only accounts with Private Library access can receive these entries. Accounts using individual-title mode do not receive M3U content.
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="private-library-form">
+          <div>
+            <div class="field-label">Source name</div>
+            <input id="adultM3uName" maxlength="120" placeholder="e.g. Adult Library">
+          </div>
+
+          <div>
+            <div class="field-label">Default category</div>
+            <input id="adultM3uDefaultCategory" maxlength="100" value="Adult" placeholder="Adult">
+          </div>
+
+          <div class="wide">
+            <div class="field-label">M3U URL</div>
+            <input id="adultM3uUrl" type="url" inputmode="url" placeholder="https://provider.example/playlist.m3u">
+            <div class="small-text">
+              Use this for a remote M3U/M3U8 playlist. The URL stays in Supabase and is never returned to Panther clients.
+            </div>
+          </div>
+
+          <div class="wide">
+            <div class="field-label">Or upload an M3U file</div>
+            <input
+              id="adultM3uFile"
+              type="file"
+              accept=".m3u,.m3u8,text/plain,application/x-mpegURL,application/vnd.apple.mpegurl,audio/x-mpegurl">
+            <div class="small-text">
+              Uploaded playlists are parsed during import. To refresh an uploaded source later, choose the updated M3U file again.
+            </div>
+          </div>
+
+          <div>
+            <div class="field-label">Sort order</div>
+            <input id="adultM3uSortOrder" type="number" value="100">
+          </div>
+
+          <label class="private-check-card">
+            <input id="adultM3uEnabled" type="checkbox" checked>
+            <span>
+              <strong>Enabled</strong>
+              <div class="small-text">Disabled sources remain stored but are not returned to Panther.</div>
+            </span>
+          </label>
+
+          <div class="cache-actions wide">
+            <button id="saveAdultM3uBtn" class="primary">Save &amp; Import</button>
+            <button id="cancelAdultM3uEditBtn" class="hidden">Cancel edit</button>
+            <button id="reloadAdultM3uBtn">Reload sources</button>
+          </div>
+        </div>
+
+        <div id="adultM3uStatus" class="status"></div>
+
+        <div style="height:12px"></div>
+
+        <div id="adultM3uSourceList" class="private-content-list">
+          <div class="empty-note">No Adult M3U sources configured yet.</div>
+        </div>
+      </div>
+
+      <div style="height:14px"></div>
+
+
+
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left">
+            <div class="section-title-text">
+              <h2>Adult Magnet / TorBox</h2>
+              <div>Paste a magnet link, add it to TorBox, choose the video file, then publish it into Panther's existing Adult / Private Library.</div>
+            </div>
+          </div>
+          <span id="adultMagnetStatePill" class="pill">NOT ADDED</span>
+        </div>
+
+        <div class="cache-explainer">
+          <strong>Server-side TorBox import.</strong>
+          The magnet link and TorBox API token are never sent to Panther devices.
+          When a user presses Play, Panther receives a temporary protected playback URL and the Adult stream function redirects to TorBox's temporary CDN link.
+          This keeps TorBox credentials out of the APK and avoids sending the video itself through Supabase.
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="private-library-form">
+          <div class="wide">
+            <div class="field-label">Magnet link</div>
+            <textarea
+              id="adultMagnetLink"
+              rows="4"
+              spellcheck="false"
+              placeholder="magnet:?xt=urn:btih:..."></textarea>
+            <div class="small-text">
+              Paste a standard magnet URI. Panther does not scrape torrent websites; it only processes the magnet you supply.
+            </div>
+          </div>
+
+          <div>
+            <div class="field-label">Title</div>
+            <input id="adultMagnetTitle" maxlength="180" placeholder="Auto-filled from TorBox">
+          </div>
+
+          <div>
+            <div class="field-label">Category</div>
+            <input id="adultMagnetCategory" maxlength="100" value="Adult" placeholder="Adult">
+          </div>
+
+          <div class="wide">
+            <div class="field-label">Poster URL</div>
+            <input id="adultMagnetPosterUrl" type="url" inputmode="url" placeholder="https://example.com/poster.jpg">
+            <div class="small-text">Optional. You can also edit the title later in the normal Private Library content editor.</div>
+          </div>
+
+          <div class="wide">
+            <div class="field-label">Description</div>
+            <textarea id="adultMagnetDescription" rows="3" placeholder="Optional description"></textarea>
+          </div>
+
+          <div>
+            <div class="field-label">Sort order</div>
+            <input id="adultMagnetSortOrder" type="number" value="100">
+          </div>
+
+          <label class="private-check-card">
+            <input id="adultMagnetEnabled" type="checkbox" checked>
+            <span>
+              <strong>Enable after publishing</strong>
+              <div class="small-text">Turn this off if you want to review the item before it appears in Panther.</div>
+            </span>
+          </label>
+
+          <label class="private-check-card wide">
+            <input id="adultMagnetCachedOnly" type="checkbox">
+            <span>
+              <strong>Cached only</strong>
+              <div class="small-text">When enabled, TorBox refuses the import unless it is already cached. Leave off to allow TorBox to download an uncached torrent.</div>
+            </span>
+          </label>
+
+          <div class="cache-actions wide">
+            <button id="inspectAdultMagnetBtn">Inspect magnet</button>
+            <button id="addAdultMagnetBtn" class="primary">Add to TorBox</button>
+            <button id="refreshAdultMagnetBtn" disabled>Refresh status</button>
+            <button id="publishAdultMagnetBtn" class="primary" disabled>Publish to Adult</button>
+            <button id="resetAdultMagnetBtn">Clear</button>
+          </div>
+        </div>
+
+        <div id="adultMagnetStatus" class="status"></div>
+
+        <div style="height:12px"></div>
+
+        <div id="adultMagnetSummary" class="private-bulk-summary">
+          Paste a magnet and press Inspect magnet or Add to TorBox.
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div id="adultMagnetFiles" class="private-content-list"></div>
       </div>
 
       <div style="height:14px"></div>
@@ -2589,8 +2293,6 @@ async function boot() {
     await loadCatalogCache();
     await loadFeatureFlags();
     await loadHomeConfig();
-    await loadRemoteSettingsPanel();
-    await loadSeasonalTheme();
     await loadPrivateLibrary();
     await loadDevices();
   } catch (e) {
@@ -2624,8 +2326,6 @@ $("loginBtn").onclick = async () => {
     await loadCatalogCache();
     await loadFeatureFlags();
     await loadHomeConfig();
-    await loadRemoteSettingsPanel();
-    await loadSeasonalTheme();
     await loadPrivateLibrary();
     await loadDevices();
 
@@ -3878,1038 +3578,6 @@ $("uploadPrivatePosterBtn")?.addEventListener(
 
 
 
-
-
-// ============================================================
-// REMOTE APP SETTINGS
-// ============================================================
-
-let remoteSettingsAccounts = [];
-
-
-function remoteSettingsTargetAccountScope(){
-  const value = $("remoteSettingsTarget")?.value || "__global__";
-  return value === "__global__" ? null : value;
-}
-
-
-function remoteNullableString(value){
-  const text = String(value ?? "").trim();
-  if(!text || text === "__local__") return null;
-  return text;
-}
-
-
-function remoteNullableBoolean(value){
-  const text = String(value ?? "").trim();
-  if(!text || text === "__local__") return null;
-  return text === "true";
-}
-
-
-function remoteSelectValue(value){
-  return value === null || value === undefined || value === ""
-    ? "__local__"
-    : String(value);
-}
-
-
-function remoteBooleanSelectValue(value){
-  if(value === null || value === undefined) return "__local__";
-  return value === true ? "true" : "false";
-}
-
-
-function remoteSettingsLabelForAccount(account){
-  if(!account) return "Unknown account";
-
-  const service = String(account.service_name || "").trim();
-  const username = String(account.username || "").trim();
-
-  if(service && username) return `${service} — ${username}`;
-  if(username) return username;
-  if(service) return service;
-
-  return account.account_scope_id || "Unknown account";
-}
-
-
-function remoteSettingsManagedCount(config){
-  const values = [
-    config?.live_tv_view_mode,
-    config?.movie_view_mode,
-    config?.series_view_mode,
-    config?.swipe_remote_navigation,
-    config?.auto_play_next_episode,
-    config?.show_epg_channel_list,
-    config?.show_continue_watching,
-    config?.default_player_live,
-    config?.default_player_movies,
-    config?.default_player_series
-  ];
-
-  return values.filter(value => value !== null && value !== undefined && value !== "").length;
-}
-
-
-function remoteSettingsConfigFromForm(){
-  return {
-    enabled: $("remoteSettingsEnabled")?.checked === true,
-    ignore_global: $("remoteSettingsIgnoreGlobal")?.checked === true,
-    lock_settings: $("remoteSettingsLock")?.checked === true,
-
-    live_tv_view_mode:
-      remoteNullableString($("remoteLiveTvViewMode")?.value),
-
-    movie_view_mode:
-      remoteNullableString($("remoteMovieViewMode")?.value),
-
-    series_view_mode:
-      remoteNullableString($("remoteSeriesViewMode")?.value),
-
-    swipe_remote_navigation:
-      remoteNullableBoolean($("remoteSwipeNavigation")?.value),
-
-    auto_play_next_episode:
-      remoteNullableBoolean($("remoteAutoPlayNext")?.value),
-
-    show_epg_channel_list:
-      remoteNullableBoolean($("remoteShowEpg")?.value),
-
-    show_continue_watching:
-      remoteNullableBoolean($("remoteShowContinue")?.value),
-
-    default_player_live:
-      remoteNullableString($("remoteDefaultPlayerLive")?.value),
-
-    default_player_movies:
-      remoteNullableString($("remoteDefaultPlayerMovies")?.value),
-
-    default_player_series:
-      remoteNullableString($("remoteDefaultPlayerSeries")?.value)
-  };
-}
-
-
-function applyRemoteSettingsToForm(config){
-  const value = config || {};
-
-  $("remoteSettingsEnabled").checked = value.enabled === true;
-  $("remoteSettingsIgnoreGlobal").checked = value.ignore_global === true;
-  $("remoteSettingsLock").checked = value.lock_settings !== false;
-
-  $("remoteLiveTvViewMode").value =
-    remoteSelectValue(value.live_tv_view_mode);
-
-  $("remoteMovieViewMode").value =
-    remoteSelectValue(value.movie_view_mode);
-
-  $("remoteSeriesViewMode").value =
-    remoteSelectValue(value.series_view_mode);
-
-  $("remoteSwipeNavigation").value =
-    remoteBooleanSelectValue(value.swipe_remote_navigation);
-
-  $("remoteAutoPlayNext").value =
-    remoteBooleanSelectValue(value.auto_play_next_episode);
-
-  $("remoteShowEpg").value =
-    remoteBooleanSelectValue(value.show_epg_channel_list);
-
-  $("remoteShowContinue").value =
-    remoteBooleanSelectValue(value.show_continue_watching);
-
-  $("remoteDefaultPlayerLive").value =
-    remoteSelectValue(value.default_player_live);
-
-  $("remoteDefaultPlayerMovies").value =
-    remoteSelectValue(value.default_player_movies);
-
-  $("remoteDefaultPlayerSeries").value =
-    remoteSelectValue(value.default_player_series);
-
-  updateRemoteSettingsSummary(value);
-}
-
-
-function updateRemoteSettingsTargetUi(){
-  const accountScopeId = remoteSettingsTargetAccountScope();
-  const isGlobal = accountScopeId === null;
-
-  $("remoteSettingsIgnoreGlobalCard").style.display =
-    isGlobal ? "none" : "";
-
-  if(isGlobal){
-    $("remoteSettingsTargetInfo").textContent =
-      "Global values are inherited by all accounts unless an account override replaces them or ignores Global.";
-    return;
-  }
-
-  const account =
-    remoteSettingsAccounts.find(
-      item => item.account_scope_id === accountScopeId
-    );
-
-  if(!account){
-    $("remoteSettingsTargetInfo").textContent =
-      `Account scope: ${accountScopeId}`;
-    return;
-  }
-
-  const deviceCount = Number(account.device_count || 0);
-  const overrideText = account.has_override
-    ? (
-        account.override_enabled
-          ? "Account override exists and is enabled"
-          : "Account override exists but is disabled"
-      )
-    : "No account override saved yet";
-
-  $("remoteSettingsTargetInfo").textContent =
-    `${remoteSettingsLabelForAccount(account)} · ${deviceCount} device${deviceCount === 1 ? "" : "s"} · ${overrideText}`;
-}
-
-
-function updateRemoteSettingsSummary(config){
-  const host = $("remoteSettingsSummary");
-  if(!host) return;
-
-  const targetAccountScopeId = remoteSettingsTargetAccountScope();
-  const isGlobal = targetAccountScopeId === null;
-  const managedCount = remoteSettingsManagedCount(config);
-
-  let title = "🌍 Global";
-  if(!isGlobal){
-    const account =
-      remoteSettingsAccounts.find(
-        item => item.account_scope_id === targetAccountScopeId
-      );
-
-    title =
-      `👤 ${remoteSettingsLabelForAccount(account)}`;
-  }
-
-  const enabledText =
-    config?.enabled === true ? "Enabled" : "Disabled";
-
-  const behaviourText =
-    config?.lock_settings === false
-      ? "Push once — user can change locally afterwards"
-      : "Locked — Panther Admin enforces managed values";
-
-  const inheritedText =
-    !isGlobal && config?.ignore_global === true
-      ? "Global settings ignored"
-      : (
-          !isGlobal
-            ? "Inherits Global values where this override is Local"
-            : "Applies to accounts unless overridden"
-        );
-
-  host.innerHTML =
-    `<strong>${escapeHtml(title)}</strong><br>` +
-    `${escapeHtml(enabledText)} · ${escapeHtml(behaviourText)}<br>` +
-    `${escapeHtml(inheritedText)}<br>` +
-    `<span class="remote-managed-count">${managedCount} setting${managedCount === 1 ? "" : "s"} configured on this target</span>`;
-}
-
-
-async function loadRemoteSettingsAccounts(){
-  const rows =
-    await rpc(
-      "panther_admin_list_remote_setting_accounts",
-      {}
-    );
-
-  remoteSettingsAccounts =
-    Array.isArray(rows) ? rows : [];
-
-  const target = $("remoteSettingsTarget");
-  const previous = target.value || "__global__";
-
-  target.innerHTML =
-    `<option value="__global__">🌍 Global — all Panther accounts</option>`;
-
-  remoteSettingsAccounts.forEach(account => {
-    const option = document.createElement("option");
-    option.value = account.account_scope_id;
-    option.textContent =
-      `👤 ${remoteSettingsLabelForAccount(account)} (${Number(account.device_count || 0)} device${Number(account.device_count || 0) === 1 ? "" : "s"})`;
-    target.appendChild(option);
-  });
-
-  if(
-    previous === "__global__" ||
-    remoteSettingsAccounts.some(
-      item => item.account_scope_id === previous
-    )
-  ){
-    target.value = previous;
-  }
-
-  updateRemoteSettingsTargetUi();
-}
-
-
-async function loadRemoteSettingsForTarget(){
-  const accountScopeId =
-    remoteSettingsTargetAccountScope();
-
-  setStatus(
-    $("remoteSettingsStatus"),
-    "Loading remote settings..."
-  );
-
-  try{
-    const result =
-      await rpc(
-        "panther_admin_get_remote_app_settings",
-        {
-          p_account_scope_id: accountScopeId
-        }
-      );
-
-    applyRemoteSettingsToForm(
-      result || {}
-    );
-
-    updateRemoteSettingsTargetUi();
-
-    setStatus(
-      $("remoteSettingsStatus"),
-      ""
-    );
-
-  }catch(e){
-    setStatus(
-      $("remoteSettingsStatus"),
-      e?.message || String(e),
-      false
-    );
-  }
-}
-
-
-async function loadRemoteSettingsPanel(){
-  if(!$("remoteAppSettingsSection")) return;
-
-  try{
-    await loadRemoteSettingsAccounts();
-    await loadRemoteSettingsForTarget();
-
-  }catch(e){
-    setStatus(
-      $("remoteSettingsStatus"),
-      "Remote App Settings is not ready yet. Run Panther_Remote_App_Settings_V1.txt in Supabase first. " +
-        (e?.message || String(e)),
-      false
-    );
-  }
-}
-
-
-async function saveRemoteSettings(){
-  const button = $("saveRemoteSettingsBtn");
-  const accountScopeId =
-    remoteSettingsTargetAccountScope();
-
-  try{
-    button.disabled = true;
-
-    const config =
-      remoteSettingsConfigFromForm();
-
-    setStatus(
-      $("remoteSettingsStatus"),
-      "Saving remote settings..."
-    );
-
-    await rpc(
-      "panther_admin_save_remote_app_settings",
-      {
-        p_account_scope_id: accountScopeId,
-        p_enabled: config.enabled,
-        p_ignore_global:
-          accountScopeId === null
-            ? false
-            : config.ignore_global,
-        p_lock_settings: config.lock_settings,
-        p_live_tv_view_mode: config.live_tv_view_mode,
-        p_movie_view_mode: config.movie_view_mode,
-        p_series_view_mode: config.series_view_mode,
-        p_swipe_remote_navigation: config.swipe_remote_navigation,
-        p_auto_play_next_episode: config.auto_play_next_episode,
-        p_show_epg_channel_list: config.show_epg_channel_list,
-        p_show_continue_watching: config.show_continue_watching,
-        p_default_player_live: config.default_player_live,
-        p_default_player_movies: config.default_player_movies,
-        p_default_player_series: config.default_player_series
-      }
-    );
-
-    setStatus(
-      $("remoteSettingsStatus"),
-      accountScopeId === null
-        ? "Global remote settings saved."
-        : "Account remote settings saved.",
-      true
-    );
-
-    await loadRemoteSettingsAccounts();
-    await loadRemoteSettingsForTarget();
-
-  }catch(e){
-    setStatus(
-      $("remoteSettingsStatus"),
-      e?.message || String(e),
-      false
-    );
-
-  }finally{
-    button.disabled = false;
-  }
-}
-
-
-async function resetRemoteSettingsTarget(){
-  const accountScopeId =
-    remoteSettingsTargetAccountScope();
-
-  try{
-    $("resetRemoteSettingsBtn").disabled = true;
-
-    if(accountScopeId === null){
-      await rpc(
-        "panther_admin_save_remote_app_settings",
-        {
-          p_account_scope_id: null,
-          p_enabled: false,
-          p_ignore_global: false,
-          p_lock_settings: true,
-          p_live_tv_view_mode: null,
-          p_movie_view_mode: null,
-          p_series_view_mode: null,
-          p_swipe_remote_navigation: null,
-          p_auto_play_next_episode: null,
-          p_show_epg_channel_list: null,
-          p_show_continue_watching: null,
-          p_default_player_live: null,
-          p_default_player_movies: null,
-          p_default_player_series: null
-        }
-      );
-
-      setStatus(
-        $("remoteSettingsStatus"),
-        "Global remote settings reset to local-device control.",
-        true
-      );
-
-    }else{
-      await rpc(
-        "panther_admin_delete_remote_app_settings",
-        {
-          p_account_scope_id: accountScopeId
-        }
-      );
-
-      setStatus(
-        $("remoteSettingsStatus"),
-        "Account override removed. It will inherit Global settings again.",
-        true
-      );
-    }
-
-    await loadRemoteSettingsAccounts();
-    await loadRemoteSettingsForTarget();
-
-  }catch(e){
-    setStatus(
-      $("remoteSettingsStatus"),
-      e?.message || String(e),
-      false
-    );
-
-  }finally{
-    $("resetRemoteSettingsBtn").disabled = false;
-  }
-}
-
-
-$("remoteSettingsTarget")?.addEventListener(
-  "change",
-  async () => {
-    updateRemoteSettingsTargetUi();
-    await loadRemoteSettingsForTarget();
-  }
-);
-
-
-[
-  "remoteSettingsEnabled",
-  "remoteSettingsLock",
-  "remoteSettingsIgnoreGlobal",
-  "remoteLiveTvViewMode",
-  "remoteMovieViewMode",
-  "remoteSeriesViewMode",
-  "remoteSwipeNavigation",
-  "remoteAutoPlayNext",
-  "remoteShowEpg",
-  "remoteShowContinue",
-  "remoteDefaultPlayerLive",
-  "remoteDefaultPlayerMovies",
-  "remoteDefaultPlayerSeries"
-].forEach(id => {
-  $(id)?.addEventListener(
-    "change",
-    () => {
-      try{
-        updateRemoteSettingsSummary(
-          remoteSettingsConfigFromForm()
-        );
-      }catch{
-      }
-    }
-  );
-});
-
-
-$("saveRemoteSettingsBtn")?.addEventListener(
-  "click",
-  saveRemoteSettings
-);
-
-
-$("reloadRemoteSettingsBtn")?.addEventListener(
-  "click",
-  loadRemoteSettingsForTarget
-);
-
-
-$("resetRemoteSettingsBtn")?.addEventListener(
-  "click",
-  resetRemoteSettingsTarget
-);
-
-
-
-// ============================================================
-// SEASONAL THEMES
-// ============================================================
-
-const SEASONAL_PRESETS = {
-  christmas: {
-    label: "Christmas",
-    title: "Merry Christmas",
-    badge: "🎄",
-    accent: "#D62839",
-    secondary: "#0A7A3D"
-  },
-  halloween: {
-    label: "Halloween",
-    title: "Happy Halloween",
-    badge: "🎃",
-    accent: "#FF7A00",
-    secondary: "#5A189A"
-  },
-  valentine: {
-    label: "Valentine's",
-    title: "Happy Valentine's",
-    badge: "❤",
-    accent: "#E91E63",
-    secondary: "#8E0038"
-  },
-  new_year: {
-    label: "New Year",
-    title: "Happy New Year",
-    badge: "✨",
-    accent: "#D4AF37",
-    secondary: "#16213E"
-  },
-  easter: {
-    label: "Easter",
-    title: "Happy Easter",
-    badge: "🐣",
-    accent: "#A855F7",
-    secondary: "#4CAF50"
-  },
-  custom: {
-    label: "Custom",
-    title: "Panther Streams",
-    badge: "✨",
-    accent: "#E51E37",
-    secondary: "#101828"
-  }
-};
-
-
-function seasonalDefaults(){
-  return {
-    enabled: false,
-    force_active: false,
-    theme_key: "christmas",
-    title: "Merry Christmas",
-    badge_text: "🎄",
-    accent_color: "#D62839",
-    secondary_color: "#0A7A3D",
-    background_url: "",
-    show_banner: true,
-    theme_intensity: "subtle",
-    apply_button_colors: false,
-    decorate_header: true,
-    use_builtin_artwork: true,
-    start_at: null,
-    end_at: null
-  };
-}
-
-
-function seasonalIsoToLocalInput(value){
-  if(!value) return "";
-
-  const date = new Date(value);
-  if(Number.isNaN(date.getTime())) return "";
-
-  const pad = number => String(number).padStart(2, "0");
-
-  return (
-    date.getFullYear() +
-    "-" + pad(date.getMonth() + 1) +
-    "-" + pad(date.getDate()) +
-    "T" + pad(date.getHours()) +
-    ":" + pad(date.getMinutes())
-  );
-}
-
-
-function seasonalLocalInputToIso(value){
-  const text = String(value || "").trim();
-  if(!text) return null;
-
-  const date = new Date(text);
-  if(Number.isNaN(date.getTime())){
-    throw new Error("Invalid seasonal date/time.");
-  }
-
-  return date.toISOString();
-}
-
-
-function seasonalIsActive(config){
-  if(config?.enabled !== true) return false;
-  if(config?.force_active === true) return true;
-
-  const now = Date.now();
-
-  if(config?.start_at){
-    const start = new Date(config.start_at).getTime();
-    if(Number.isFinite(start) && now < start) return false;
-  }
-
-  if(config?.end_at){
-    const end = new Date(config.end_at).getTime();
-    if(Number.isFinite(end) && now >= end) return false;
-  }
-
-  return true;
-}
-
-
-function seasonalConfigFromForm(){
-  return {
-    enabled: $("seasonalEnabled")?.value === "true",
-    force_active: $("seasonalForceActive")?.checked === true,
-    theme_key: $("seasonalThemeKey")?.value || "custom",
-    title: ($("seasonalTitle")?.value || "").trim(),
-    badge_text: ($("seasonalBadgeText")?.value || "").trim(),
-    accent_color: ($("seasonalAccentColor")?.value || "#E51E37").toUpperCase(),
-    secondary_color: ($("seasonalSecondaryColor")?.value || "#101828").toUpperCase(),
-    background_url: ($("seasonalBackgroundUrl")?.value || "").trim(),
-    show_banner: $("seasonalShowBanner")?.checked !== false,
-    theme_intensity: $("seasonalThemeIntensity")?.value || "subtle",
-    apply_button_colors: $("seasonalApplyButtonColors")?.checked === true,
-    decorate_header: $("seasonalDecorateHeader")?.checked !== false,
-    use_builtin_artwork: $("seasonalUseBuiltinArtwork")?.checked !== false,
-    start_at: seasonalLocalInputToIso($("seasonalStartAt")?.value || ""),
-    end_at: seasonalLocalInputToIso($("seasonalEndAt")?.value || "")
-  };
-}
-
-
-function applySeasonalConfigToForm(config){
-  const value = {
-    ...seasonalDefaults(),
-    ...(config || {})
-  };
-
-  $("seasonalEnabled").value = value.enabled === true ? "true" : "false";
-  $("seasonalForceActive").checked = value.force_active === true;
-  $("seasonalThemeKey").value = value.theme_key || "custom";
-  $("seasonalTitle").value = value.title || "";
-  $("seasonalBadgeText").value = value.badge_text || "";
-  $("seasonalAccentColor").value = value.accent_color || "#E51E37";
-  $("seasonalSecondaryColor").value = value.secondary_color || "#101828";
-  $("seasonalBackgroundUrl").value = value.background_url || "";
-  $("seasonalShowBanner").checked = value.show_banner !== false;
-  $("seasonalThemeIntensity").value = value.theme_intensity || "subtle";
-  $("seasonalApplyButtonColors").checked = value.apply_button_colors === true;
-  $("seasonalDecorateHeader").checked = value.decorate_header !== false;
-  $("seasonalUseBuiltinArtwork").checked = value.use_builtin_artwork !== false;
-  $("seasonalStartAt").value = seasonalIsoToLocalInput(value.start_at);
-  $("seasonalEndAt").value = seasonalIsoToLocalInput(value.end_at);
-
-  updateSeasonalPreview();
-  updateSeasonalSummary(value);
-}
-
-
-function seasonalBuiltInPreview(themeKey, accent, secondary){
-  switch(themeKey){
-    case "christmas":
-      return [
-        "radial-gradient(circle at 12% 18%, rgba(255,255,255,.75) 0 2px, transparent 3px)",
-        "radial-gradient(circle at 72% 22%, rgba(255,255,255,.55) 0 2px, transparent 3px)",
-        "radial-gradient(circle at 32% 66%, rgba(255,255,255,.45) 0 2px, transparent 3px)",
-        `linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`
-      ].join(",");
-    case "halloween":
-      return [
-        "radial-gradient(circle at 82% 18%, rgba(255,184,77,.55) 0 9%, transparent 20%)",
-        `linear-gradient(135deg, ${secondary}, #08030d 52%, ${accent})`
-      ].join(",");
-    case "valentine":
-      return [
-        "radial-gradient(circle at 18% 22%, rgba(255,180,200,.25) 0 8%, transparent 18%)",
-        "radial-gradient(circle at 78% 68%, rgba(255,120,160,.18) 0 10%, transparent 22%)",
-        `linear-gradient(135deg, ${secondary}, #090408 50%, ${accent})`
-      ].join(",");
-    case "new_year":
-      return [
-        "radial-gradient(circle at 20% 20%, rgba(255,215,0,.30) 0 2%, transparent 14%)",
-        "radial-gradient(circle at 76% 32%, rgba(255,255,255,.22) 0 2%, transparent 16%)",
-        `linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`
-      ].join(",");
-    case "easter":
-      return [
-        "radial-gradient(ellipse at 20% 30%, rgba(255,180,210,.28) 0 7%, transparent 8%)",
-        "radial-gradient(ellipse at 72% 62%, rgba(180,220,255,.26) 0 8%, transparent 9%)",
-        `linear-gradient(135deg, ${secondary}, #08080b 50%, ${accent})`
-      ].join(",");
-    default:
-      return `radial-gradient(circle at 20% 20%, rgba(255,255,255,.12), transparent 35%), linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`;
-  }
-}
-
-
-function updateSeasonalPreview(){
-  if(!$("seasonalPreview")) return;
-
-  let config;
-
-  try{
-    config = seasonalConfigFromForm();
-  }catch{
-    config = seasonalDefaults();
-  }
-
-  const preset =
-    SEASONAL_PRESETS[config.theme_key] ||
-    SEASONAL_PRESETS.custom;
-
-  const accent = config.accent_color || preset.accent;
-  const secondary = config.secondary_color || preset.secondary;
-
-  const preview = $("seasonalPreview");
-  const card = $("seasonalPreviewCard");
-
-  preview.style.backgroundImage = config.background_url
-    ? `linear-gradient(rgba(4,7,14,.45),rgba(4,7,14,.68)), url("${config.background_url.replace(/"/g, '\\"')}")`
-    : (
-        config.use_builtin_artwork
-          ? seasonalBuiltInPreview(config.theme_key, accent, secondary)
-          : `linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`
-      );
-
-  preview.style.backgroundSize = "cover";
-  preview.style.backgroundPosition = "center";
-
-  card.style.background =
-    `linear-gradient(135deg, ${accent}, ${secondary})`;
-
-  card.textContent =
-    `${config.badge_text || preset.badge || "✨"}  ${config.title || preset.title || "Panther Streams"}`;
-
-  $("seasonalPreviewPreset").textContent = preset.label || "Custom";
-
-  const start = config.start_at ? new Date(config.start_at) : null;
-  const end = config.end_at ? new Date(config.end_at) : null;
-
-  let schedule = "No schedule";
-
-  if(config.force_active){
-    schedule = "Forced active now";
-  }else if(start && end){
-    schedule = `${start.toLocaleString()} → ${end.toLocaleString()}`;
-  }else if(start){
-    schedule = `Starts ${start.toLocaleString()}`;
-  }else if(end){
-    schedule = `Until ${end.toLocaleString()}`;
-  }
-
-  $("seasonalPreviewSchedule").textContent = schedule;
-
-  preview.style.boxShadow =
-    config.theme_intensity === "full"
-      ? `inset 0 0 0 2px ${accent}, 0 14px 34px rgba(0,0,0,.34)`
-      : `inset 0 0 0 1px rgba(255,255,255,.10)`;
-
-  card.style.opacity =
-    config.theme_intensity === "full"
-      ? "1"
-      : ".90";
-}
-
-
-function updateSeasonalSummary(config){
-  const host = $("seasonalThemeSummary");
-  if(!host) return;
-
-  const preset =
-    SEASONAL_PRESETS[config?.theme_key] ||
-    SEASONAL_PRESETS.custom;
-
-  if(config?.enabled !== true){
-    host.textContent =
-      "Disabled — Panther uses its normal Home appearance";
-    return;
-  }
-
-  if(config?.force_active === true){
-    host.textContent =
-      `ACTIVE NOW · ${preset.label} · schedule bypassed`;
-    return;
-  }
-
-  host.textContent =
-    seasonalIsActive(config)
-      ? `ACTIVE · ${preset.label}`
-      : `Scheduled / inactive · ${preset.label}`;
-}
-
-
-function applySeasonalPreset(){
-  const key =
-    $("seasonalThemeKey")?.value ||
-    "custom";
-
-  const preset =
-    SEASONAL_PRESETS[key] ||
-    SEASONAL_PRESETS.custom;
-
-  if(key !== "custom"){
-    $("seasonalTitle").value = preset.title;
-    $("seasonalBadgeText").value = preset.badge;
-    $("seasonalAccentColor").value = preset.accent;
-    $("seasonalSecondaryColor").value = preset.secondary;
-  }
-
-  updateSeasonalPreview();
-}
-
-
-async function loadSeasonalTheme(){
-  if(!$("seasonalThemesSection")) return;
-
-  setStatus(
-    $("seasonalThemeStatus"),
-    "Loading seasonal theme..."
-  );
-
-  try{
-    const fields = [
-      "id",
-      "enabled",
-      "force_active",
-      "theme_key",
-      "title",
-      "badge_text",
-      "accent_color",
-      "secondary_color",
-      "background_url",
-      "show_banner",
-      "theme_intensity",
-      "apply_button_colors",
-      "decorate_header",
-      "use_builtin_artwork",
-      "start_at",
-      "end_at",
-      "updated_at"
-    ].join(",");
-
-    const rows = await select(
-      "panther_seasonal_theme_config",
-      `select=${fields}&id=eq.1&limit=1`
-    );
-
-    applySeasonalConfigToForm(
-      rows[0] || seasonalDefaults()
-    );
-
-    setStatus(
-      $("seasonalThemeStatus"),
-      ""
-    );
-
-  }catch(e){
-    applySeasonalConfigToForm(
-      seasonalDefaults()
-    );
-
-    setStatus(
-      $("seasonalThemeStatus"),
-      "Seasonal Themes is not ready yet. Run Panther_Seasonal_Themes.sql in Supabase first. " +
-        (e?.message || String(e)),
-      false
-    );
-  }
-}
-
-
-async function saveSeasonalTheme(){
-  const button = $("saveSeasonalThemeBtn");
-
-  try{
-    button.disabled = true;
-
-    const config =
-      seasonalConfigFromForm();
-
-    if(
-      config.start_at &&
-      config.end_at &&
-      new Date(config.end_at).getTime() <=
-        new Date(config.start_at).getTime()
-    ){
-      throw new Error(
-        "End date must be after the start date."
-      );
-    }
-
-    setStatus(
-      $("seasonalThemeStatus"),
-      "Publishing seasonal theme..."
-    );
-
-    await rpc(
-      "panther_admin_save_seasonal_theme",
-      {
-        p_enabled: config.enabled,
-        p_force_active: config.force_active,
-        p_theme_key: config.theme_key,
-        p_title: config.title,
-        p_badge_text: config.badge_text,
-        p_accent_color: config.accent_color,
-        p_secondary_color: config.secondary_color,
-        p_background_url: config.background_url,
-        p_show_banner: config.show_banner,
-        p_theme_intensity: config.theme_intensity,
-        p_apply_button_colors: config.apply_button_colors,
-        p_decorate_header: config.decorate_header,
-        p_use_builtin_artwork: config.use_builtin_artwork,
-        p_start_at: config.start_at,
-        p_end_at: config.end_at
-      }
-    );
-
-    setStatus(
-      $("seasonalThemeStatus"),
-      "Seasonal theme published. Panther will apply it when Home refreshes.",
-      true
-    );
-
-    await loadSeasonalTheme();
-
-  }catch(e){
-    setStatus(
-      $("seasonalThemeStatus"),
-      e?.message || String(e),
-      false
-    );
-
-  }finally{
-    button.disabled = false;
-  }
-}
-
-
-$("seasonalThemeKey")?.addEventListener(
-  "change",
-  applySeasonalPreset
-);
-
-
-[
-  "seasonalEnabled",
-  "seasonalForceActive",
-  "seasonalShowBanner",
-  "seasonalThemeIntensity",
-  "seasonalApplyButtonColors",
-  "seasonalDecorateHeader",
-  "seasonalUseBuiltinArtwork",
-  "seasonalStartAt",
-  "seasonalEndAt",
-  "seasonalTitle",
-  "seasonalBadgeText",
-  "seasonalAccentColor",
-  "seasonalSecondaryColor",
-  "seasonalBackgroundUrl"
-].forEach(id => {
-  $(id)?.addEventListener("input", updateSeasonalPreview);
-  $(id)?.addEventListener("change", updateSeasonalPreview);
-});
-
-
-$("saveSeasonalThemeBtn")?.addEventListener(
-  "click",
-  saveSeasonalTheme
-);
-
-
-$("reloadSeasonalThemeBtn")?.addEventListener(
-  "click",
-  loadSeasonalTheme
-);
-
-
-$("seasonalActivateNowBtn")?.addEventListener(
-  "click",
-  async () => {
-
-    $("seasonalEnabled").value = "true";
-    $("seasonalForceActive").checked = true;
-
-    updateSeasonalPreview();
-
-    await saveSeasonalTheme();
-  }
-);
-
-
-$("seasonalDisableBtn")?.addEventListener(
-  "click",
-  async () => {
-
-    $("seasonalEnabled").value = "false";
-    $("seasonalForceActive").checked = false;
-
-    updateSeasonalPreview();
-
-    await saveSeasonalTheme();
-  }
-);
-
-
-
 // ============================================================
 // PRIVATE LIBRARY CATALOGUE IMPORT (CSV / JSON)
 // ============================================================
@@ -5855,6 +4523,1332 @@ $("clearPrivateBulkUploadBtn")?.addEventListener("click", clearPrivateBulkUpload
 
 
 // ============================================================
+// ADULT M3U SOURCES
+// ============================================================
+
+let adultM3uSources = [];
+let editingAdultM3uSourceId = null;
+
+
+function resetAdultM3uForm(){
+  editingAdultM3uSourceId = null;
+
+  if($("adultM3uName")) $("adultM3uName").value = "";
+  if($("adultM3uUrl")) $("adultM3uUrl").value = "";
+  if($("adultM3uFile")) $("adultM3uFile").value = "";
+  if($("adultM3uDefaultCategory")) $("adultM3uDefaultCategory").value = "Adult";
+  if($("adultM3uSortOrder")) $("adultM3uSortOrder").value = "100";
+  if($("adultM3uEnabled")) $("adultM3uEnabled").checked = true;
+
+  if($("saveAdultM3uBtn")) $("saveAdultM3uBtn").textContent = "Save & Import";
+  $("cancelAdultM3uEditBtn")?.classList.add("hidden");
+}
+
+
+function adultM3uSafeUrlLabel(value){
+  const raw = String(value || "").trim();
+  if(!raw) return "Uploaded M3U file";
+
+  try{
+    const u = new URL(raw);
+    return `${u.origin}${u.pathname}`;
+  }catch{
+    return "Remote M3U URL";
+  }
+}
+
+
+function adultM3uDate(value){
+  if(!value) return "Never";
+
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return String(value);
+
+  return date.toLocaleString();
+}
+
+
+function renderAdultM3uSources(){
+  const host = $("adultM3uSourceList");
+  if(!host) return;
+
+  $("adultM3uSourceCount").textContent =
+    String(adultM3uSources.length);
+
+  if(!adultM3uSources.length){
+    host.innerHTML =
+      '<div class="empty-note">No Adult M3U sources configured yet.</div>';
+    return;
+  }
+
+  host.innerHTML = adultM3uSources.map(source => {
+    const sourceId = esc(source.id || "");
+    const isUpload = String(source.source_type || "url") === "upload";
+    const itemCount = Number(source.last_item_count || 0);
+    const error = String(source.last_error || "").trim();
+
+    return `
+      <div class="private-content-card">
+        <div class="private-content-head">
+          <div>
+            <div class="private-content-title">${esc(source.name || "Adult M3U")}</div>
+            <div class="private-content-meta">
+              ${isUpload ? "Uploaded M3U file" : esc(adultM3uSafeUrlLabel(source.playlist_url))}<br>
+              Default category: ${esc(source.default_category || "Adult")} · Sort ${Number(source.sort_order ?? 100)}<br>
+              ${itemCount} item${itemCount === 1 ? "" : "s"} · Last refreshed ${esc(adultM3uDate(source.last_refreshed_at))}
+              ${error ? `<br><span style="color:#ff8f8f">Last error: ${esc(error)}</span>` : ""}
+            </div>
+          </div>
+
+          <span class="pill ${source.enabled === false ? "disabled" : "enabled"}">
+            ${source.enabled === false ? "DISABLED" : "ENABLED"}
+          </span>
+        </div>
+
+        <div class="device-actions">
+          <button class="small edit-adult-m3u" data-id="${sourceId}">Edit</button>
+          <button class="small refresh-adult-m3u" data-id="${sourceId}">
+            ${isUpload ? "Re-upload" : "Refresh now"}
+          </button>
+          <button class="small danger delete-adult-m3u" data-id="${sourceId}">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  document.querySelectorAll(".edit-adult-m3u").forEach(button => {
+    button.onclick = () => editAdultM3uSource(button.dataset.id);
+  });
+
+  document.querySelectorAll(".refresh-adult-m3u").forEach(button => {
+    button.onclick = () => refreshAdultM3uSource(button.dataset.id);
+  });
+
+  document.querySelectorAll(".delete-adult-m3u").forEach(button => {
+    button.onclick = () => deleteAdultM3uSource(button.dataset.id);
+  });
+}
+
+
+async function loadAdultM3uSources(){
+  if(!$("adultM3uSourceList")) return;
+
+  setStatus(
+    $("adultM3uStatus"),
+    "Loading Adult M3U sources..."
+  );
+
+  try{
+    const rows =
+      await rpc(
+        "panther_admin_list_adult_m3u_sources",
+        {}
+      );
+
+    adultM3uSources =
+      Array.isArray(rows)
+        ? rows
+        : [];
+
+    renderAdultM3uSources();
+
+    setStatus(
+      $("adultM3uStatus"),
+      ""
+    );
+
+  }catch(e){
+    adultM3uSources = [];
+    renderAdultM3uSources();
+
+    setStatus(
+      $("adultM3uStatus"),
+      "Adult M3U setup is not ready yet. Run Panther_Adult_M3U.sql first. " +
+        (e?.message || String(e)),
+      false
+    );
+  }
+}
+
+
+function editAdultM3uSource(id){
+  const source =
+    adultM3uSources.find(
+      item => item.id === id
+    );
+
+  if(!source) return;
+
+  editingAdultM3uSourceId = id;
+
+  $("adultM3uName").value =
+    source.name || "";
+
+  $("adultM3uUrl").value =
+    source.source_type === "upload"
+      ? ""
+      : (source.playlist_url || "");
+
+  $("adultM3uFile").value = "";
+
+  $("adultM3uDefaultCategory").value =
+    source.default_category || "Adult";
+
+  $("adultM3uSortOrder").value =
+    String(source.sort_order ?? 100);
+
+  $("adultM3uEnabled").checked =
+    source.enabled !== false;
+
+  $("saveAdultM3uBtn").textContent =
+    source.source_type === "upload"
+      ? "Save / Re-import"
+      : "Save & Refresh";
+
+  $("cancelAdultM3uEditBtn").classList.remove("hidden");
+
+  openSection("privateLibrarySection");
+
+  setTimeout(
+    () => $("adultM3uName")?.focus(),
+    100
+  );
+}
+
+
+async function callAdultM3uAdmin(action, sourceId, playlistText = null){
+  const body = {
+    action,
+    source_id: sourceId
+  };
+
+  if(playlistText !== null){
+    body.playlist_text = playlistText;
+  }
+
+  const response =
+    await apiFetch(
+      "/functions/v1/panther-adult-m3u-admin",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      }
+    );
+
+  const data =
+    await readJson(response);
+
+  if(
+    !response.ok ||
+    data?.success === false
+  ){
+    throw new Error(
+      data?.error ||
+      data?.message ||
+      `Adult M3U request failed (HTTP ${response.status})`
+    );
+  }
+
+  return data;
+}
+
+
+function rpcUuid(value){
+  if(typeof value === "string") return value;
+
+  if(Array.isArray(value) && value.length){
+    const first = value[0];
+
+    if(typeof first === "string") return first;
+
+    if(first && typeof first === "object"){
+      return String(
+        first.panther_admin_save_adult_m3u_source ||
+        first.id ||
+        Object.values(first)[0] ||
+        ""
+      );
+    }
+  }
+
+  if(value && typeof value === "object"){
+    return String(
+      value.panther_admin_save_adult_m3u_source ||
+      value.id ||
+      Object.values(value)[0] ||
+      ""
+    );
+  }
+
+  return String(value || "");
+}
+
+
+async function saveAdultM3uSource(){
+  const button =
+    $("saveAdultM3uBtn");
+
+  const name =
+    String(
+      $("adultM3uName")?.value || ""
+    ).trim();
+
+  const url =
+    String(
+      $("adultM3uUrl")?.value || ""
+    ).trim();
+
+  const file =
+    $("adultM3uFile")?.files?.[0] || null;
+
+  const category =
+    String(
+      $("adultM3uDefaultCategory")?.value || "Adult"
+    ).trim() || "Adult";
+
+  const sortOrder =
+    Number.parseInt(
+      $("adultM3uSortOrder")?.value || "100",
+      10
+    ) || 100;
+
+  const enabled =
+    !!$("adultM3uEnabled")?.checked;
+
+
+  const existing =
+    editingAdultM3uSourceId
+      ? adultM3uSources.find(
+          item => item.id === editingAdultM3uSourceId
+        )
+      : null;
+
+
+  const sourceType =
+    file
+      ? "upload"
+      : (
+          existing?.source_type === "upload" &&
+          !url
+            ? "upload"
+            : "url"
+        );
+
+
+  if(!name){
+    setStatus(
+      $("adultM3uStatus"),
+      "Enter a source name.",
+      false
+    );
+    return;
+  }
+
+
+  if(sourceType === "url"){
+    try{
+      const parsed = new URL(url);
+
+      if(!["http:","https:"].includes(parsed.protocol)){
+        throw new Error();
+      }
+    }catch{
+      setStatus(
+        $("adultM3uStatus"),
+        "Enter a valid http:// or https:// M3U URL, or choose an M3U file.",
+        false
+      );
+      return;
+    }
+  }
+
+
+  if(
+    sourceType === "upload" &&
+    !file &&
+    !editingAdultM3uSourceId
+  ){
+    setStatus(
+      $("adultM3uStatus"),
+      "Choose an M3U file.",
+      false
+    );
+    return;
+  }
+
+
+  button.disabled = true;
+
+  setStatus(
+    $("adultM3uStatus"),
+    file
+      ? "Saving source and importing M3U file..."
+      : (
+          sourceType === "url"
+            ? "Saving source and refreshing M3U URL..."
+            : "Saving source..."
+        )
+  );
+
+
+  try{
+    const saved =
+      await rpc(
+        "panther_admin_save_adult_m3u_source",
+        {
+          p_id:
+            editingAdultM3uSourceId || null,
+
+          p_name:
+            name,
+
+          p_source_type:
+            sourceType,
+
+          p_playlist_url:
+            sourceType === "url"
+              ? url
+              : null,
+
+          p_default_category:
+            category,
+
+          p_enabled:
+            enabled,
+
+          p_sort_order:
+            sortOrder
+        }
+      );
+
+
+    const sourceId =
+      rpcUuid(saved);
+
+
+    if(!sourceId){
+      throw new Error(
+        "The source was saved but Panther could not read its ID."
+      );
+    }
+
+
+    let result = null;
+
+
+    if(file){
+      const text =
+        await file.text();
+
+      result =
+        await callAdultM3uAdmin(
+          "import_text",
+          sourceId,
+          text
+        );
+
+    }else if(sourceType === "url"){
+      result =
+        await callAdultM3uAdmin(
+          "refresh",
+          sourceId
+        );
+    }
+
+
+    resetAdultM3uForm();
+
+    await loadAdultM3uSources();
+
+    setStatus(
+      $("adultM3uStatus"),
+      result
+        ? `${result.item_count || 0} M3U item${Number(result.item_count || 0) === 1 ? "" : "s"} imported across ${result.category_count || 0} categor${Number(result.category_count || 0) === 1 ? "y" : "ies"}.`
+        : "Adult M3U source saved.",
+      true
+    );
+
+  }catch(e){
+    setStatus(
+      $("adultM3uStatus"),
+      e?.message || String(e),
+      false
+    );
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+async function refreshAdultM3uSource(id){
+  const source =
+    adultM3uSources.find(
+      item => item.id === id
+    );
+
+  if(!source) return;
+
+
+  if(source.source_type === "upload"){
+    editAdultM3uSource(id);
+
+    setStatus(
+      $("adultM3uStatus"),
+      "Choose the updated M3U file, then press Save / Re-import.",
+      true
+    );
+
+    $("adultM3uFile")?.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+
+    return;
+  }
+
+
+  setStatus(
+    $("adultM3uStatus"),
+    `Refreshing ${source.name || "Adult M3U"}...`
+  );
+
+
+  try{
+    const result =
+      await callAdultM3uAdmin(
+        "refresh",
+        id
+      );
+
+    await loadAdultM3uSources();
+
+    setStatus(
+      $("adultM3uStatus"),
+      `${result.item_count || 0} item${Number(result.item_count || 0) === 1 ? "" : "s"} refreshed.`,
+      true
+    );
+
+  }catch(e){
+    await loadAdultM3uSources();
+
+    setStatus(
+      $("adultM3uStatus"),
+      e?.message || String(e),
+      false
+    );
+  }
+}
+
+
+async function deleteAdultM3uSource(id){
+  const source =
+    adultM3uSources.find(
+      item => item.id === id
+    );
+
+  if(!source) return;
+
+
+  if(
+    !confirm(
+      `Delete "${source.name || "Adult M3U"}" and all imported M3U entries?`
+    )
+  ){
+    return;
+  }
+
+
+  setStatus(
+    $("adultM3uStatus"),
+    "Deleting Adult M3U source..."
+  );
+
+
+  try{
+    await rpc(
+      "panther_admin_delete_adult_m3u_source",
+      {
+        p_id: id
+      }
+    );
+
+    if(editingAdultM3uSourceId === id){
+      resetAdultM3uForm();
+    }
+
+    await loadAdultM3uSources();
+
+    setStatus(
+      $("adultM3uStatus"),
+      "Adult M3U source deleted.",
+      true
+    );
+
+  }catch(e){
+    setStatus(
+      $("adultM3uStatus"),
+      e?.message || String(e),
+      false
+    );
+  }
+}
+
+
+$("saveAdultM3uBtn")?.addEventListener(
+  "click",
+  saveAdultM3uSource
+);
+
+
+$("cancelAdultM3uEditBtn")?.addEventListener(
+  "click",
+  () => {
+    resetAdultM3uForm();
+    setStatus($("adultM3uStatus"), "");
+  }
+);
+
+
+$("reloadAdultM3uBtn")?.addEventListener(
+  "click",
+  loadAdultM3uSources
+);
+
+
+
+// ============================================================
+// ADULT MAGNET / TORBOX
+// ============================================================
+
+let adultMagnetTorrentId = null;
+let adultMagnetTorrentReady = false;
+let adultMagnetFiles = [];
+let adultMagnetSelectedFileId = null;
+let adultMagnetLastStatus = null;
+let adultMagnetPollTimer = null;
+
+
+function adultMagnetFormatBytes(value){
+  const bytes = Number(value || 0);
+
+  if(!Number.isFinite(bytes) || bytes <= 0){
+    return "Unknown size";
+  }
+
+  const units = ["B","KB","MB","GB","TB"];
+  let amount = bytes;
+  let index = 0;
+
+  while(amount >= 1024 && index < units.length - 1){
+    amount /= 1024;
+    index += 1;
+  }
+
+  return `${amount >= 100 || index === 0 ? amount.toFixed(0) : amount.toFixed(1)} ${units[index]}`;
+}
+
+
+function adultMagnetCleanTitle(value){
+  return String(value || "")
+    .split("/")
+    .pop()
+    .replace(/\.[^.]+$/, "")
+    .replace(/[._]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+
+function setAdultMagnetPill(text, mode = ""){
+  const pill = $("adultMagnetStatePill");
+  if(!pill) return;
+
+  pill.textContent = text || "NOT ADDED";
+  pill.classList.remove("enabled","disabled");
+
+  if(mode === "ready"){
+    pill.classList.add("enabled");
+  }else if(mode === "error"){
+    pill.classList.add("disabled");
+  }
+}
+
+
+function stopAdultMagnetPolling(){
+  if(adultMagnetPollTimer){
+    clearTimeout(adultMagnetPollTimer);
+    adultMagnetPollTimer = null;
+  }
+}
+
+
+function resetAdultMagnetForm(){
+  stopAdultMagnetPolling();
+
+  adultMagnetTorrentId = null;
+  adultMagnetTorrentReady = false;
+  adultMagnetFiles = [];
+  adultMagnetSelectedFileId = null;
+  adultMagnetLastStatus = null;
+
+  if($("adultMagnetLink")) $("adultMagnetLink").value = "";
+  if($("adultMagnetTitle")) $("adultMagnetTitle").value = "";
+  if($("adultMagnetCategory")) $("adultMagnetCategory").value = "Adult";
+  if($("adultMagnetPosterUrl")) $("adultMagnetPosterUrl").value = "";
+  if($("adultMagnetDescription")) $("adultMagnetDescription").value = "";
+  if($("adultMagnetSortOrder")) $("adultMagnetSortOrder").value = "100";
+  if($("adultMagnetEnabled")) $("adultMagnetEnabled").checked = true;
+  if($("adultMagnetCachedOnly")) $("adultMagnetCachedOnly").checked = false;
+
+  if($("adultMagnetFiles")) $("adultMagnetFiles").innerHTML = "";
+  if($("adultMagnetSummary")){
+    $("adultMagnetSummary").textContent =
+      "Paste a magnet and press Inspect magnet or Add to TorBox.";
+  }
+
+  if($("refreshAdultMagnetBtn")) $("refreshAdultMagnetBtn").disabled = true;
+  if($("publishAdultMagnetBtn")) $("publishAdultMagnetBtn").disabled = true;
+
+  setAdultMagnetPill("NOT ADDED");
+  setStatus($("adultMagnetStatus"), "");
+}
+
+
+async function callAdultMagnetAdmin(action, extra = {}){
+  const response =
+    await apiFetch(
+      "/functions/v1/panther-adult-magnet-admin",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          action,
+          ...extra
+        })
+      }
+    );
+
+  const data =
+    await readJson(response);
+
+  if(
+    !response.ok ||
+    data?.success === false
+  ){
+    throw new Error(
+      data?.error ||
+      data?.message ||
+      `Adult Magnet request failed (HTTP ${response.status})`
+    );
+  }
+
+  return data;
+}
+
+
+function adultMagnetValue(){
+  const magnet =
+    String(
+      $("adultMagnetLink")?.value || ""
+    ).trim();
+
+  if(!magnet.toLowerCase().startsWith("magnet:?")){
+    throw new Error("Paste a valid magnet link first.");
+  }
+
+  return magnet;
+}
+
+
+function renderAdultMagnetPreview(data){
+  const host = $("adultMagnetFiles");
+  if(!host) return;
+
+  const files =
+    Array.isArray(data?.files)
+      ? data.files
+      : [];
+
+  const name =
+    String(data?.name || "Torrent");
+
+  const titleInput =
+    $("adultMagnetTitle");
+
+  if(
+    titleInput &&
+    !String(titleInput.value || "").trim()
+  ){
+    titleInput.value =
+      adultMagnetCleanTitle(name) || name;
+  }
+
+  $("adultMagnetSummary").innerHTML = `
+    <strong>${esc(name)}</strong><br>
+    ${adultMagnetFormatBytes(data?.size)} · ${Number(data?.seeds || 0)} seed${Number(data?.seeds || 0) === 1 ? "" : "s"} ·
+    ${Number(data?.peers || 0)} peer${Number(data?.peers || 0) === 1 ? "" : "s"}<br>
+    ${files.length} video file${files.length === 1 ? "" : "s"} detected.
+    <div class="small-text" style="margin-top:5px">Preview only — add the magnet to TorBox before choosing the final playable file.</div>
+  `;
+
+  if(!files.length){
+    host.innerHTML =
+      '<div class="empty-note">No video files were detected in the magnet metadata yet.</div>';
+    return;
+  }
+
+  host.innerHTML =
+    files.map(file => `
+      <div class="private-content-card">
+        <div class="private-content-title">${esc(file.name || "Video")}</div>
+        <div class="private-content-meta">${esc(adultMagnetFormatBytes(file.size))}${file.mimetype ? ` · ${esc(file.mimetype)}` : ""}</div>
+      </div>
+    `).join("");
+}
+
+
+function renderAdultMagnetStatus(status){
+  adultMagnetLastStatus = status || null;
+  adultMagnetTorrentReady = status?.ready === true;
+  adultMagnetFiles =
+    Array.isArray(status?.files)
+      ? status.files
+      : [];
+
+  if(
+    adultMagnetFiles.length &&
+    (
+      adultMagnetSelectedFileId === null ||
+      !adultMagnetFiles.some(file => Number(file.id) === Number(adultMagnetSelectedFileId))
+    )
+  ){
+    const largest =
+      [...adultMagnetFiles]
+        .sort(
+          (a,b) =>
+            Number(b.size || 0) -
+            Number(a.size || 0)
+        )[0];
+
+    adultMagnetSelectedFileId =
+      largest
+        ? Number(largest.id)
+        : null;
+  }
+
+  const state =
+    String(status?.state || (adultMagnetTorrentReady ? "ready" : "processing"));
+
+  const progressRaw =
+    Number(status?.progress || 0);
+
+  const progress =
+    progressRaw <= 1 && progressRaw > 0
+      ? Math.round(progressRaw * 100)
+      : Math.round(progressRaw);
+
+  const name =
+    String(status?.name || "TorBox torrent");
+
+  const titleInput =
+    $("adultMagnetTitle");
+
+  if(
+    titleInput &&
+    !String(titleInput.value || "").trim()
+  ){
+    titleInput.value =
+      adultMagnetCleanTitle(name) || name;
+  }
+
+  $("adultMagnetSummary").innerHTML = `
+    <strong>${esc(name)}</strong><br>
+    State: ${esc(state || "Unknown")} · Progress ${Number.isFinite(progress) ? Math.max(0,Math.min(100,progress)) : 0}% ·
+    ${status?.cached === true ? "Cached" : "Not marked cached"}<br>
+    ${Number(status?.seeds || 0)} seed${Number(status?.seeds || 0) === 1 ? "" : "s"} ·
+    ${Number(status?.peers || 0)} peer${Number(status?.peers || 0) === 1 ? "" : "s"} ·
+    ${adultMagnetFormatBytes(status?.size)}
+  `;
+
+  setAdultMagnetPill(
+    adultMagnetTorrentReady
+      ? "READY"
+      : (state || "PROCESSING").toUpperCase(),
+    adultMagnetTorrentReady
+      ? "ready"
+      : ""
+  );
+
+  if($("refreshAdultMagnetBtn")){
+    $("refreshAdultMagnetBtn").disabled =
+      !adultMagnetTorrentId;
+  }
+
+  if($("publishAdultMagnetBtn")){
+    $("publishAdultMagnetBtn").disabled =
+      !(
+        adultMagnetTorrentReady &&
+        adultMagnetSelectedFileId !== null
+      );
+  }
+
+  const host =
+    $("adultMagnetFiles");
+
+  if(!host) return;
+
+  if(!adultMagnetFiles.length){
+    host.innerHTML =
+      '<div class="empty-note">No playable video files are available yet. If TorBox is still downloading metadata/content, refresh again shortly.</div>';
+    return;
+  }
+
+  host.innerHTML =
+    adultMagnetFiles.map(file => {
+      const id =
+        Number(file.id);
+
+      const selected =
+        Number(adultMagnetSelectedFileId) ===
+        id;
+
+      return `
+        <label class="private-check-card" style="display:flex;align-items:flex-start;gap:10px">
+          <input
+            type="radio"
+            name="adultMagnetVideoFile"
+            class="adult-magnet-file"
+            data-id="${id}"
+            ${selected ? "checked" : ""}>
+          <span>
+            <strong>${esc(file.name || "Video")}</strong>
+            <div class="small-text">${esc(adultMagnetFormatBytes(file.size))}${file.mimetype ? ` · ${esc(file.mimetype)}` : ""}</div>
+          </span>
+        </label>
+      `;
+    }).join("");
+
+  document
+    .querySelectorAll(".adult-magnet-file")
+    .forEach(input => {
+      input.addEventListener("change", () => {
+        adultMagnetSelectedFileId =
+          Number(input.dataset.id);
+
+        const selected =
+          adultMagnetFiles.find(
+            file =>
+              Number(file.id) ===
+              Number(adultMagnetSelectedFileId)
+          );
+
+        if(
+          selected &&
+          $("adultMagnetTitle") &&
+          !String($("adultMagnetTitle").value || "").trim()
+        ){
+          $("adultMagnetTitle").value =
+            adultMagnetCleanTitle(selected.name);
+        }
+
+        if($("publishAdultMagnetBtn")){
+          $("publishAdultMagnetBtn").disabled =
+            !(
+              adultMagnetTorrentReady &&
+              adultMagnetSelectedFileId !== null
+            );
+        }
+      });
+    });
+}
+
+
+function scheduleAdultMagnetPoll(){
+  stopAdultMagnetPolling();
+
+  if(
+    !adultMagnetTorrentId ||
+    adultMagnetTorrentReady
+  ){
+    return;
+  }
+
+  adultMagnetPollTimer =
+    setTimeout(
+      async () => {
+        try{
+          await refreshAdultMagnetStatus(true);
+        }catch(_){
+          // Keep the manual Refresh status button available if a background poll fails.
+        }
+
+        if(
+          adultMagnetTorrentId &&
+          !adultMagnetTorrentReady
+        ){
+          scheduleAdultMagnetPoll();
+        }
+      },
+      8000
+    );
+}
+
+
+async function inspectAdultMagnet(){
+  const button =
+    $("inspectAdultMagnetBtn");
+
+  try{
+    const magnet =
+      adultMagnetValue();
+
+    button.disabled = true;
+
+    setStatus(
+      $("adultMagnetStatus"),
+      "Reading magnet metadata from TorBox..."
+    );
+
+    const result =
+      await callAdultMagnetAdmin(
+        "inspect",
+        {
+          magnet
+        }
+      );
+
+    renderAdultMagnetPreview(
+      result?.data || {}
+    );
+
+    setStatus(
+      $("adultMagnetStatus"),
+      "Magnet metadata loaded. Press Add to TorBox when you are ready.",
+      true
+    );
+
+  }catch(e){
+    setAdultMagnetPill("ERROR","error");
+
+    setStatus(
+      $("adultMagnetStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+async function addAdultMagnet(){
+  const button =
+    $("addAdultMagnetBtn");
+
+  try{
+    const magnet =
+      adultMagnetValue();
+
+    button.disabled = true;
+
+    setStatus(
+      $("adultMagnetStatus"),
+      "Adding magnet to TorBox..."
+    );
+
+    const result =
+      await callAdultMagnetAdmin(
+        "create",
+        {
+          magnet,
+          name:
+            String(
+              $("adultMagnetTitle")?.value || ""
+            ).trim(),
+          cached_only:
+            !!$("adultMagnetCachedOnly")?.checked
+        }
+      );
+
+    adultMagnetTorrentId =
+      Number(result?.torrent_id || 0) || null;
+
+    adultMagnetSelectedFileId =
+      null;
+
+    if(!adultMagnetTorrentId){
+      throw new Error("TorBox did not return a torrent ID.");
+    }
+
+    if(result?.status){
+      renderAdultMagnetStatus(
+        result.status
+      );
+    }else{
+      adultMagnetTorrentReady = false;
+      adultMagnetFiles = [];
+
+      setAdultMagnetPill("PROCESSING");
+
+      $("adultMagnetSummary").textContent =
+        `Added to TorBox as torrent #${adultMagnetTorrentId}. Waiting for metadata...`;
+
+      $("refreshAdultMagnetBtn").disabled = false;
+      $("publishAdultMagnetBtn").disabled = true;
+    }
+
+    setStatus(
+      $("adultMagnetStatus"),
+      adultMagnetTorrentReady
+        ? "TorBox is ready. Choose the video file and publish it."
+        : "Added to TorBox. Panther will keep checking until the video is ready.",
+      true
+    );
+
+    scheduleAdultMagnetPoll();
+
+  }catch(e){
+    setAdultMagnetPill("ERROR","error");
+
+    setStatus(
+      $("adultMagnetStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+async function refreshAdultMagnetStatus(background = false){
+  if(!adultMagnetTorrentId){
+    if(!background){
+      setStatus(
+        $("adultMagnetStatus"),
+        "Add a magnet to TorBox first.",
+        false
+      );
+    }
+    return;
+  }
+
+  const button =
+    $("refreshAdultMagnetBtn");
+
+  if(button && !background){
+    button.disabled = true;
+  }
+
+  if(!background){
+    setStatus(
+      $("adultMagnetStatus"),
+      "Refreshing TorBox status..."
+    );
+  }
+
+  try{
+    const result =
+      await callAdultMagnetAdmin(
+        "status",
+        {
+          torrent_id:
+            adultMagnetTorrentId
+        }
+      );
+
+    renderAdultMagnetStatus(
+      result?.status || {}
+    );
+
+    if(!background){
+      setStatus(
+        $("adultMagnetStatus"),
+        adultMagnetTorrentReady
+          ? "Ready to publish."
+          : "TorBox is still preparing this torrent.",
+        adultMagnetTorrentReady
+      );
+    }
+
+  }catch(e){
+    if(!background){
+      setStatus(
+        $("adultMagnetStatus"),
+        e?.message || String(e),
+        false
+      );
+    }
+    throw e;
+
+  }finally{
+    if(button){
+      button.disabled =
+        !adultMagnetTorrentId;
+    }
+  }
+}
+
+
+async function publishAdultMagnet(){
+  if(
+    !adultMagnetTorrentId ||
+    adultMagnetSelectedFileId === null
+  ){
+    setStatus(
+      $("adultMagnetStatus"),
+      "Choose a ready TorBox video file first.",
+      false
+    );
+    return;
+  }
+
+  const button =
+    $("publishAdultMagnetBtn");
+
+  button.disabled = true;
+
+  setStatus(
+    $("adultMagnetStatus"),
+    "Publishing to Panther Adult / Private Library..."
+  );
+
+  try{
+    const selected =
+      adultMagnetFiles.find(
+        file =>
+          Number(file.id) ===
+          Number(adultMagnetSelectedFileId)
+      );
+
+    const title =
+      String(
+        $("adultMagnetTitle")?.value || ""
+      ).trim() ||
+      adultMagnetCleanTitle(
+        selected?.name || adultMagnetLastStatus?.name || "Adult video"
+      );
+
+    const result =
+      await callAdultMagnetAdmin(
+        "publish",
+        {
+          torrent_id:
+            adultMagnetTorrentId,
+
+          file_id:
+            adultMagnetSelectedFileId,
+
+          title,
+
+          category:
+            String(
+              $("adultMagnetCategory")?.value || "Adult"
+            ).trim() || "Adult",
+
+          poster_url:
+            String(
+              $("adultMagnetPosterUrl")?.value || ""
+            ).trim(),
+
+          description:
+            String(
+              $("adultMagnetDescription")?.value || ""
+            ).trim(),
+
+          creator:
+            "TorBox",
+
+          enabled:
+            !!$("adultMagnetEnabled")?.checked,
+
+          sort_order:
+            Number.parseInt(
+              $("adultMagnetSortOrder")?.value || "100",
+              10
+            ) || 100
+        }
+      );
+
+    await loadPrivateContent();
+
+    const savedTitle =
+      result?.item?.title ||
+      title;
+
+    resetAdultMagnetForm();
+
+    setStatus(
+      $("adultMagnetStatus"),
+      `"${savedTitle}" has been published to the Adult / Private Library.`,
+      true
+    );
+
+  }catch(e){
+    setStatus(
+      $("adultMagnetStatus"),
+      e?.message || String(e),
+      false
+    );
+
+    if(
+      adultMagnetTorrentId &&
+      !adultMagnetTorrentReady
+    ){
+      scheduleAdultMagnetPoll();
+    }
+
+  }finally{
+    button.disabled =
+      !(
+        adultMagnetTorrentReady &&
+        adultMagnetSelectedFileId !== null
+      );
+  }
+}
+
+
+$("inspectAdultMagnetBtn")?.addEventListener(
+  "click",
+  inspectAdultMagnet
+);
+
+
+$("addAdultMagnetBtn")?.addEventListener(
+  "click",
+  addAdultMagnet
+);
+
+
+$("refreshAdultMagnetBtn")?.addEventListener(
+  "click",
+  () =>
+    refreshAdultMagnetStatus(
+      false
+    )
+);
+
+
+$("publishAdultMagnetBtn")?.addEventListener(
+  "click",
+  publishAdultMagnet
+);
+
+
+$("resetAdultMagnetBtn")?.addEventListener(
+  "click",
+  resetAdultMagnetForm
+);
+
+
+// ============================================================
 // PRIVATE LIBRARY
 // ============================================================
 
@@ -5909,7 +5903,11 @@ function renderPrivateContent(){
             ${esc(item.category || "Private")} · Sort ${Number(item.sort_order ?? 100)}<br>
             ${item.creator ? `Creator: ${esc(item.creator)}<br>` : ""}
             ${item.licence ? `Licence: ${esc(item.licence)}<br>` : ""}
-            ${esc(item.video_url || "")}
+            ${esc(
+              String(item.video_url || "").startsWith("panther-torbox://")
+                ? "TorBox magnet source"
+                : (item.video_url || "")
+            )}
           </div>
         </div>
         <span class="pill ${item.enabled === false ? "disabled" : "enabled"}">${item.enabled === false ? "DISABLED" : "ENABLED"}</span>
@@ -6320,7 +6318,8 @@ async function loadPrivateLibrary(){
   if(!$("privateLibrarySection")) return;
   await Promise.all([
     loadPrivateContent(),
-    loadPrivateAccounts()
+    loadPrivateAccounts(),
+    loadAdultM3uSources()
   ]);
 }
 
@@ -7798,14 +7797,6 @@ $("quickFeatures")?.addEventListener("click", () => openSection("featuresSection
 $("quickHomeScreen")?.addEventListener("click", () => {
   openSection("homeScreenSection");
   loadHomeConfig();
-});
-$("quickRemoteAppSettings")?.addEventListener("click", () => {
-  openSection("remoteAppSettingsSection");
-  loadRemoteSettingsPanel();
-});
-$("quickSeasonalThemes")?.addEventListener("click", () => {
-  openSection("seasonalThemesSection");
-  loadSeasonalTheme();
 });
 $("quickPrivateLibrary")?.addEventListener("click", () => {
   openSection("privateLibrarySection");
