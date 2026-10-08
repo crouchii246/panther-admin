@@ -774,6 +774,76 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   font-size:12px;
 }
 
+/* ===== Seasonal Themes ===== */
+
+.seasonal-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.seasonal-grid .wide{
+  grid-column:1 / -1;
+}
+
+.seasonal-preview{
+  min-height:180px;
+  border-radius:16px;
+  border:1px solid #39455f;
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,.10), transparent 35%),
+    linear-gradient(135deg,#111827,#050505);
+}
+
+.seasonal-preview::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.45));
+  pointer-events:none;
+}
+
+.seasonal-preview-card{
+  position:relative;
+  z-index:1;
+  padding:14px 20px;
+  border-radius:14px;
+  color:#fff;
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:.02em;
+  border:2px solid rgba(255,255,255,.85);
+  box-shadow:0 10px 28px rgba(0,0,0,.35);
+  text-align:center;
+}
+
+.seasonal-state{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+
+.seasonal-pill{
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:11px;
+  font-weight:700;
+  background:#161d2c;
+  border:1px solid #35415d;
+  color:#d9e1f2;
+}
+
+@media (max-width:760px){
+  .seasonal-grid{grid-template-columns:1fr}
+}
+
 </style>
 
 </head>
@@ -798,6 +868,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#catalogCacheSection">Cache</a>
       <a href="#featuresSection">Features</a>
       <a href="#homeScreenSection">Home Screen</a>
+      <a href="#seasonalThemesSection">Seasonal Themes</a>
       <a href="#privateLibrarySection">Private Library</a>
       <a href="#devicesSection">Devices</a>
       <a href="#announcementsSection">Announcements</a>
@@ -864,6 +935,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickCatalogCache" class="quick-action">⚡ Catalog cache</button>
     <button id="quickFeatures" class="quick-action">⚙ App Features</button>
     <button id="quickHomeScreen" class="quick-action">🏠 Home Screen</button>
+    <button id="quickSeasonalThemes" class="quick-action">🎄 Seasonal Themes</button>
     <button id="quickPrivateLibrary" class="quick-action">🔒 Private Library</button>
     <button id="quickDevices" class="quick-action">📱 Devices</button>
     <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
@@ -988,6 +1060,173 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         <div class="field-label">Current remote Home state</div>
         <div id="homeConfigSummary" class="update-summary-value">Loading…</div>
         <div class="update-help">Panther uses the last successfully downloaded configuration if Supabase is temporarily unavailable.</div>
+      </div>
+
+    </div>
+  </details>
+
+
+  <details id="seasonalThemesSection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left">
+        <div class="section-icon">🎄</div>
+        <div class="section-title-text">
+          <h2>Seasonal Themes</h2>
+          <div>Schedule festive Panther Home themes without releasing another APK.</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+
+    <div class="collapse-content">
+
+      <div class="cache-explainer">
+        <strong>Seasonal Themes</strong> change the Panther Home background and add an optional
+        seasonal banner while the schedule is active. When the end date passes, Panther
+        automatically returns to the normal Home appearance.
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="seasonal-grid">
+
+        <div>
+          <div class="field-label">Seasonal themes</div>
+          <select id="seasonalEnabled">
+            <option value="false">Disabled</option>
+            <option value="true">Enabled</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="field-label">Preset</div>
+          <select id="seasonalThemeKey">
+            <option value="christmas">🎄 Christmas</option>
+            <option value="halloween">🎃 Halloween</option>
+            <option value="valentine">❤ Valentine's</option>
+            <option value="new_year">✨ New Year</option>
+            <option value="easter">🐣 Easter</option>
+            <option value="custom">🎨 Custom</option>
+          </select>
+        </div>
+
+        <label class="cache-switch-card">
+          <input id="seasonalForceActive" type="checkbox">
+          <span>
+            <span class="cache-switch-title">Force active now</span>
+            <div class="cache-switch-help">Ignore the schedule and show the theme immediately on every Panther Home screen.</div>
+          </span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="seasonalShowBanner" type="checkbox" checked>
+          <span>
+            <span class="cache-switch-title">Show seasonal banner</span>
+            <div class="cache-switch-help">Show the badge and message over the Home screen.</div>
+          </span>
+        </label>
+
+        <div>
+          <div class="field-label">Theme intensity</div>
+          <select id="seasonalThemeIntensity">
+            <option value="subtle">Subtle</option>
+            <option value="full">Full</option>
+          </select>
+          <div class="update-help">Full makes the Home background and header more strongly themed.</div>
+        </div>
+
+        <label class="cache-switch-card">
+          <input id="seasonalApplyButtonColors" type="checkbox">
+          <span>
+            <span class="cache-switch-title">Apply seasonal colours to Home buttons</span>
+            <div class="cache-switch-help">Recolour Live TV, Movies, Series, Catch Up, Continue Watching, Extras and Settings while the theme is active.</div>
+          </span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="seasonalDecorateHeader" type="checkbox" checked>
+          <span>
+            <span class="cache-switch-title">Decorate Panther header</span>
+            <div class="cache-switch-help">In Full mode the header gets a seasonal gradient and a small seasonal badge beside the Panther logo.</div>
+          </span>
+        </label>
+
+        <div>
+          <div class="field-label">Start date & time</div>
+          <input id="seasonalStartAt" type="datetime-local">
+        </div>
+
+        <div>
+          <div class="field-label">End date & time</div>
+          <input id="seasonalEndAt" type="datetime-local">
+        </div>
+
+        <div>
+          <div class="field-label">Theme message</div>
+          <input id="seasonalTitle" maxlength="120" placeholder="e.g. Merry Christmas">
+        </div>
+
+        <div>
+          <div class="field-label">Badge / emoji</div>
+          <input id="seasonalBadgeText" maxlength="24" placeholder="🎄">
+        </div>
+
+        <div>
+          <div class="field-label">Accent colour</div>
+          <input id="seasonalAccentColor" type="color" value="#D62839">
+        </div>
+
+        <div>
+          <div class="field-label">Secondary colour</div>
+          <input id="seasonalSecondaryColor" type="color" value="#0A7A3D">
+        </div>
+
+        <label class="cache-switch-card wide">
+          <input id="seasonalUseBuiltinArtwork" type="checkbox" checked>
+          <span>
+            <span class="cache-switch-title">Use built-in seasonal artwork</span>
+            <div class="cache-switch-help">
+              Uses Panther's built-in snow, Halloween, hearts, fireworks or Easter artwork when no custom background URL is supplied.
+            </div>
+          </span>
+        </label>
+
+        <div class="wide">
+          <div class="field-label">Optional background image URL</div>
+          <input id="seasonalBackgroundUrl" type="url" inputmode="url" placeholder="https://...">
+          <div class="update-help">
+            A direct image URL overrides the built-in artwork. Leave this blank to use Panther's native seasonal artwork.
+          </div>
+        </div>
+
+        <div class="wide">
+          <div class="field-label">Preview</div>
+          <div id="seasonalPreview" class="seasonal-preview">
+            <div id="seasonalPreviewCard" class="seasonal-preview-card">🎄 &nbsp; Merry Christmas</div>
+          </div>
+          <div class="seasonal-state">
+            <span id="seasonalPreviewPreset" class="seasonal-pill">Christmas</span>
+            <span id="seasonalPreviewSchedule" class="seasonal-pill">No schedule</span>
+          </div>
+        </div>
+
+        <div class="wide cache-actions">
+          <button id="saveSeasonalThemeBtn" class="primary">Publish seasonal theme</button>
+          <button id="reloadSeasonalThemeBtn">Reload</button>
+          <button id="seasonalActivateNowBtn">Activate now</button>
+          <button id="seasonalDisableBtn">Turn off</button>
+        </div>
+
+      </div>
+
+      <div id="seasonalThemeStatus" class="status"></div>
+
+      <div class="update-summary">
+        <div class="field-label">Current seasonal state</div>
+        <div id="seasonalThemeSummary" class="update-summary-value">Loading…</div>
+        <div class="update-help">
+          Panther caches the last successful theme configuration, so a temporary network issue does not remove an active theme.
+        </div>
       </div>
 
     </div>
@@ -2293,6 +2532,7 @@ async function boot() {
     await loadCatalogCache();
     await loadFeatureFlags();
     await loadHomeConfig();
+    await loadSeasonalTheme();
     await loadPrivateLibrary();
     await loadDevices();
   } catch (e) {
@@ -2326,6 +2566,7 @@ $("loginBtn").onclick = async () => {
     await loadCatalogCache();
     await loadFeatureFlags();
     await loadHomeConfig();
+    await loadSeasonalTheme();
     await loadPrivateLibrary();
     await loadDevices();
 
@@ -3576,6 +3817,522 @@ $("uploadPrivatePosterBtn")?.addEventListener(
   uploadSelectedPrivatePoster
 );
 
+
+
+// ============================================================
+// SEASONAL THEMES
+// ============================================================
+
+const SEASONAL_PRESETS = {
+  christmas: {
+    label: "Christmas",
+    title: "Merry Christmas",
+    badge: "🎄",
+    accent: "#D62839",
+    secondary: "#0A7A3D"
+  },
+  halloween: {
+    label: "Halloween",
+    title: "Happy Halloween",
+    badge: "🎃",
+    accent: "#FF7A00",
+    secondary: "#5A189A"
+  },
+  valentine: {
+    label: "Valentine's",
+    title: "Happy Valentine's",
+    badge: "❤",
+    accent: "#E91E63",
+    secondary: "#8E0038"
+  },
+  new_year: {
+    label: "New Year",
+    title: "Happy New Year",
+    badge: "✨",
+    accent: "#D4AF37",
+    secondary: "#16213E"
+  },
+  easter: {
+    label: "Easter",
+    title: "Happy Easter",
+    badge: "🐣",
+    accent: "#A855F7",
+    secondary: "#4CAF50"
+  },
+  custom: {
+    label: "Custom",
+    title: "Panther Streams",
+    badge: "✨",
+    accent: "#E51E37",
+    secondary: "#101828"
+  }
+};
+
+
+function seasonalDefaults(){
+  return {
+    enabled: false,
+    force_active: false,
+    theme_key: "christmas",
+    title: "Merry Christmas",
+    badge_text: "🎄",
+    accent_color: "#D62839",
+    secondary_color: "#0A7A3D",
+    background_url: "",
+    show_banner: true,
+    theme_intensity: "subtle",
+    apply_button_colors: false,
+    decorate_header: true,
+    use_builtin_artwork: true,
+    start_at: null,
+    end_at: null
+  };
+}
+
+
+function seasonalIsoToLocalInput(value){
+  if(!value) return "";
+
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "";
+
+  const pad = number => String(number).padStart(2, "0");
+
+  return (
+    date.getFullYear() +
+    "-" + pad(date.getMonth() + 1) +
+    "-" + pad(date.getDate()) +
+    "T" + pad(date.getHours()) +
+    ":" + pad(date.getMinutes())
+  );
+}
+
+
+function seasonalLocalInputToIso(value){
+  const text = String(value || "").trim();
+  if(!text) return null;
+
+  const date = new Date(text);
+  if(Number.isNaN(date.getTime())){
+    throw new Error("Invalid seasonal date/time.");
+  }
+
+  return date.toISOString();
+}
+
+
+function seasonalIsActive(config){
+  if(config?.enabled !== true) return false;
+  if(config?.force_active === true) return true;
+
+  const now = Date.now();
+
+  if(config?.start_at){
+    const start = new Date(config.start_at).getTime();
+    if(Number.isFinite(start) && now < start) return false;
+  }
+
+  if(config?.end_at){
+    const end = new Date(config.end_at).getTime();
+    if(Number.isFinite(end) && now >= end) return false;
+  }
+
+  return true;
+}
+
+
+function seasonalConfigFromForm(){
+  return {
+    enabled: $("seasonalEnabled")?.value === "true",
+    force_active: $("seasonalForceActive")?.checked === true,
+    theme_key: $("seasonalThemeKey")?.value || "custom",
+    title: ($("seasonalTitle")?.value || "").trim(),
+    badge_text: ($("seasonalBadgeText")?.value || "").trim(),
+    accent_color: ($("seasonalAccentColor")?.value || "#E51E37").toUpperCase(),
+    secondary_color: ($("seasonalSecondaryColor")?.value || "#101828").toUpperCase(),
+    background_url: ($("seasonalBackgroundUrl")?.value || "").trim(),
+    show_banner: $("seasonalShowBanner")?.checked !== false,
+    theme_intensity: $("seasonalThemeIntensity")?.value || "subtle",
+    apply_button_colors: $("seasonalApplyButtonColors")?.checked === true,
+    decorate_header: $("seasonalDecorateHeader")?.checked !== false,
+    use_builtin_artwork: $("seasonalUseBuiltinArtwork")?.checked !== false,
+    start_at: seasonalLocalInputToIso($("seasonalStartAt")?.value || ""),
+    end_at: seasonalLocalInputToIso($("seasonalEndAt")?.value || "")
+  };
+}
+
+
+function applySeasonalConfigToForm(config){
+  const value = {
+    ...seasonalDefaults(),
+    ...(config || {})
+  };
+
+  $("seasonalEnabled").value = value.enabled === true ? "true" : "false";
+  $("seasonalForceActive").checked = value.force_active === true;
+  $("seasonalThemeKey").value = value.theme_key || "custom";
+  $("seasonalTitle").value = value.title || "";
+  $("seasonalBadgeText").value = value.badge_text || "";
+  $("seasonalAccentColor").value = value.accent_color || "#E51E37";
+  $("seasonalSecondaryColor").value = value.secondary_color || "#101828";
+  $("seasonalBackgroundUrl").value = value.background_url || "";
+  $("seasonalShowBanner").checked = value.show_banner !== false;
+  $("seasonalThemeIntensity").value = value.theme_intensity || "subtle";
+  $("seasonalApplyButtonColors").checked = value.apply_button_colors === true;
+  $("seasonalDecorateHeader").checked = value.decorate_header !== false;
+  $("seasonalUseBuiltinArtwork").checked = value.use_builtin_artwork !== false;
+  $("seasonalStartAt").value = seasonalIsoToLocalInput(value.start_at);
+  $("seasonalEndAt").value = seasonalIsoToLocalInput(value.end_at);
+
+  updateSeasonalPreview();
+  updateSeasonalSummary(value);
+}
+
+
+function seasonalBuiltInPreview(themeKey, accent, secondary){
+  switch(themeKey){
+    case "christmas":
+      return [
+        "radial-gradient(circle at 12% 18%, rgba(255,255,255,.75) 0 2px, transparent 3px)",
+        "radial-gradient(circle at 72% 22%, rgba(255,255,255,.55) 0 2px, transparent 3px)",
+        "radial-gradient(circle at 32% 66%, rgba(255,255,255,.45) 0 2px, transparent 3px)",
+        `linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`
+      ].join(",");
+    case "halloween":
+      return [
+        "radial-gradient(circle at 82% 18%, rgba(255,184,77,.55) 0 9%, transparent 20%)",
+        `linear-gradient(135deg, ${secondary}, #08030d 52%, ${accent})`
+      ].join(",");
+    case "valentine":
+      return [
+        "radial-gradient(circle at 18% 22%, rgba(255,180,200,.25) 0 8%, transparent 18%)",
+        "radial-gradient(circle at 78% 68%, rgba(255,120,160,.18) 0 10%, transparent 22%)",
+        `linear-gradient(135deg, ${secondary}, #090408 50%, ${accent})`
+      ].join(",");
+    case "new_year":
+      return [
+        "radial-gradient(circle at 20% 20%, rgba(255,215,0,.30) 0 2%, transparent 14%)",
+        "radial-gradient(circle at 76% 32%, rgba(255,255,255,.22) 0 2%, transparent 16%)",
+        `linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`
+      ].join(",");
+    case "easter":
+      return [
+        "radial-gradient(ellipse at 20% 30%, rgba(255,180,210,.28) 0 7%, transparent 8%)",
+        "radial-gradient(ellipse at 72% 62%, rgba(180,220,255,.26) 0 8%, transparent 9%)",
+        `linear-gradient(135deg, ${secondary}, #08080b 50%, ${accent})`
+      ].join(",");
+    default:
+      return `radial-gradient(circle at 20% 20%, rgba(255,255,255,.12), transparent 35%), linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`;
+  }
+}
+
+
+function updateSeasonalPreview(){
+  if(!$("seasonalPreview")) return;
+
+  let config;
+
+  try{
+    config = seasonalConfigFromForm();
+  }catch{
+    config = seasonalDefaults();
+  }
+
+  const preset =
+    SEASONAL_PRESETS[config.theme_key] ||
+    SEASONAL_PRESETS.custom;
+
+  const accent = config.accent_color || preset.accent;
+  const secondary = config.secondary_color || preset.secondary;
+
+  const preview = $("seasonalPreview");
+  const card = $("seasonalPreviewCard");
+
+  preview.style.backgroundImage = config.background_url
+    ? `linear-gradient(rgba(4,7,14,.45),rgba(4,7,14,.68)), url("${config.background_url.replace(/"/g, '\\"')}")`
+    : (
+        config.use_builtin_artwork
+          ? seasonalBuiltInPreview(config.theme_key, accent, secondary)
+          : `linear-gradient(135deg, ${secondary}, #050505 55%, ${accent})`
+      );
+
+  preview.style.backgroundSize = "cover";
+  preview.style.backgroundPosition = "center";
+
+  card.style.background =
+    `linear-gradient(135deg, ${accent}, ${secondary})`;
+
+  card.textContent =
+    `${config.badge_text || preset.badge || "✨"}  ${config.title || preset.title || "Panther Streams"}`;
+
+  $("seasonalPreviewPreset").textContent = preset.label || "Custom";
+
+  const start = config.start_at ? new Date(config.start_at) : null;
+  const end = config.end_at ? new Date(config.end_at) : null;
+
+  let schedule = "No schedule";
+
+  if(config.force_active){
+    schedule = "Forced active now";
+  }else if(start && end){
+    schedule = `${start.toLocaleString()} → ${end.toLocaleString()}`;
+  }else if(start){
+    schedule = `Starts ${start.toLocaleString()}`;
+  }else if(end){
+    schedule = `Until ${end.toLocaleString()}`;
+  }
+
+  $("seasonalPreviewSchedule").textContent = schedule;
+
+  preview.style.boxShadow =
+    config.theme_intensity === "full"
+      ? `inset 0 0 0 2px ${accent}, 0 14px 34px rgba(0,0,0,.34)`
+      : `inset 0 0 0 1px rgba(255,255,255,.10)`;
+
+  card.style.opacity =
+    config.theme_intensity === "full"
+      ? "1"
+      : ".90";
+}
+
+
+function updateSeasonalSummary(config){
+  const host = $("seasonalThemeSummary");
+  if(!host) return;
+
+  const preset =
+    SEASONAL_PRESETS[config?.theme_key] ||
+    SEASONAL_PRESETS.custom;
+
+  if(config?.enabled !== true){
+    host.textContent =
+      "Disabled — Panther uses its normal Home appearance";
+    return;
+  }
+
+  if(config?.force_active === true){
+    host.textContent =
+      `ACTIVE NOW · ${preset.label} · schedule bypassed`;
+    return;
+  }
+
+  host.textContent =
+    seasonalIsActive(config)
+      ? `ACTIVE · ${preset.label}`
+      : `Scheduled / inactive · ${preset.label}`;
+}
+
+
+function applySeasonalPreset(){
+  const key =
+    $("seasonalThemeKey")?.value ||
+    "custom";
+
+  const preset =
+    SEASONAL_PRESETS[key] ||
+    SEASONAL_PRESETS.custom;
+
+  if(key !== "custom"){
+    $("seasonalTitle").value = preset.title;
+    $("seasonalBadgeText").value = preset.badge;
+    $("seasonalAccentColor").value = preset.accent;
+    $("seasonalSecondaryColor").value = preset.secondary;
+  }
+
+  updateSeasonalPreview();
+}
+
+
+async function loadSeasonalTheme(){
+  if(!$("seasonalThemesSection")) return;
+
+  setStatus(
+    $("seasonalThemeStatus"),
+    "Loading seasonal theme..."
+  );
+
+  try{
+    const fields = [
+      "id",
+      "enabled",
+      "force_active",
+      "theme_key",
+      "title",
+      "badge_text",
+      "accent_color",
+      "secondary_color",
+      "background_url",
+      "show_banner",
+      "theme_intensity",
+      "apply_button_colors",
+      "decorate_header",
+      "use_builtin_artwork",
+      "start_at",
+      "end_at",
+      "updated_at"
+    ].join(",");
+
+    const rows = await select(
+      "panther_seasonal_theme_config",
+      `select=${fields}&id=eq.1&limit=1`
+    );
+
+    applySeasonalConfigToForm(
+      rows[0] || seasonalDefaults()
+    );
+
+    setStatus(
+      $("seasonalThemeStatus"),
+      ""
+    );
+
+  }catch(e){
+    applySeasonalConfigToForm(
+      seasonalDefaults()
+    );
+
+    setStatus(
+      $("seasonalThemeStatus"),
+      "Seasonal Themes is not ready yet. Run Panther_Seasonal_Themes.sql in Supabase first. " +
+        (e?.message || String(e)),
+      false
+    );
+  }
+}
+
+
+async function saveSeasonalTheme(){
+  const button = $("saveSeasonalThemeBtn");
+
+  try{
+    button.disabled = true;
+
+    const config =
+      seasonalConfigFromForm();
+
+    if(
+      config.start_at &&
+      config.end_at &&
+      new Date(config.end_at).getTime() <=
+        new Date(config.start_at).getTime()
+    ){
+      throw new Error(
+        "End date must be after the start date."
+      );
+    }
+
+    setStatus(
+      $("seasonalThemeStatus"),
+      "Publishing seasonal theme..."
+    );
+
+    await rpc(
+      "panther_admin_save_seasonal_theme",
+      {
+        p_enabled: config.enabled,
+        p_force_active: config.force_active,
+        p_theme_key: config.theme_key,
+        p_title: config.title,
+        p_badge_text: config.badge_text,
+        p_accent_color: config.accent_color,
+        p_secondary_color: config.secondary_color,
+        p_background_url: config.background_url,
+        p_show_banner: config.show_banner,
+        p_theme_intensity: config.theme_intensity,
+        p_apply_button_colors: config.apply_button_colors,
+        p_decorate_header: config.decorate_header,
+        p_use_builtin_artwork: config.use_builtin_artwork,
+        p_start_at: config.start_at,
+        p_end_at: config.end_at
+      }
+    );
+
+    setStatus(
+      $("seasonalThemeStatus"),
+      "Seasonal theme published. Panther will apply it when Home refreshes.",
+      true
+    );
+
+    await loadSeasonalTheme();
+
+  }catch(e){
+    setStatus(
+      $("seasonalThemeStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+$("seasonalThemeKey")?.addEventListener(
+  "change",
+  applySeasonalPreset
+);
+
+
+[
+  "seasonalEnabled",
+  "seasonalForceActive",
+  "seasonalShowBanner",
+  "seasonalThemeIntensity",
+  "seasonalApplyButtonColors",
+  "seasonalDecorateHeader",
+  "seasonalUseBuiltinArtwork",
+  "seasonalStartAt",
+  "seasonalEndAt",
+  "seasonalTitle",
+  "seasonalBadgeText",
+  "seasonalAccentColor",
+  "seasonalSecondaryColor",
+  "seasonalBackgroundUrl"
+].forEach(id => {
+  $(id)?.addEventListener("input", updateSeasonalPreview);
+  $(id)?.addEventListener("change", updateSeasonalPreview);
+});
+
+
+$("saveSeasonalThemeBtn")?.addEventListener(
+  "click",
+  saveSeasonalTheme
+);
+
+
+$("reloadSeasonalThemeBtn")?.addEventListener(
+  "click",
+  loadSeasonalTheme
+);
+
+
+$("seasonalActivateNowBtn")?.addEventListener(
+  "click",
+  async () => {
+
+    $("seasonalEnabled").value = "true";
+    $("seasonalForceActive").checked = true;
+
+    updateSeasonalPreview();
+
+    await saveSeasonalTheme();
+  }
+);
+
+
+$("seasonalDisableBtn")?.addEventListener(
+  "click",
+  async () => {
+
+    $("seasonalEnabled").value = "false";
+    $("seasonalForceActive").checked = false;
+
+    updateSeasonalPreview();
+
+    await saveSeasonalTheme();
+  }
+);
 
 
 // ============================================================
@@ -7841,6 +8598,10 @@ $("quickFeatures")?.addEventListener("click", () => openSection("featuresSection
 $("quickHomeScreen")?.addEventListener("click", () => {
   openSection("homeScreenSection");
   loadHomeConfig();
+});
+$("quickSeasonalThemes")?.addEventListener("click", () => {
+  openSection("seasonalThemesSection");
+  loadSeasonalTheme();
 });
 $("quickPrivateLibrary")?.addEventListener("click", () => {
   openSection("privateLibrarySection");
