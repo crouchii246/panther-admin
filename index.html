@@ -5218,36 +5218,67 @@ function resetAdultMagnetForm(){
 
 
 async function callAdultMagnetAdmin(action, extra = {}){
-  const response =
-    await apiFetch(
-      "/functions/v1/panther-adult-magnet-admin",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          action,
-          ...extra
-        })
-      }
+  const controller =
+    new AbortController();
+
+  const timeoutMs =
+    action === "inspect"
+      ? 18000
+      : 45000;
+
+  const timer =
+    setTimeout(
+      () => controller.abort(),
+      timeoutMs
     );
 
-  const data =
-    await readJson(response);
+  try{
+    const response =
+      await apiFetch(
+        "/functions/v1/panther-adult-magnet-admin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            action,
+            ...extra
+          }),
+          signal: controller.signal
+        }
+      );
 
-  if(
-    !response.ok ||
-    data?.success === false
-  ){
-    throw new Error(
-      data?.error ||
-      data?.message ||
-      `Adult Magnet request failed (HTTP ${response.status})`
-    );
+    const data =
+      await readJson(response);
+
+    if(
+      !response.ok ||
+      data?.success === false
+    ){
+      throw new Error(
+        data?.error ||
+        data?.message ||
+        `Adult Magnet request failed (HTTP ${response.status})`
+      );
+    }
+
+    return data;
+
+  }catch(e){
+    if(e?.name === "AbortError"){
+      throw new Error(
+        action === "inspect"
+          ? "TorBox metadata lookup took too long. Press Add to TorBox instead — Panther can resolve the files after TorBox adds it."
+          : "TorBox took too long to respond. Try the action again."
+      );
+    }
+
+    throw e;
+
+  }finally{
+    clearTimeout(timer);
   }
-
-  return data;
 }
 
 
@@ -5293,12 +5324,14 @@ function renderAdultMagnetPreview(data){
     ${adultMagnetFormatBytes(data?.size)} · ${Number(data?.seeds || 0)} seed${Number(data?.seeds || 0) === 1 ? "" : "s"} ·
     ${Number(data?.peers || 0)} peer${Number(data?.peers || 0) === 1 ? "" : "s"}<br>
     ${files.length} video file${files.length === 1 ? "" : "s"} detected.
-    <div class="small-text" style="margin-top:5px">Preview only — add the magnet to TorBox before choosing the final playable file.</div>
+    <div class="small-text" style="margin-top:5px">${data?.metadata_pending === true ? "Metadata lookup timed out — this does not stop you adding it to TorBox." : "Preview only — add the magnet to TorBox before choosing the final playable file."}</div>
   `;
 
   if(!files.length){
     host.innerHTML =
-      '<div class="empty-note">No video files were detected in the magnet metadata yet.</div>';
+      data?.metadata_pending === true
+        ? '<div class="empty-note">TorBox did not return metadata quickly enough. Press <strong>Add to TorBox</strong>; Panther will load the video files from TorBox when the torrent is ready.</div>'
+        : '<div class="empty-note">No video files were detected in the magnet metadata yet.</div>';
     return;
   }
 
@@ -5526,11 +5559,22 @@ async function inspectAdultMagnet(){
       result?.data || {}
     );
 
-    setStatus(
-      $("adultMagnetStatus"),
-      "Magnet metadata loaded. Press Add to TorBox when you are ready.",
-      true
-    );
+    if(result?.data?.metadata_pending === true){
+      setAdultMagnetPill("READY TO ADD");
+
+      setStatus(
+        $("adultMagnetStatus"),
+        result?.data?.warning ||
+          "Metadata lookup took too long. Press Add to TorBox to continue.",
+        true
+      );
+    }else{
+      setStatus(
+        $("adultMagnetStatus"),
+        "Magnet metadata loaded. Press Add to TorBox when you are ready.",
+        true
+      );
+    }
 
   }catch(e){
     setAdultMagnetPill("ERROR","error");
