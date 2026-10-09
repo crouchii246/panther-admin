@@ -1838,7 +1838,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <span id="adultFolderImageLabel" class="small-text">No folder image assigned</span>
   </div>
   <div id="adultFolderImageStatus" class="status"></div>
-  <div class="small-text">The uploaded image is stored in Supabase Storage. Folder-to-image assignments in this version are remembered in this browser; showing them on other devices or in Panther requires a shared folder-metadata source.</div>
+  <div class="small-text">Folder images are saved in Supabase and displayed in Panther after the Android update. Existing browser-only images must be saved again once after the SQL setup.</div>
 </div>
 </div>
 <div class="wide">
@@ -6534,11 +6534,23 @@ function resetPrivateContentForm(){
 // Empty folders are remembered by this browser until content is published in them.
 const adultFolderStorageKey = "panther_adult_folder_names_v1";
 const adultFolderImagesKey = "panther_adult_folder_images_v1";
-function getAdultFolderImages(){
-  try {
-    const data = JSON.parse(localStorage.getItem(adultFolderImagesKey) || "{}");
-    return data && typeof data === "object" && !Array.isArray(data) ? data : {};
-  } catch(_) { return {}; }
+let adultFolderSharedImages = {};
+let adultFolderImagesLoaded = false;
+function getAdultFolderImages(){ return adultFolderSharedImages; }
+async function loadAdultFolderImages(){
+  const rows = await rpc("panther_admin_list_private_folder_artwork", {});
+  adultFolderSharedImages = {};
+  for(const row of (Array.isArray(rows) ? rows : [])) {
+    adultFolderSharedImages[String(row.folder_name || "").trim()] = String(row.image_url || "");
+  }
+  adultFolderImagesLoaded = true;
+  updateAdultFolderImagePreview();
+}
+async function saveAdultFolderImage(folder, url){
+  await rpc("panther_admin_set_private_folder_artwork", {p_folder_name:folder,p_image_url:url});
+  if(url) adultFolderSharedImages[folder] = url;
+  else delete adultFolderSharedImages[folder];
+  updateAdultFolderImagePreview();
 }
 function updateAdultFolderImagePreview(){
   const folder = $("adultMagnetFolder")?.value || "Adult";
@@ -6553,7 +6565,7 @@ function updateAdultFolderImagePreview(){
   const urlInput = $("adultFolderImageUrl");
   if(urlInput) urlInput.value = url;
 }
-$("adultSaveFolderImageUrlBtn")?.addEventListener("click", () => {
+$("adultSaveFolderImageUrlBtn")?.addEventListener("click", async () => {
   const folder = $("adultMagnetFolder")?.value || "Adult";
   const url = String($("adultFolderImageUrl")?.value || "").trim();
   const status = $("adultFolderImageStatus");
@@ -6561,12 +6573,9 @@ $("adultSaveFolderImageUrlBtn")?.addEventListener("click", () => {
     setStatus(status, "Enter a valid HTTPS image URL.", false); return;
   }
   try {
-    const images = getAdultFolderImages();
-    images[folder] = url;
-    localStorage.setItem(adultFolderImagesKey, JSON.stringify(images));
-    updateAdultFolderImagePreview();
-    setStatus(status, `Image URL saved for ${folder}.`, true);
-  } catch(error) { setStatus(status, error?.message || "Could not save folder image URL.", false); }
+    await saveAdultFolderImage(folder,url);
+    setStatus(status, `Image URL saved for ${folder} to Supabase.`, true);
+  } catch(error) { setStatus(status, error?.message || "Unable to save folder image", false); }
 });
 $("adultUploadMagnetPosterBtn")?.addEventListener("click", async () => {
   const file = $("adultMagnetPosterFile")?.files?.[0];
@@ -6601,23 +6610,18 @@ $("adultUploadFolderImageBtn")?.addEventListener("click", async () => {
   setStatus(status, `Uploading image for ${folder}…`);
   try {
     const result = await uploadPrivateMedia(file, "poster");
-    const images = getAdultFolderImages();
-    images[folder] = result.url;
-    localStorage.setItem(adultFolderImagesKey, JSON.stringify(images));
-    updateAdultFolderImagePreview();
-    setStatus(status, `Image uploaded for ${folder}.`, true);
-  } catch(error) {
-    setStatus(status, error?.message || "Image upload failed.", false);
-  } finally { button.disabled = false; }
+    await saveAdultFolderImage(folder,result.url);
+    $("adultFolderImageFile").value = "";
+    setStatus(status, `Image uploaded and saved for ${folder} in Supabase.`, true);
+  } catch(error) { setStatus(status, error?.message || "Image upload failed.", false); }
+  finally { button.disabled = false; }
 });
-$("adultRemoveFolderImageBtn")?.addEventListener("click", () => {
+$("adultRemoveFolderImageBtn")?.addEventListener("click", async () => {
   const folder = $("adultMagnetFolder")?.value || "Adult";
-  const images = getAdultFolderImages();
-  delete images[folder];
-  try { localStorage.setItem(adultFolderImagesKey, JSON.stringify(images)); }
-  catch(error){ setStatus($("adultFolderImageStatus"), "Unable to save this change in the browser.", false); return; }
-  updateAdultFolderImagePreview();
-  setStatus($("adultFolderImageStatus"), `Folder image removed for ${folder} (uploaded file left untouched).`, true);
+  try {
+    await saveAdultFolderImage(folder,"");
+    setStatus($("adultFolderImageStatus"), `Folder image removed for ${folder}.`, true);
+  } catch(error) { setStatus($("adultFolderImageStatus"), error?.message || "Unable to remove image", false); }
 });
 function getAdultFolders(){
   let saved = [];
@@ -6626,6 +6630,10 @@ function getAdultFolders(){
   return [...new Set(names.map(x => String(x || "").trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
 }
 function renderAdultFolderChoices(){
+  if(!adultFolderImagesLoaded && accessToken){
+    adultFolderImagesLoaded = true;
+    loadAdultFolderImages().catch(e => { adultFolderImagesLoaded = false; setStatus($("adultFolderImageStatus"), e?.message || "Unable to load shared folder images", false); });
+  }
   const folderSelect = $("adultMagnetFolder");
   const filter = $("adultLibraryFolderFilter");
   const folders = getAdultFolders();
