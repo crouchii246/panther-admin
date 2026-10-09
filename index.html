@@ -1986,7 +1986,13 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
 <button class="small" id="reloadPrivateAccountsBtn">Reload accounts</button>
 </div>
+<div style="margin:12px 0 10px">
+  <label class="field-label" for="privateAccountUsernameSearch">Search account username</label>
+  <input id="privateAccountUsernameSearch" type="search" placeholder="Type a username to find an account..." autocomplete="off" spellcheck="false" aria-controls="privateAccountsList">
+  <div id="privateAccountSearchCount" class="small-text" style="margin-top:7px" aria-live="polite"></div>
+</div>
 <div class="status" id="privateAccountStatus"></div>
+<div id="privateAccountNoMatches" class="empty-note hidden" style="margin-bottom:10px">No accounts match that username.</div>
 <div class="private-account-list" id="privateAccountsList"></div>
 </div>
 <div class="private-title-access hidden" id="privateTitleAccessPanel">
@@ -7049,12 +7055,33 @@ function privateAccountLabel(account){
 }
 
 
+// Filter visible account cards without rebuilding forms, so unsaved edits stay intact.
+function filterPrivateAccountsByUsername(){
+  const input = $("privateAccountUsernameSearch");
+  const query = (input?.value || "").trim().toLocaleLowerCase();
+  const cards = document.querySelectorAll("#privateAccountsList .private-account-card");
+  let visible = 0;
+  cards.forEach(card => {
+    const username = (card.dataset.username || "").toLocaleLowerCase();
+    const match = !query || username.includes(query);
+    card.style.display = match ? "" : "none";
+    if(match) visible++;
+  });
+  const count = $("privateAccountSearchCount");
+  if(count) count.textContent = query
+    ? `${visible} of ${cards.length} accounts found`
+    : `${cards.length} registered account${cards.length === 1 ? "" : "s"}`;
+  const noMatches = $("privateAccountNoMatches");
+  if(noMatches) noMatches.classList.toggle("hidden", !query || visible !== 0 || cards.length === 0);
+}
+
 function renderPrivateAccounts(){
   const host = $("privateAccountsList");
   if(!host) return;
 
   if(!privateLibraryAccounts.length){
     host.innerHTML = '<div class="empty-note">No registered Panther accounts yet. Open Panther on a logged-in device first.</div>';
+    filterPrivateAccountsByUsername();
     return;
   }
 
@@ -7063,7 +7090,7 @@ function renderPrivateAccounts(){
     const expiry = toLocalDateTimeValue(account.expires_at);
 
     return `
-      <div class="private-account-card">
+      <div class="private-account-card" data-username="${esc(account.username || "")}">
         <div class="private-account-head">
           <div>
             <div class="private-account-title">${esc(privateAccountLabel(account))}</div>
@@ -7117,6 +7144,7 @@ function renderPrivateAccounts(){
   document.querySelectorAll(".manage-private-titles").forEach(button => {
     button.onclick = () => openPrivateTitleAccess(button.dataset.scope);
   });
+  filterPrivateAccountsByUsername();
 }
 
 
@@ -7262,6 +7290,7 @@ async function loadPrivateLibrary(){
 
 $("reloadPrivateLibraryBtn")?.addEventListener("click", loadPrivateLibrary);
 $("reloadPrivateAccountsBtn")?.addEventListener("click", loadPrivateAccounts);
+$("privateAccountUsernameSearch")?.addEventListener("input", filterPrivateAccountsByUsername);
 
 
 let pantherDevices = [];
