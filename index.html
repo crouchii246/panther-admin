@@ -844,6 +844,20 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   .seasonal-grid{grid-template-columns:1fr}
 }
 
+
+/* Nested collapsible panels inside each main section */
+.nested-panel{border:1px solid var(--border);background:var(--panel3);border-radius:13px;margin:0 0 12px;overflow:hidden}
+.nested-panel>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;color:var(--text);font-weight:800;user-select:none}
+.nested-panel>summary::-webkit-details-marker{display:none}
+.nested-panel>summary::after{content:'+';font-size:22px;line-height:1;color:var(--accent)}
+.nested-panel[open]>summary::after{content:'−'}
+.nested-panel[open]>summary{border-bottom:1px solid var(--border)}
+.nested-panel-body{padding:14px;min-width:0}
+.nested-panel-body>.card-flat{margin-bottom:0}
+.nested-panel-body>.private-library-grid{min-width:0}
+.nested-panel-body>.device-list{min-width:0}
+@media(max-width:520px){.nested-panel>summary{padding:12px}.nested-panel-body{padding:10px}}
+
 </style>
 
 </head>
@@ -8781,6 +8795,98 @@ $("quickUpdates")?.addEventListener("click", () => openSection("updatesSection")
 initCollapsibleSections();
 
 boot();
+</script>
+
+
+<script>
+/* Secondary accordions: preserve every existing input, element ID and event handler.
+   Main sections are untouched; all nested sections default to collapsed. */
+(function () {
+  function initialiseNestedPanels() {
+    const layouts = {
+      overviewSection: [{title:'Dashboard overview',start:0,end:1}],
+      homeScreenSection: [
+        {title:'Home Screen settings',start:0,end:2},
+        {title:'Published Home Screen status',start:3,end:4}
+      ],
+      seasonalThemesSection: [
+        {title:'Seasonal theme settings and artwork',start:0,end:2},
+        {title:'Seasonal theme status',start:3,end:4}
+      ],
+      servicesSection: [
+        {title:'Service controls and add service',start:0,end:1},
+        {title:'Existing services',start:2,end:3}
+      ],
+      categoriesSection: [
+        {title:'Provider and category filters',start:0,end:1},
+        {title:'Grouping settings',start:2,end:3}
+      ],
+      groupsSection: [{title:'Groups and supplier categories',start:0,end:0}],
+      catalogCacheSection: [
+        {title:'Catalogue cache settings',start:0,end:2},
+        {title:'Cache status',start:3,end:4}
+      ],
+      featuresSection: [
+        {title:'Feature switches',start:0,end:2},
+        {title:'Current feature state',start:3,end:4}
+      ],
+      updatesSection: [
+        {title:'Publish new app version',start:0,end:1},
+        {title:'Release information and status',start:2,end:3}
+      ],
+      privateLibrarySection: [
+        {title:'Private Library information',start:0,end:2},
+        {title:'Magnet / TorBox and new content',start:3,end:6},
+        {title:'Edit existing titles and library list',start:7,end:7},
+        {title:'Account access and username search',start:9,end:9},
+        {title:'Individual account title access',start:10,end:10}
+      ],
+      devicesSection: [
+        {title:'Device overview',start:0,end:1},
+        {title:'Search, manage and browse devices',start:2,end:4}
+      ],
+      announcementsSection: [
+        {title:'Create announcement',start:0,end:1},
+        {title:'Existing announcements',start:2,end:2}
+      ]
+    };
+    Object.keys(layouts).forEach(function (id) {
+      const root = document.getElementById(id);
+      if (!root || root.dataset.nestedReady === '1') return;
+      const container = Array.from(root.children).find(function(el) {
+        return el.classList.contains('collapse-content');
+      });
+      if (!container) return;
+      const original = Array.from(container.children);
+      layouts[id].forEach(function (part) {
+        const elements = original.slice(part.start,part.end+1);
+        if (!elements.length) return;
+        const wrapper=document.createElement('details');
+        wrapper.className='nested-panel';
+        const heading=document.createElement('summary');
+        heading.textContent=part.title;
+        const body=document.createElement('div');
+        body.className='nested-panel-body';
+        wrapper.appendChild(heading);
+        wrapper.appendChild(body);
+        container.insertBefore(wrapper,elements[0]);
+        elements.forEach(function(el){body.appendChild(el)});
+        // Editing controls that become visible later must remain reachable.
+        body.querySelectorAll('.hidden').forEach(function(el){
+          const observer=new MutationObserver(function () {
+            if (!el.classList.contains('hidden') && getComputedStyle(el).display !== 'none') {
+              if (el.id === 'privateContentEditorCard' || el.id === 'privateTitleAccessPanel') wrapper.open=true;
+            }
+          });
+          observer.observe(el,{attributes:true,attributeFilter:['class']});
+        });
+      });
+      root.dataset.nestedReady='1';
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initialiseNestedPanels);
+  else initialiseNestedPanels();
+})();
 </script>
 
 </body>
