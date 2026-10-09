@@ -858,6 +858,22 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 .nested-panel-body>.device-list{min-width:0}
 @media(max-width:520px){.nested-panel>summary{padding:12px}.nested-panel-body{padding:10px}}
 
+/* Stream Health */
+.stream-health-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.stream-health-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.stream-health-stat{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px}
+.stream-health-stat strong{font-size:21px;display:block}
+.stream-health-list{display:grid;gap:10px}
+.stream-health-item{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:13px;overflow-wrap:anywhere}
+.stream-health-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.stream-health-meta{font-size:12px;color:var(--muted);margin:6px 0;line-height:1.65}
+.stream-health-actions{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:10px}
+.stream-health-actions select{max-width:175px}
+.stream-health-tag{display:inline-block;padding:4px 8px;border:1px solid var(--border);border-radius:30px;font-size:11px;margin-right:5px}
+.stream-health-notes{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
+@media(max-width:850px){.stream-health-filters,.stream-health-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.stream-health-filters{grid-template-columns:1fr}.stream-health-head{flex-direction:column}}
+
 </style>
 
 </head>
@@ -884,6 +900,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#homeScreenSection">Home Screen</a>
       <a href="#seasonalThemesSection">Seasonal Themes</a>
       <a href="#privateLibrarySection">Private Library</a>
+      <a href="#streamHealthSection">Stream Health</a>
       <a href="#devicesSection">Devices</a>
       <a href="#announcementsSection">Announcements</a>
       <a href="#updatesSection">Updates</a>
@@ -951,6 +968,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickHomeScreen" class="quick-action">🏠 Home Screen</button>
     <button id="quickSeasonalThemes" class="quick-action">🎄 Seasonal Themes</button>
     <button id="quickPrivateLibrary" class="quick-action">🔒 Private Library</button>
+    <button id="quickStreamHealth" class="quick-action">⚠ Stream Health</button>
     <button id="quickDevices" class="quick-action">📱 Devices</button>
     <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
     <button id="quickUpdates" class="quick-action">⬆ Updates</button>
@@ -1246,6 +1264,32 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     </div>
   </details>
 
+
+
+  <details id="streamHealthSection" class="section-anchor collapse-card">
+    <summary><div class="section-heading-left"><div class="section-icon">⚠</div>
+      <div class="section-title-text"><h2>Stream Health &amp; Reports</h2>
+      <div>Live TV, Movie and Episode problems reported by Panther viewers.</div></div></div>
+      <span class="collapse-arrow">▼</span></summary>
+    <div class="collapse-content">
+      <div class="cache-explainer">Automatic playback errors and customer-submitted reports. Data is restricted to signed-in administrators. Refresh to check for new reports.</div>
+      <div class="stream-health-stats">
+        <div class="stream-health-stat"><strong id="healthNewCount">–</strong><span class="small-text">New</span></div>
+        <div class="stream-health-stat"><strong id="healthInvestigatingCount">–</strong><span class="small-text">Investigating</span></div>
+        <div class="stream-health-stat"><strong id="healthAutomaticCount">–</strong><span class="small-text">Automatic reports</span></div>
+        <div class="stream-health-stat"><strong id="healthTotalCount">–</strong><span class="small-text">Reports loaded</span></div>
+      </div>
+      <div class="stream-health-filters">
+        <div><div class="field-label">Content type</div><select id="healthTypeFilter"><option value="">All types</option><option value="live">Live TV</option><option value="movie">Movies</option><option value="episode">Episodes</option></select></div>
+        <div><div class="field-label">Status</div><select id="healthStatusFilter"><option value="">All statuses</option><option value="new">New</option><option value="investigating">Investigating</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option></select></div>
+        <div><div class="field-label">Source</div><select id="healthSourceFilter"><option value="">Automatic &amp; manual</option><option value="auto">Automatic</option><option value="manual">Manual</option></select></div>
+        <div><div class="field-label">Search</div><input id="healthSearch" placeholder="Title, provider, account..."></div>
+      </div>
+      <div class="cache-actions"><button id="healthRefresh" class="primary">↻ Refresh reports</button><label class="small-text"><input type="checkbox" id="healthGroup" checked> Group same title / issue</label><span class="small-text">Latest 500 reports</span></div>
+      <div id="healthStatus" class="status"></div>
+      <div id="healthList" class="stream-health-list"><div class="empty-note">Open Stream Health to load reports.</div></div>
+    </div>
+  </details>
 
   <details id="servicesSection" class="section-anchor collapse-card">
     <summary>
@@ -8791,6 +8835,81 @@ $("quickDevices")?.addEventListener("click", () => {
 });
 $("quickAnnouncements")?.addEventListener("click", () => openSection("announcementsSection"));
 $("quickUpdates")?.addEventListener("click", () => openSection("updatesSection"));
+
+
+// ===== Stream Health / Reports =====
+let healthRows = [];
+let healthLoaded = false;
+function healthSafe(value){ return esc(String(value ?? '')); }
+function healthDate(value){ const date=new Date(value); return Number.isNaN(date.getTime()) ? '' : date.toLocaleString(); }
+function healthStatusName(value){return String(value||'new').replace(/_/g,' ');}
+function healthFiltered(){
+  const type=$('healthTypeFilter').value, status=$('healthStatusFilter').value;
+  const source=$('healthSourceFilter').value, q=$('healthSearch').value.trim().toLowerCase();
+  return healthRows.filter(r => (!type||r.type===type) && (!status||r.status===status) &&
+    (!source||(source==='auto' ? r.automatic===true : r.automatic!==true)) &&
+    (!q||[r.title,r.service,r.username,r.content_id,r.reason,r.details].some(v=>String(v??'').toLowerCase().includes(q))));
+}
+function renderStreamHealth(){
+  const rows=healthFiltered(), container=$('healthList');
+  $('healthNewCount').textContent=healthRows.filter(r=>r.status==='new').length;
+  $('healthInvestigatingCount').textContent=healthRows.filter(r=>r.status==='investigating').length;
+  $('healthAutomaticCount').textContent=healthRows.filter(r=>r.automatic===true).length;
+  $('healthTotalCount').textContent=healthRows.length;
+  if(!rows.length){container.innerHTML='<div class="empty-note">No matching reports.</div>';return;}
+  const grouping=$('healthGroup').checked, groups=new Map();
+  for(const r of rows){
+    const key=grouping ? [r.service,r.type,r.content_id,r.reason,r.status].join('\u001f') : r.id;
+    if(!groups.has(key))groups.set(key,[]);
+    groups.get(key).push(r);
+  }
+  container.innerHTML=Array.from(groups.values()).map(group=>{
+    const r=group[0], numDevices=new Set(group.map(x=>x.device_id).filter(Boolean)).size;
+    const summary=group.length>1 ? `<span class="stream-health-tag">${group.length} reports · ${numDevices} device(s)</span>` : '';
+    const options=['new','investigating','resolved','dismissed'].map(st=>`<option value="${st}" ${st===r.status?'selected':''}>${st.charAt(0).toUpperCase()+st.slice(1)}</option>`).join('');
+    const more=group.length>1?`<details class="nested-panel" style="margin-top:10px"><summary>View ${group.length} individual reports</summary><div class="nested-panel-body">${group.map(x=>`<div class="stream-health-meta">${healthSafe(healthDate(x.created_at))} · ${healthSafe(x.username||'Unknown account')} · ${healthSafe(x.device_model||'Unknown device')} · ${x.automatic?'Automatic':'Manual'} ${x.details?`<div class="stream-health-notes">${healthSafe(x.details)}</div>`:''}</div>`).join('')}</div></details>`:'';
+    return `<div class="stream-health-item"><div class="stream-health-head"><strong>${healthSafe(r.title||r.content_id)}</strong><span class="stream-health-tag">${healthSafe(healthStatusName(r.status))}</span></div>
+      <div class="stream-health-meta">${healthSafe(r.type)} · ${healthSafe(r.service||'Unknown provider')} · ${healthSafe(r.content_id)}<br>
+      ${healthSafe(r.reason).replace(/_/g,' ')} · ${healthSafe(healthDate(r.created_at))} · ${healthSafe(r.username||'Unknown account')}</div>
+      <div>${summary}<span class="stream-health-tag">${r.automatic?'Automatic':'Manual'}</span></div>
+      ${r.details?`<div class="stream-health-notes">${healthSafe(r.details)}</div>`:''}
+      <div class="stream-health-actions"><select aria-label="Report status" data-health-id="${healthSafe(r.id)}">${options}</select>
+      <button class="small" data-health-save="${healthSafe(r.id)}">Save status${group.length>1?' (all grouped)':''}</button></div>${more}</div>`;
+  }).join('');
+  container.querySelectorAll('[data-health-save]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const id=btn.dataset.healthSave, row=rows.find(x=>x.id===id), group=Array.from(groups.values()).find(g=>g.some(x=>x.id===id));
+    const chosen=container.querySelectorAll('[data-health-id]');
+    const selector=Array.from(chosen).find(x=>x.dataset.healthId===id);
+    if(!row||!selector||!group)return;
+    const status=selector.value;
+    btn.disabled=true;
+    try{
+      for(const member of group) await rpc('panther_admin_update_stream_report_status',{p_report_id:member.id,p_status:status});
+      group.forEach(member=>member.status=status);
+      setStatus($('healthStatus'),'Report status saved.',true);
+      renderStreamHealth();
+    }catch(e){setStatus($('healthStatus'),'Could not update report: '+(e.message||e),false)}
+    finally{btn.disabled=false}
+  }));
+}
+async function loadStreamHealth(){
+  setStatus($('healthStatus'),'Loading reports...');
+  $('healthRefresh').disabled=true;
+  try{
+    const result=await rpc('panther_admin_list_stream_reports',{});
+    healthRows=Array.isArray(result)?result:(result?.reports||[]);
+    healthLoaded=true;
+    renderStreamHealth();
+    setStatus($('healthStatus'),`${healthRows.length} reports loaded (latest 500).`,true);
+  }catch(e){
+    setStatus($('healthStatus'),'Unable to load reports. Run the Stream Health Admin SQL first. '+(e?.message||e),false);
+  }finally{$('healthRefresh').disabled=false}
+}
+$('quickStreamHealth')?.addEventListener('click',()=>{openSection('streamHealthSection');loadStreamHealth()});
+$('streamHealthSection')?.addEventListener('toggle',()=>{if($('streamHealthSection').open&&!healthLoaded&&accessToken)loadStreamHealth()});
+$('healthRefresh')?.addEventListener('click',loadStreamHealth);
+['healthTypeFilter','healthStatusFilter','healthSourceFilter','healthGroup'].forEach(id=>$(id)?.addEventListener('change',renderStreamHealth));
+$('healthSearch')?.addEventListener('input',renderStreamHealth);
 
 initCollapsibleSections();
 
