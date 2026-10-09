@@ -1820,6 +1820,15 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <div class="small-text">Choose the folder for this video before publishing.</div>
 </div>
 <div>
+<div class="card-flat" style="margin-top:12px">
+  <div class="field-label">Delete existing folder</div>
+  <div class="small-text">Select the folder above, then choose whether to keep or delete its published videos. This does not delete TorBox downloads.</div>
+  <div class="cache-actions" style="margin-top:10px">
+    <button id="adultDeleteFolderOnlyBtn" type="button">Delete folder — keep videos</button>
+    <button id="adultDeleteFolderAndVideosBtn" type="button" class="danger">Delete folder and videos</button>
+  </div>
+  <div class="status" id="adultDeleteFolderStatus"></div>
+</div>
 <div class="field-label">Create new folder</div>
 <div class="private-upload-row"><input id="adultNewFolderName" maxlength="100" placeholder="New folder name"><button id="adultCreateFolderBtn" type="button">Create folder</button></div>
 <input id="adultMagnetCategory" type="hidden" value="Adult"/>
@@ -6665,6 +6674,75 @@ $("adultCreateFolderBtn")?.addEventListener("click", () => {
   $("adultNewFolderName").value = "";
   setStatus($("adultMagnetStatus"), `Folder "${name}" selected. Publish a video into it to store the folder in Supabase.`, true);
 });
+// Remove a folder safely without deleting TorBox downloads or Storage objects.
+let adultFolderDeletionBusy = false;
+async function deleteAdultLibraryFolder(deleteVideos) {
+  if(adultFolderDeletionBusy) return;
+  const folder = String($("adultMagnetFolder")?.value || "").trim();
+  const status = $("adultDeleteFolderStatus");
+  if(!folder) { setStatus(status,"Choose a folder first.",false); return; }
+  if(folder === "Adult") { setStatus(status,"Adult is the default folder and cannot be deleted. You can move its videos into another folder using Edit.",false); return; }
+  const matches = privateLibraryContent.filter(item => String(item.category || "Adult").trim() === folder);
+  const target = "Uncategorised";
+  if(!deleteVideos && folder === target) {
+    setStatus(status,"Uncategorised is the destination for retained videos and cannot be moved into itself.",false);
+    return;
+  }
+  const message = deleteVideos
+    ? `DELETE FOLDER AND VIDEOS?\n\nFolder: ${folder}\nPublished titles: ${matches.length}\n\nThis permanently deletes the library records, including title access assignments. It does NOT delete files from TorBox or Supabase Storage.\n\nContinue?`
+    : `DELETE FOLDER BUT KEEP VIDEOS?\n\nFolder: ${folder}\nPublished titles: ${matches.length}\n\nAll videos will move to ${target}. Their IDs and playback links will remain unchanged.\n\nContinue?`;
+  if(!confirm(message)) return;
+  if(deleteVideos && matches.length > 0 && !confirm(`FINAL CONFIRMATION: Delete ${matches.length} published title(s) in ${folder}?`)) return;
+  adultFolderDeletionBusy = true;
+  const buttons = [$("adultDeleteFolderOnlyBtn"),$("adultDeleteFolderAndVideosBtn")];
+  buttons.forEach(b=>{if(b)b.disabled=true;});
+  let done = 0;
+  try {
+    for(const item of matches) {
+      setStatus(status,`${deleteVideos ? "Deleting" : "Moving"} ${done+1} of ${matches.length}: ${item.title || "Untitled"}…`);
+      if(deleteVideos) {
+        await rpc("panther_admin_delete_private_content",{p_id:item.id});
+      } else {
+        await rpc("panther_admin_save_private_content",{
+          p_id:item.id,
+          p_title:item.title || "Private video",
+          p_description:item.description || "",
+          p_video_url:item.video_url || "",
+          p_poster_url:item.poster_url || "",
+          p_category:target,
+          p_creator:item.creator || "",
+          p_licence:item.licence || "",
+          p_attribution:item.attribution || "",
+          p_source_url:item.source_url || "",
+          p_enabled:item.enabled !== false,
+          p_sort_order:Number(item.sort_order ?? 100)
+        });
+      }
+      done++;
+    }
+    // Remove the artwork assignment, but never delete the actual image file.
+    if(getAdultFolderImages()[folder]) await saveAdultFolderImage(folder,"");
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]"); } catch(_) {}
+    localStorage.setItem(adultFolderStorageKey,JSON.stringify(
+      (Array.isArray(saved) ? saved : []).filter(name=>String(name).trim()!==folder)
+    ));
+    // Clear the chosen folder before rebuilding selectors.
+    if($("adultMagnetFolder")) $("adultMagnetFolder").value = "Adult";
+    if($("adultLibraryFolderFilter")) $("adultLibraryFolderFilter").value = "";
+    await loadPrivateContent();
+    setStatus(status,`Folder "${folder}" deleted. ${done} title(s) ${deleteVideos ? "removed from the library" : "moved to Uncategorised"}.`,true);
+  } catch(error) {
+    try { await loadPrivateContent(); } catch(_) {}
+    setStatus(status,`Stopped after ${done} of ${matches.length} title(s). ${error?.message || String(error)}. Resolve this error before retrying.`,false);
+  } finally {
+    adultFolderDeletionBusy = false;
+    buttons.forEach(b=>{if(b)b.disabled=false;});
+  }
+}
+$("adultDeleteFolderOnlyBtn")?.addEventListener("click",()=>deleteAdultLibraryFolder(false));
+$("adultDeleteFolderAndVideosBtn")?.addEventListener("click",()=>deleteAdultLibraryFolder(true));
+
 $("adultMagnetFolder")?.addEventListener("change", () => {
   $("adultMagnetCategory").value = $("adultMagnetFolder").value;
   updateAdultFolderImagePreview();
