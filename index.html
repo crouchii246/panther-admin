@@ -1956,20 +1956,22 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <label for="adultLibraryFolderFilter" class="field-label" style="margin:0">Show folder</label>
 <select id="adultLibraryFolderFilter" style="flex:1;min-width:160px"><option value="">All folders</option></select>
 </div>
-<div class="card-flat" style="margin-bottom:12px">
-  <h3>Manual Scene Collections</h3>
-  <div class="small-text">Select videos below (newly published or existing). Select in the order they should play; enter a collection title and save. Only videos from the same folder can be grouped.</div>
-  <div class="private-library-form" style="margin-top:10px">
-    <div><div class="field-label">Collection title</div><input id="manualCollectionTitle" placeholder="e.g. My Film — all scenes" maxlength="180"></div>
-    <div class="small-text" id="manualCollectionSelection">No videos selected</div>
-    <div class="cache-actions">
-      <button class="primary" id="saveManualCollectionBtn" type="button">Group selected videos</button>
-      <button id="removeManualCollectionBtn" type="button">Ungroup selected videos</button>
-      <button id="clearManualCollectionBtn" type="button">Clear selection</button>
+<details id="manualSceneCollectionsPanel" class="add-service-panel" style="margin-bottom:12px">
+  <summary>Manual Scene Collections</summary>
+  <div class="add-service-body">
+    <div class="small-text">Select videos below (newly published or existing). Select in the order they should play; enter a collection title and save. Only videos from the same folder can be grouped.</div>
+    <div class="private-library-form" style="margin-top:10px">
+      <div><div class="field-label">Collection title</div><input id="manualCollectionTitle" placeholder="e.g. My Film — all scenes" maxlength="180"></div>
+      <div class="small-text" id="manualCollectionSelection">No videos selected</div>
+      <div class="cache-actions">
+        <button class="primary" id="saveManualCollectionBtn" type="button">Group selected videos</button>
+        <button id="removeManualCollectionBtn" type="button">Ungroup selected videos</button>
+        <button id="clearManualCollectionBtn" type="button">Clear selection</button>
+      </div>
+      <div class="status" id="manualCollectionStatus"></div>
     </div>
-    <div class="status" id="manualCollectionStatus"></div>
   </div>
-</div>
+</details>
 <div class="private-content-list" id="privateContentList"></div>
 </div>
 </div>
