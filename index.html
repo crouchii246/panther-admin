@@ -1956,6 +1956,20 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <label for="adultLibraryFolderFilter" class="field-label" style="margin:0">Show folder</label>
 <select id="adultLibraryFolderFilter" style="flex:1;min-width:160px"><option value="">All folders</option></select>
 </div>
+<div class="card-flat" style="margin-bottom:12px">
+  <h3>Manual Scene Collections</h3>
+  <div class="small-text">Select videos below (newly published or existing). Select in the order they should play; enter a collection title and save. Only videos from the same folder can be grouped.</div>
+  <div class="private-library-form" style="margin-top:10px">
+    <div><div class="field-label">Collection title</div><input id="manualCollectionTitle" placeholder="e.g. My Film — all scenes" maxlength="180"></div>
+    <div class="small-text" id="manualCollectionSelection">No videos selected</div>
+    <div class="cache-actions">
+      <button class="primary" id="saveManualCollectionBtn" type="button">Group selected videos</button>
+      <button id="removeManualCollectionBtn" type="button">Ungroup selected videos</button>
+      <button id="clearManualCollectionBtn" type="button">Clear selection</button>
+    </div>
+    <div class="status" id="manualCollectionStatus"></div>
+  </div>
+</div>
 <div class="private-content-list" id="privateContentList"></div>
 </div>
 </div>
@@ -6771,7 +6785,9 @@ function renderPrivateContent(){
     <div class="private-content-card">
       <div class="private-content-head">
         <div>
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><input type="checkbox" class="manual-collection-select" data-id="${esc(item.id)}" ${manualCollectionSelected.includes(String(item.id)) ? "checked" : ""}><span class="small-text">Select for collection ${manualCollectionSelected.includes(String(item.id)) ? `(#${manualCollectionSelected.indexOf(String(item.id))+1})` : ""}</span></label>
           <div class="private-content-title">${esc(item.title || "Untitled")}</div>
+          ${item.manual_group_title ? `<div class="small-text">Collection: ${esc(item.manual_group_title)} · Scene ${Number(item.manual_scene_order || 0)}</div>` : ""}
           <div class="private-content-meta">
             ${esc(item.category || "Private")} · Sort ${Number(item.sort_order ?? 100)}<br>
             ${item.creator ? `Creator: ${esc(item.creator)}<br>` : ""}
@@ -6800,9 +6816,48 @@ function renderPrivateContent(){
     button.onclick = () => deletePrivateContent(button.dataset.id);
   });
 
+  document.querySelectorAll(".manual-collection-select").forEach(input => {
+    input.onchange = () => {
+      const id = String(input.dataset.id);
+      manualCollectionSelected = manualCollectionSelected.filter(x => x !== id);
+      if(input.checked) manualCollectionSelected.push(id);
+      renderPrivateContent();
+    };
+  });
+  updateManualSelection();
   renderPrivateTitleAccess();
 }
 
+let manualCollectionSelected = [];
+function updateManualSelection(){
+  const label = $("manualCollectionSelection");
+  if(!label) return;
+  label.textContent = manualCollectionSelected.length
+    ? `${manualCollectionSelected.length} selected · order: ` + manualCollectionSelected.map((id,i) => `${i+1}. ${privateLibraryContent.find(x=>String(x.id)===id)?.title || id}`).join(" → ")
+    : "No videos selected";
+}
+$("clearManualCollectionBtn")?.addEventListener("click", () => { manualCollectionSelected=[]; renderPrivateContent(); });
+async function assignManualCollection(title){
+  const items = manualCollectionSelected.map(id=>privateLibraryContent.find(x=>String(x.id)===id)).filter(Boolean);
+  if(!items.length) return setStatus($("manualCollectionStatus"),"Select at least one video.",false);
+  if(new Set(items.map(x=>(x.category||"Uncategorised").trim())).size!==1)
+    return setStatus($("manualCollectionStatus"),"Choose videos from the same folder.",false);
+  if(title && items.length < 2)
+    return setStatus($("manualCollectionStatus"),"Select at least two videos to form a collection.",false);
+  try {
+    setStatus($("manualCollectionStatus"), "Saving collection...");
+    await rpc("panther_admin_assign_private_collection", {p_content_ids:manualCollectionSelected,p_group_title:title});
+    manualCollectionSelected=[];
+    await loadPrivateContent();
+    setStatus($("manualCollectionStatus"), title ? "Collection saved. Restart/reopen the Private Library to refresh." : "Selected videos ungrouped.", true);
+  } catch(e){ setStatus($("manualCollectionStatus"),e?.message||String(e),false); }
+}
+$("saveManualCollectionBtn")?.addEventListener("click",()=>{
+  const title=$("manualCollectionTitle")?.value.trim()||"";
+  if(!title) return setStatus($("manualCollectionStatus"),"Enter a collection name.",false);
+  assignManualCollection(title);
+});
+$("removeManualCollectionBtn")?.addEventListener("click",()=>assignManualCollection(""));
 
 async function loadPrivateContent(){
   if(!$("privateLibrarySection")) return;
