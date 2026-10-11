@@ -2341,7 +2341,25 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         <div class="wide"><div class="field-label">Message</div><textarea id="announcementMessage" maxlength="2000" placeholder="Enter the announcement shown to Panther users..."></textarea></div>
         <div><div class="field-label">Type</div><select id="announcementType"><option value="info">Info</option><option value="warning">Warning</option><option value="critical">Critical</option></select></div>
         <div><div class="field-label">Display</div><select id="announcementDisplayType"><option value="popup">Popup</option><option value="banner">Banner</option></select></div>
-        <div><div class="field-label">Target group</div><select id="announcementTargetGroup"><option value="all">All users</option></select></div>
+        <div class="wide"><div class="field-label">Send announcement to</div>
+          <select id="announcementTargetGroup">
+            <option value="all">All IPTV accounts</option>
+            <option value="selected">Selected IPTV accounts only</option>
+          </select>
+          <div class="update-help">Choose one or several IPTV accounts. All their registered devices receive this announcement.</div>
+        </div>
+        <div class="wide" id="announcementAccountsContainer" style="display:none">
+          <div class="field-label">Select IPTV accounts</div>
+          <input id="announcementAccountSearch" type="search" autocomplete="off" placeholder="Search service or username">
+          <div class="cache-actions" style="margin:10px 0">
+            <button type="button" id="announcementSelectAllAccountsBtn" class="small">Select all registered</button>
+            <button type="button" id="announcementClearAccountsBtn" class="small">Clear selection</button>
+            <button type="button" id="announcementReloadAccountsBtn" class="small">Reload accounts</button>
+          </div>
+          <div id="announcementSelectedCount" class="small-text" style="margin-bottom:10px">0 accounts selected</div>
+          <div id="announcementAccountsList" style="display:grid;gap:8px;max-height:320px;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:12px"></div>
+          <div class="update-help">Only accounts with a registered Panther device appear here. This targets IPTV accounts, not individual viewing profiles.</div>
+        </div>
         <div><div class="field-label">Status</div><select id="announcementEnabled"><option value="true">Enabled</option><option value="false">Disabled</option></select></div>
         <div><div class="field-label">Starts</div><input id="announcementStartAt" type="datetime-local"></div>
         <div><div class="field-label">Ends</div><input id="announcementEndAt" type="datetime-local"></div>
@@ -3407,47 +3425,245 @@ async function toggleCategoryHidden(id) {
 }
 
 
-function formatAnnouncementDate(value){if(!value)return"No limit";const d=new Date(value);return Number.isNaN(d.getTime())?value:d.toLocaleString()}
-function toLocalDateTimeValue(value){if(!value)return"";const d=new Date(value);if(Number.isNaN(d.getTime()))return"";const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return local.toISOString().slice(0,16)}
+// ============================================================
+// ANNOUNCEMENTS: GLOBAL OR TARGETED IPTV ACCOUNTS
+// ============================================================
+let announcementRegisteredAccounts = [];
+let announcementSelectedAccounts = [];
+
+function announcementUpdateTargets(){
+  const selected = $("announcementTargetGroup").value === "selected";
+  $("announcementAccountsContainer").style.display = selected ? "block" : "none";
+  const n = announcementSelectedAccounts.length;
+  $("announcementSelectedCount").textContent = `${n} account${n === 1 ? "" : "s"} selected`;
+  if (selected && !announcementRegisteredAccounts.length) {
+    loadAnnouncementAccounts().catch(e => setStatus($("announcementStatus"), e?.message || String(e), false));
+  }
+}
+
+function renderAnnouncementAccounts(){
+  const host = $("announcementAccountsList");
+  if (!host) return;
+  const search = ($("announcementAccountSearch").value || "").toLowerCase().trim();
+  const rows = announcementRegisteredAccounts.filter(a =>
+    `${a.service_name} ${a.username} ${a.account_scope_id}`.toLowerCase().includes(search)
+  );
+  if (!rows.length) {
+    host.innerHTML = '<div class="small-text" style="padding:10px">No matching registered accounts.</div>';
+  } else {
+    host.innerHTML = rows.map(a => {
+      const id = a.account_scope_id;
+      const checked = announcementSelectedAccounts.includes(id) ? "checked" : "";
+      return `<label class="cache-switch-card" style="margin:0;cursor:pointer">
+        <input type="checkbox" data-announcement-account="${esc(id)}" ${checked}>
+        <span><span class="cache-switch-title">${esc(a.service_name || "IPTV Service")} · ${esc(a.username || "Unknown user")}</span>
+        <span class="small-text">${a.device_count} registered device(s)</span></span>
+      </label>`;
+    }).join("");
+    host.querySelectorAll("[data-announcement-account]").forEach(input => {
+      input.addEventListener("change", () => {
+        const id = input.getAttribute("data-announcement-account");
+        const set = new Set(announcementSelectedAccounts);
+        if (input.checked) set.add(id); else set.delete(id);
+        announcementSelectedAccounts = [...set];
+        $("announcementSelectedCount").textContent = `${announcementSelectedAccounts.length} account(s) selected`;
+      });
+    });
+  }
+  $("announcementSelectedCount").textContent = `${announcementSelectedAccounts.length} account(s) selected`;
+}
+
+async function loadAnnouncementAccounts(){
+  const list = await rpc("panther_admin_list_devices", {});
+  const grouped = new Map();
+  for(const d of (Array.isArray(list) ? list : [])) {
+    const id = String(d.account_scope_id || "").trim();
+    if (!id) continue;
+    if (!grouped.has(id)) grouped.set(id, {
+      account_scope_id:id,
+      service_name:String(d.service_name || ""),
+      username:String(d.username || ""),
+      device_count:0
+    });
+    grouped.get(id).device_count++;
+  }
+  announcementRegisteredAccounts = [...grouped.values()].sort((a,b) =>
+    `${a.service_name} ${a.username}`.localeCompare(`${b.service_name} ${b.username}`)
+  );
+  renderAnnouncementAccounts();
+}
+
+$("announcementTargetGroup")?.addEventListener("change", announcementUpdateTargets);
+$("announcementAccountSearch")?.addEventListener("input", renderAnnouncementAccounts);
+$("announcementSelectAllAccountsBtn")?.addEventListener("click", () => {
+  announcementSelectedAccounts = [...new Set(announcementRegisteredAccounts.map(a => a.account_scope_id))];
+  renderAnnouncementAccounts();
+});
+$("announcementClearAccountsBtn")?.addEventListener("click", () => {
+  announcementSelectedAccounts = [];
+  renderAnnouncementAccounts();
+});
+$("announcementReloadAccountsBtn")?.addEventListener("click", async () => {
+  try {
+    await loadAnnouncementAccounts();
+    setStatus($("announcementStatus"), "Account list refreshed.", true);
+  } catch(e) {setStatus($("announcementStatus"), e?.message || String(e), false)}
+});
+
+function formatAnnouncementDate(value){
+  if (!value) return "No limit";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+}
+function toLocalDateTimeValue(value){
+  if (!value) return "";
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return "";
+  return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+}
+
 function announcementPayload(){
-  const title=$("announcementTitle").value.trim(),message=$("announcementMessage").value.trim();
-  if(!title)throw new Error("Enter an announcement title.");
-  if(!message)throw new Error("Enter an announcement message.");
-  const start=$("announcementStartAt").value,end=$("announcementEndAt").value;
-  return{title,message,type:$("announcementType").value,display_type:$("announcementDisplayType").value,target_group:$("announcementTargetGroup").value||"all",start_at:start?new Date(start).toISOString():new Date().toISOString(),end_at:end?new Date(end).toISOString():null,show_once:$("announcementShowOnce").checked,require_acknowledgement:$("announcementRequireAck").checked,enabled:$("announcementEnabled").value==="true"};
+  const title = $("announcementTitle").value.trim();
+  const message = $("announcementMessage").value.trim();
+  if (!title) throw new Error("Enter an announcement title.");
+  if (!message) throw new Error("Enter an announcement message.");
+  const targetGroup = $("announcementTargetGroup").value === "selected" ? "selected" : "all";
+  const targets = targetGroup === "selected" ? [...new Set(announcementSelectedAccounts)] : [];
+  if (targetGroup === "selected" && !targets.length) throw new Error("Select at least one IPTV account.");
+  const start = $("announcementStartAt").value;
+  const end = $("announcementEndAt").value;
+  if (start && end && new Date(end) <= new Date(start)) throw new Error("End date must be after the start date.");
+  return {
+    title, message, type:$("announcementType").value,
+    display_type:$("announcementDisplayType").value,
+    target_group:targetGroup,
+    target_account_scopes:targets,
+    start_at:start ? new Date(start).toISOString() : new Date().toISOString(),
+    end_at:end ? new Date(end).toISOString() : null,
+    show_once:$("announcementShowOnce").checked,
+    require_acknowledgement:$("announcementRequireAck").checked,
+    enabled:$("announcementEnabled").value === "true"
+  };
 }
+
 function resetAnnouncementForm(){
-  editingAnnouncementId=null;$("announcementTitle").value="";$("announcementMessage").value="";$("announcementType").value="info";$("announcementDisplayType").value="popup";$("announcementTargetGroup").value="all";$("announcementEnabled").value="true";$("announcementStartAt").value="";$("announcementEndAt").value="";$("announcementShowOnce").checked=false;$("announcementRequireAck").checked=false;$("saveAnnouncementBtn").textContent="Create announcement";$("cancelAnnouncementEditBtn").classList.add("hidden");
+  editingAnnouncementId = null;
+  announcementSelectedAccounts = [];
+  $("announcementTitle").value = "";
+  $("announcementMessage").value = "";
+  $("announcementType").value = "info";
+  $("announcementDisplayType").value = "popup";
+  $("announcementTargetGroup").value = "all";
+  $("announcementEnabled").value = "true";
+  $("announcementStartAt").value = "";
+  $("announcementEndAt").value = "";
+  $("announcementShowOnce").checked = false;
+  $("announcementRequireAck").checked = false;
+  $("saveAnnouncementBtn").textContent = "Create announcement";
+  $("cancelAnnouncementEditBtn").classList.add("hidden");
+  $("announcementAccountSearch").value = "";
+  announcementUpdateTargets();
+  renderAnnouncementAccounts();
 }
+
 async function loadAnnouncements(){
-  if(!$("announcementsList"))return;
-  setStatus($("announcementStatus"),"Loading announcements...");
-  try{announcements=await select("announcements","select=id,title,message,type,display_type,target_group,start_at,end_at,show_once,require_acknowledgement,enabled,created_at&order=created_at.desc");renderAnnouncements();setStatus($("announcementStatus"),"")}
-  catch(e){announcements=[];renderAnnouncements();setStatus($("announcementStatus"),e?.message||String(e),false)}
+  if (!$("announcementsList")) return;
+  setStatus($("announcementStatus"), "Loading announcements...");
+  try {
+    announcements = await select("announcements",
+      "select=id,title,message,type,display_type,target_group,target_account_scopes,start_at,end_at,show_once,require_acknowledgement,enabled,created_at&order=created_at.desc");
+    renderAnnouncements();
+    setStatus($("announcementStatus"), "");
+  } catch(e) {
+    announcements = [];
+    renderAnnouncements();
+    setStatus($("announcementStatus"), e?.message || String(e), false);
+  }
 }
+
 function renderAnnouncements(){
-  const host=$("announcementsList");if(!host)return;
-  if(!announcements.length){host.innerHTML='<div class="empty-note">No announcements yet.</div>';return}
-  host.innerHTML=announcements.map(a=>`<div class="announcement-card announcement-type-${esc(a.type||"info")}"><div class="announcement-head"><div><h3>${esc(a.title)}</h3><div class="announcement-meta"><span class="pill">${esc((a.type||"info").toUpperCase())}</span><span class="pill">${esc((a.display_type||"popup").toUpperCase())}</span><span class="pill">${esc(a.target_group==="all"?"ALL USERS":a.target_group)}</span><span class="pill ${a.enabled?"enabled":"disabled"}">${a.enabled?"Enabled":"Disabled"}</span>${a.show_once?'<span class="pill">Show once</span>':""}${a.require_acknowledgement?'<span class="pill">Acknowledgement</span>':""}</div></div></div><div class="announcement-message">${esc(a.message)}</div><div class="small-text">Starts: ${esc(formatAnnouncementDate(a.start_at))}<br>Ends: ${esc(formatAnnouncementDate(a.end_at))}</div><div style="height:10px"></div><div class="announcement-actions"><button class="small edit-announcement" data-id="${esc(a.id)}">Edit</button><button class="small toggle-announcement" data-id="${esc(a.id)}">${a.enabled?"Disable":"Enable"}</button><button class="small danger delete-announcement" data-id="${esc(a.id)}">Delete</button></div></div>`).join("");
+  const host = $("announcementsList");
+  if (!host) return;
+  if (!announcements.length) {host.innerHTML='<div class="empty-note">No announcements yet.</div>';return}
+  host.innerHTML = announcements.map(a => {
+    const targeting = a.target_group === "selected"
+      ? `${(a.target_account_scopes || []).length} ACCOUNT(S)` : "ALL ACCOUNTS";
+    return `<div class="announcement-card announcement-type-${esc(a.type||"info")}">
+      <div class="announcement-head"><div><h3>${esc(a.title)}</h3>
+      <div class="announcement-meta"><span class="pill">${esc((a.type||"info").toUpperCase())}</span>
+      <span class="pill">${esc((a.display_type||"popup").toUpperCase())}</span>
+      <span class="pill">${esc(targeting)}</span>
+      <span class="pill ${a.enabled ? "enabled" : "disabled"}">${a.enabled ? "Enabled" : "Disabled"}</span>
+      ${a.show_once ? '<span class="pill">Show once</span>' : ""}
+      ${a.require_acknowledgement ? '<span class="pill">Acknowledgement</span>' : ""}</div></div></div>
+      <div class="announcement-message">${esc(a.message)}</div>
+      <div class="small-text">Starts: ${esc(formatAnnouncementDate(a.start_at))}<br>Ends: ${esc(formatAnnouncementDate(a.end_at))}</div>
+      <div style="height:10px"></div>
+      <div class="announcement-actions"><button class="small edit-announcement" data-id="${esc(a.id)}">Edit</button>
+      <button class="small toggle-announcement" data-id="${esc(a.id)}">${a.enabled ? "Disable" : "Enable"}</button>
+      <button class="small danger delete-announcement" data-id="${esc(a.id)}">Delete</button></div></div>`;
+  }).join("");
   document.querySelectorAll(".edit-announcement").forEach(b=>b.onclick=()=>editAnnouncement(b.dataset.id));
   document.querySelectorAll(".toggle-announcement").forEach(b=>b.onclick=()=>toggleAnnouncement(b.dataset.id));
   document.querySelectorAll(".delete-announcement").forEach(b=>b.onclick=()=>deleteAnnouncement(b.dataset.id));
 }
+
 function editAnnouncement(id){
-  const a=announcements.find(x=>x.id===id);if(!a)return;editingAnnouncementId=id;
-  $("announcementTitle").value=a.title||"";$("announcementMessage").value=a.message||"";$("announcementType").value=a.type||"info";$("announcementDisplayType").value=a.display_type||"popup";$("announcementTargetGroup").value=a.target_group||"all";$("announcementEnabled").value=String(a.enabled!==false);$("announcementStartAt").value=toLocalDateTimeValue(a.start_at);$("announcementEndAt").value=toLocalDateTimeValue(a.end_at);$("announcementShowOnce").checked=!!a.show_once;$("announcementRequireAck").checked=!!a.require_acknowledgement;$("saveAnnouncementBtn").textContent="Save changes";$("cancelAnnouncementEditBtn").classList.remove("hidden");openSection("announcementsSection");setTimeout(()=>$("announcementTitle")?.focus(),150);
+  const a = announcements.find(x=>x.id===id);
+  if(!a) return;
+  editingAnnouncementId = id;
+  $("announcementTitle").value = a.title || "";
+  $("announcementMessage").value = a.message || "";
+  $("announcementType").value = a.type || "info";
+  $("announcementDisplayType").value = a.display_type || "popup";
+  $("announcementTargetGroup").value = a.target_group === "selected" ? "selected" : "all";
+  announcementSelectedAccounts = Array.isArray(a.target_account_scopes) ? [...a.target_account_scopes] : [];
+  $("announcementEnabled").value = String(a.enabled !== false);
+  $("announcementStartAt").value = toLocalDateTimeValue(a.start_at);
+  $("announcementEndAt").value = toLocalDateTimeValue(a.end_at);
+  $("announcementShowOnce").checked = !!a.show_once;
+  $("announcementRequireAck").checked = !!a.require_acknowledgement;
+  $("saveAnnouncementBtn").textContent = "Save changes";
+  $("cancelAnnouncementEditBtn").classList.remove("hidden");
+  $("announcementAccountSearch").value = "";
+  announcementUpdateTargets();
+  renderAnnouncementAccounts();
+  openSection("announcementsSection");
+  setTimeout(() => $("announcementTitle")?.focus(), 150);
 }
-$("saveAnnouncementBtn")?.addEventListener("click",async()=>{
-  const b=$("saveAnnouncementBtn");b.disabled=true;setStatus($("announcementStatus"),editingAnnouncementId?"Saving changes...":"Creating announcement...");
-  try{const payload=announcementPayload();if(editingAnnouncementId){await restMutation("announcements","PATCH",payload,`id=eq.${encodeURIComponent(editingAnnouncementId)}`)}else{await restMutation("announcements","POST",payload)}resetAnnouncementForm();await loadAnnouncements();setStatus($("announcementStatus"),editingAnnouncementId?"Announcement updated.":"Announcement saved.",true)}
-  catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}finally{b.disabled=false}
+
+$("saveAnnouncementBtn")?.addEventListener("click", async () => {
+  const button = $("saveAnnouncementBtn");
+  const wasEditing = Boolean(editingAnnouncementId);
+  button.disabled = true;
+  setStatus($("announcementStatus"), wasEditing ? "Saving changes..." : "Creating announcement...");
+  try {
+    const payload = announcementPayload();
+    if (wasEditing) await restMutation("announcements", "PATCH", payload, `id=eq.${encodeURIComponent(editingAnnouncementId)}`);
+    else await restMutation("announcements", "POST", payload);
+    resetAnnouncementForm();
+    await loadAnnouncements();
+    setStatus($("announcementStatus"), wasEditing ? "Announcement updated." : "Announcement created.", true);
+  } catch (e) {
+    setStatus($("announcementStatus"), e?.message || String(e), false);
+  } finally {button.disabled = false}
 });
-$("cancelAnnouncementEditBtn")?.addEventListener("click",()=>{resetAnnouncementForm();setStatus($("announcementStatus"),"")});
+$("cancelAnnouncementEditBtn")?.addEventListener("click",()=>{
+  resetAnnouncementForm();setStatus($("announcementStatus"), "");
+});
 $("reloadAnnouncementsBtn")?.addEventListener("click",loadAnnouncements);
-async function toggleAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a)return;try{await restMutation("announcements","PATCH",{enabled:!a.enabled},`id=eq.${encodeURIComponent(id)}`);await loadAnnouncements()}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
-async function deleteAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a||!confirm(`Delete "${a.title}"?`))return;try{await restMutation("announcements","DELETE",null,`id=eq.${encodeURIComponent(id)}`);if(editingAnnouncementId===id)resetAnnouncementForm();await loadAnnouncements();setStatus($("announcementStatus"),"Announcement deleted.",true)}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
-
-
+async function toggleAnnouncement(id){
+  const a=announcements.find(x=>x.id===id);if(!a)return;
+  try{await restMutation("announcements","PATCH",{enabled:!a.enabled},`id=eq.${encodeURIComponent(id)}`);await loadAnnouncements()}
+  catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}
+}
+async function deleteAnnouncement(id){
+  const a=announcements.find(x=>x.id===id);if(!a||!confirm(`Delete "${a.title}"?`))return;
+  try{await restMutation("announcements","DELETE",null,`id=eq.${encodeURIComponent(id)}`);
+    if(editingAnnouncementId===id)resetAnnouncementForm();await loadAnnouncements();
+    setStatus($("announcementStatus"),"Announcement deleted.",true)}
+  catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}
+}
 
 
 // ============================================================
@@ -7933,4 +8149,4 @@ boot();
 </script>
 
 </body>
-                                            </html>
+  </html>
