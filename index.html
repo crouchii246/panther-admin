@@ -774,6 +774,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   font-size:12px;
 }
 
+
 /* ===== Seasonal Themes ===== */
 
 .seasonal-grid{
@@ -845,19 +846,56 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 }
 
 
-/* Nested collapsible panels inside each main section */
-.nested-panel{border:1px solid var(--border);background:var(--panel3);border-radius:13px;margin:0 0 12px;overflow:hidden}
-.nested-panel>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;color:var(--text);font-weight:800;user-select:none}
-.nested-panel>summary::-webkit-details-marker{display:none}
-.nested-panel>summary::after{content:'+';font-size:22px;line-height:1;color:var(--accent)}
-.nested-panel[open]>summary::after{content:'−'}
-.nested-panel[open]>summary{border-bottom:1px solid var(--border)}
-.nested-panel-body{padding:14px;min-width:0}
-.nested-panel-body>.card-flat{margin-bottom:0}
-.nested-panel-body>.private-library-grid{min-width:0}
-.nested-panel-body>.device-list{min-width:0}
-@media(max-width:520px){.nested-panel>summary{padding:12px}.nested-panel-body{padding:10px}}
+/* ===== Remote App Settings ===== */
 
+.remote-settings-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.remote-settings-grid .wide{
+  grid-column:1 / -1;
+}
+
+.remote-setting-card{
+  background:#101722;
+  border:1px solid #2d3a52;
+  border-radius:14px;
+  padding:14px;
+}
+
+.remote-setting-help{
+  margin-top:6px;
+  color:#93a3bd;
+  font-size:11px;
+  line-height:1.45;
+}
+
+.remote-target-summary{
+  background:#0b111c;
+  border:1px solid #2d3a52;
+  border-radius:14px;
+  padding:14px;
+  color:#cbd5e1;
+  line-height:1.55;
+}
+
+.remote-managed-count{
+  display:inline-flex;
+  margin-top:9px;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#172238;
+  border:1px solid #3e5276;
+  color:#d9e8ff;
+  font-size:11px;
+  font-weight:800;
+}
+
+@media (max-width:760px){
+  .remote-settings-grid{grid-template-columns:1fr}
+}
 
 </style>
 
@@ -883,6 +921,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#catalogCacheSection">Cache</a>
       <a href="#featuresSection">Features</a>
       <a href="#homeScreenSection">Home Screen</a>
+      <a href="#remoteAppSettingsSection">Remote Settings</a>
       <a href="#seasonalThemesSection">Seasonal Themes</a>
       <a href="#privateLibrarySection">Private Library</a>
       <a href="#devicesSection">Devices</a>
@@ -950,6 +989,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickCatalogCache" class="quick-action">⚡ Catalog cache</button>
     <button id="quickFeatures" class="quick-action">⚙ App Features</button>
     <button id="quickHomeScreen" class="quick-action">🏠 Home Screen</button>
+    <button id="quickRemoteAppSettings" class="quick-action">🎛️ Remote Settings</button>
     <button id="quickSeasonalThemes" class="quick-action">🎄 Seasonal Themes</button>
     <button id="quickPrivateLibrary" class="quick-action">🔒 Private Library</button>
     <button id="quickDevices" class="quick-action">📱 Devices</button>
@@ -1081,6 +1121,190 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   </details>
 
 
+
+
+  <details id="remoteAppSettingsSection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left">
+        <div class="section-icon">🎛️</div>
+        <div class="section-title-text">
+          <h2>Remote App Settings</h2>
+          <div>Push important Panther preferences globally or to one IPTV account.</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+
+    <div class="collapse-content">
+
+      <div class="cache-explainer">
+        <strong>Global</strong> values can apply to every Panther account.
+        Account-specific values override Global values. Leave a setting as
+        <strong>Use local setting</strong> when Panther should not control it remotely.
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="remote-settings-grid">
+
+        <div class="wide">
+          <div class="field-label">Target</div>
+          <select id="remoteSettingsTarget">
+            <option value="__global__">🌍 Global — all Panther accounts</option>
+          </select>
+          <div id="remoteSettingsTargetInfo" class="remote-setting-help">
+            Loading registered Panther accounts…
+          </div>
+        </div>
+
+        <label class="cache-switch-card">
+          <input id="remoteSettingsEnabled" type="checkbox">
+          <span>
+            <span class="cache-switch-title">Enable this remote settings target</span>
+            <div class="cache-switch-help">
+              When disabled, this target contributes no remote values.
+            </div>
+          </span>
+        </label>
+
+        <label class="cache-switch-card">
+          <input id="remoteSettingsLock" type="checkbox" checked>
+          <span>
+            <span class="cache-switch-title">Lock managed settings in Panther</span>
+            <div class="cache-switch-help">
+              ON = Panther Admin enforces the selected values. OFF = push once, then the user can change them locally.
+            </div>
+          </span>
+        </label>
+
+        <label id="remoteSettingsIgnoreGlobalCard" class="cache-switch-card wide" style="display:none">
+          <input id="remoteSettingsIgnoreGlobal" type="checkbox">
+          <span>
+            <span class="cache-switch-title">Ignore Global settings for this account</span>
+            <div class="cache-switch-help">
+              The selected account will use only its own remote values plus any remaining local settings.
+            </div>
+          </span>
+        </label>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Live TV layout</div>
+          <select id="remoteLiveTvViewMode">
+            <option value="__local__">Use local setting</option>
+            <option value="smarters">Panel View</option>
+            <option value="card">Card View</option>
+            <option value="list">List View</option>
+            <option value="epg">EPG View</option>
+          </select>
+          <div class="remote-setting-help">
+            Controls the Live TV category/channel presentation.
+          </div>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Movies layout</div>
+          <select id="remoteMovieViewMode">
+            <option value="__local__">Use local setting</option>
+            <option value="card">Card View</option>
+            <option value="list">List View</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Series layout</div>
+          <select id="remoteSeriesViewMode">
+            <option value="__local__">Use local setting</option>
+            <option value="card">Card View</option>
+            <option value="list">List View</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Firestick Up / Down channel switching</div>
+          <select id="remoteSwipeNavigation">
+            <option value="__local__">Use local setting</option>
+            <option value="true">On</option>
+            <option value="false">Off</option>
+          </select>
+          <div class="remote-setting-help">
+            This is Panther's Swipe / Remote Navigation setting used for Up/Down Live TV channel changes.
+          </div>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Play next episode prompt</div>
+          <select id="remoteAutoPlayNext">
+            <option value="__local__">Use local setting</option>
+            <option value="true">On</option>
+            <option value="false">Off</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Show EPG in channel list</div>
+          <select id="remoteShowEpg">
+            <option value="__local__">Use local setting</option>
+            <option value="true">On</option>
+            <option value="false">Off</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Show Continue Watching</div>
+          <select id="remoteShowContinue">
+            <option value="__local__">Use local setting</option>
+            <option value="true">On</option>
+            <option value="false">Off</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Default Live TV player</div>
+          <select id="remoteDefaultPlayerLive">
+            <option value="__local__">Use local setting</option>
+            <option value="panther">Panther Player</option>
+            <option value="external:org.videolan.vlc">VLC</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Default Movies player</div>
+          <select id="remoteDefaultPlayerMovies">
+            <option value="__local__">Use local setting</option>
+            <option value="panther">Panther Player</option>
+            <option value="external:org.videolan.vlc">VLC</option>
+          </select>
+        </div>
+
+        <div class="remote-setting-card">
+          <div class="field-label">Default Series player</div>
+          <select id="remoteDefaultPlayerSeries">
+            <option value="__local__">Use local setting</option>
+            <option value="panther">Panther Player</option>
+            <option value="external:org.videolan.vlc">VLC</option>
+          </select>
+        </div>
+
+        <div class="wide">
+          <div id="remoteSettingsSummary" class="remote-target-summary">
+            Select a target to view its settings.
+          </div>
+        </div>
+
+        <div class="wide cache-actions">
+          <button id="saveRemoteSettingsBtn" class="primary">Save remote settings</button>
+          <button id="reloadRemoteSettingsBtn">Reload</button>
+          <button id="resetRemoteSettingsBtn">Reset target</button>
+        </div>
+
+      </div>
+
+      <div id="remoteSettingsStatus" class="status"></div>
+
+    </div>
+  </details>
+
+
   <details id="seasonalThemesSection" class="section-anchor collapse-card">
     <summary>
       <div class="section-heading-left">
@@ -1113,6 +1337,28 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
           </select>
         </div>
 
+        <div class="wide">
+          <div class="field-label">Apply theme to</div>
+          <select id="seasonalTargetMode">
+            <option value="all">All IPTV accounts</option>
+            <option value="selected">Selected IPTV accounts only</option>
+          </select>
+          <div class="update-help">Targets entire IPTV accounts, across their registered devices. A user can still turn Festive Themes off in the app's Settings.</div>
+        </div>
+
+        <div class="wide" id="seasonalAccountsContainer" style="display:none">
+          <div class="field-label">Select accounts</div>
+          <input id="seasonalAccountSearch" type="search" autocomplete="off" placeholder="Search service or username">
+          <div class="cache-actions" style="margin:10px 0">
+            <button id="seasonalSelectAllAccountsBtn" type="button" class="small">Select all registered</button>
+            <button id="seasonalClearAccountsBtn" type="button" class="small">Clear selection</button>
+            <button id="seasonalReloadAccountsBtn" type="button" class="small">Reload accounts</button>
+          </div>
+          <div id="seasonalSelectedCount" class="small-text" style="margin-bottom:10px">0 accounts selected</div>
+          <div id="seasonalAccountsList" style="display:grid;gap:8px;max-height:320px;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:12px"></div>
+          <div class="update-help">Accounts appear after a Panther device registers. Use Publish to save these selections.</div>
+        </div>
+
         <div>
           <div class="field-label">Preset</div>
           <select id="seasonalThemeKey">
@@ -1129,7 +1375,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
           <input id="seasonalForceActive" type="checkbox">
           <span>
             <span class="cache-switch-title">Force active now</span>
-            <div class="cache-switch-help">Ignore the schedule and show the theme immediately on every Panther Home screen.</div>
+            <div class="cache-switch-help">Ignore the schedule and activate for the selected target accounts immediately.</div>
           </span>
         </label>
 
@@ -1246,7 +1492,6 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 
     </div>
   </details>
-
 
 
   <details id="servicesSection" class="section-anchor collapse-card">
@@ -1780,251 +2025,256 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   </details>
 
 
- <details class="section-anchor collapse-card" id="privateLibrarySection">
-<summary>
-<div class="section-heading-left">
-<div class="section-icon">🔒</div>
-<div class="section-title-text">
-<h2>Private Library</h2>
-<div>Add content through Magnet Link / TorBox and control account access.</div>
-</div>
-</div>
-<span class="collapse-arrow">▼</span>
-</summary>
-<div class="collapse-content">
-<div class="cache-explainer">
-<strong>Account-controlled library.</strong>
+  <details id="privateLibrarySection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left">
+        <div class="section-icon">🔒</div>
+        <div class="section-title-text">
+          <h2>Private Library</h2>
+          <div>Manage streaming content and choose exactly which IPTV accounts can access it.</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+
+    <div class="collapse-content">
+      <div class="cache-explainer">
+        <strong>Account-controlled library.</strong>
         Panther only shows the Private Library button after the current registered device's IPTV account is approved here.
         You can require a 4–8 digit PIN, set an expiry date, allow the whole library, or select individual titles.
         Only add material you are legally permitted to store and stream, and only make explicit material available to adults.
       </div>
-<div style="height:14px"></div>
 
-<div style="height:14px"></div>
-<div class="card-flat">
-<div class="section-heading">
-<div class="section-heading-left">
-<div class="section-title-text">
-<h2>Adult Magnet / TorBox</h2>
-<div>Paste a magnet link, add it to TorBox, choose the video file, then publish it into Panther's existing Adult / Private Library.</div>
-</div>
-</div>
-<span class="pill" id="adultMagnetStatePill">NOT ADDED</span>
-</div>
-<div class="cache-explainer">
-<strong>Server-side TorBox import.</strong>
-          The magnet link and TorBox API token are never sent to Panther devices.
-          When a user presses Play, Panther receives a temporary protected playback URL and the Adult stream function redirects to TorBox's temporary CDN link.
-          This keeps TorBox credentials out of the APK and avoids sending the video itself through Supabase.
-        </div>
-<div style="height:12px"></div>
-<div class="private-library-form">
-<div class="wide">
-<div class="field-label">Magnet link</div>
-<textarea id="adultMagnetLink" placeholder="magnet:?xt=urn:btih:..." rows="4" spellcheck="false"></textarea>
-<div class="small-text">
-              Paste a standard magnet URI. Panther does not scrape torrent websites; it only processes the magnet you supply.
+      <div style="height:14px"></div>
+
+
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left">
+            <div class="section-title-text">
+              <h2>Catalogue import</h2>
+              <div>Import a licensed provider catalogue from CSV or JSON without uploading each title manually.</div>
             </div>
-</div>
-<div>
-<div class="field-label">Title</div>
-<input id="adultMagnetTitle" maxlength="180" placeholder="Auto-filled from TorBox"/>
-</div>
-<div>
-<div class="field-label">Folder</div>
-<select id="adultMagnetFolder"><option value="Adult">Adult</option></select>
-<div class="small-text">Choose the folder for this video before publishing.</div>
-</div>
-<div>
-<div class="card-flat" style="margin-top:12px">
-  <div class="field-label">Delete existing folder</div>
-  <div class="small-text">Select the folder above, then choose whether to keep or delete its published videos. This does not delete TorBox downloads.</div>
-  <div class="cache-actions" style="margin-top:10px">
-    <button id="adultDeleteFolderOnlyBtn" type="button">Delete folder — keep videos</button>
-    <button id="adultDeleteFolderAndVideosBtn" type="button" class="danger">Delete folder and videos</button>
-  </div>
-  <div class="status" id="adultDeleteFolderStatus"></div>
-</div>
-<div class="field-label">Create new folder</div>
-<div class="private-upload-row"><input id="adultNewFolderName" maxlength="100" placeholder="New folder name"><button id="adultCreateFolderBtn" type="button">Create folder</button></div>
-<input id="adultMagnetCategory" type="hidden" value="Adult"/>
-<div class="card-flat" style="margin-top:12px">
-  <div class="field-label">Folder image — upload or URL</div>
-  <div class="small-text">Select a folder above. Upload an image from your device OR paste a direct image URL.</div>
-  <input id="adultFolderImageUrl" type="url" inputmode="url" placeholder="https://example.com/folder.jpg" style="margin-top:10px"/>
-  <button id="adultSaveFolderImageUrlBtn" type="button" style="margin-top:8px">Use image URL</button>
-  <div class="private-upload-row" style="margin-top:10px">
-    <input id="adultFolderImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/>
-    <button id="adultUploadFolderImageBtn" type="button">Upload folder image</button>
-    <button id="adultRemoveFolderImageBtn" type="button" class="danger">Remove image</button>
-  </div>
-  <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <img id="adultFolderImagePreview" alt="Selected folder artwork" style="display:none;object-fit:cover;width:140px;height:90px;border-radius:10px;border:1px solid #33404c"/>
-    <span id="adultFolderImageLabel" class="small-text">No folder image assigned</span>
-  </div>
-  <div id="adultFolderImageStatus" class="status"></div>
-  <div class="small-text">Folder images are saved in Supabase and displayed in Panther after the Android update. Existing browser-only images must be saved again once after the SQL setup.</div>
-</div>
-</div>
-<div class="wide">
-<div class="field-label">Video poster — upload or URL</div>
-<input id="adultMagnetPosterUrl" inputmode="url" placeholder="https://example.com/poster.jpg" type="url"/>
-<div class="private-upload-row" style="margin-top:10px">
-  <input id="adultMagnetPosterFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/>
-  <button id="adultUploadMagnetPosterBtn" type="button">Upload poster</button>
-</div>
-<div id="adultMagnetPosterUploadStatus" class="status"></div>
-<div class="small-text">Choose either a direct image URL or attach an image. Uploaded images automatically fill in the URL field.</div>
-</div>
-<div class="wide">
-<div class="field-label">Description</div>
-<textarea id="adultMagnetDescription" placeholder="Optional description" rows="3"></textarea>
-</div>
-<div>
-<div class="field-label">Sort order</div>
-<input id="adultMagnetSortOrder" type="number" value="100"/>
-</div>
-<label class="private-check-card">
-<input checked="" id="adultMagnetEnabled" type="checkbox"/>
-<span>
-<strong>Enable after publishing</strong>
-<div class="small-text">Turn this off if you want to review the item before it appears in Panther.</div>
-</span>
-</label>
-<label class="private-check-card wide">
-<input id="adultMagnetCachedOnly" type="checkbox"/>
-<span>
-<strong>Cached only</strong>
-<div class="small-text">When enabled, TorBox refuses the import unless it is already cached. Leave off to allow TorBox to download an uncached torrent.</div>
-</span>
-</label>
-<div class="cache-actions wide">
-<button id="inspectAdultMagnetBtn">Inspect magnet</button>
-<button class="primary" id="addAdultMagnetBtn">Add to TorBox</button>
-<button disabled="" id="refreshAdultMagnetBtn">Refresh status</button>
-<button class="primary" disabled="" id="publishAdultMagnetBtn">Publish to Adult</button>
-<button class="primary" disabled="" id="publishAllAdultMagnetBtn">Publish ALL video files</button>
-<button id="resetAdultMagnetBtn">Clear</button>
-</div>
-</div>
-<div class="status" id="adultMagnetStatus"></div>
-<div style="height:12px"></div>
-<div class="private-bulk-summary" id="adultMagnetSummary">
-          Paste a magnet and press Inspect magnet or Add to TorBox.
+          </div>
         </div>
-<div style="height:10px"></div>
-<div class="private-content-list" id="adultMagnetFiles"></div>
-</div>
-<div style="height:14px"></div>
 
-<div style="height:14px"></div>
+        <div class="private-bulk-grid">
+          <div class="wide">
+            <div class="field-label">Feed URL</div>
+            <input
+              id="privateCatalogueFeedUrl"
+              type="url"
+              inputmode="url"
+              placeholder="https://provider.example/catalogue.json">
+            <div class="small-text">
+              Paste a JSON/CSV catalogue URL from a provider you are authorised to use.
+              The feed must include a direct playable <strong>video_url</strong>,
+              <strong>stream_url</strong> or <strong>playback_url</strong> for each title.
+            </div>
+          </div>
 
-<div style="height:14px"></div>
-<div class="private-library-grid">
-<div class="card-flat hidden" id="privateContentEditorCard">
-<div class="section-heading">
-<div class="section-heading-left">
-<div class="section-title-text"><h2 id="privateContentFormTitle">Edit existing title</h2><div>Edit the title and metadata of an existing entry.</div></div>
-</div>
-</div>
-<div class="private-library-form">
-<div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"/></div>
-<div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"/></div>
-<div class="wide hidden">
-<div class="field-label">Video</div>
-<div class="private-upload-row">
-<input accept="video/*,.mp4,.webm,.m4v,.mov,.mkv" disabled="" id="privateContentVideoFile" type="file"/>
-<button disabled="" id="uploadPrivateVideoBtn" type="button">Upload video</button>
-</div>
-<div class="small-text" id="privateVideoUploadStatus"></div>
-<input id="privateContentVideoUrl" placeholder="Or paste a direct video URL" style="margin-top:8px"/>
-</div>
-<div class="wide">
-<div class="field-label">Poster</div>
-<div class="private-upload-row">
-<input accept="image/*,.jpg,.jpeg,.png,.webp" id="privateContentPosterFile" type="file"/>
-<button id="uploadPrivatePosterBtn" type="button">Upload poster</button>
-</div>
-<div class="small-text" id="privatePosterUploadStatus"></div>
-<input id="privateContentPosterUrl" placeholder="Optional poster URL" style="margin-top:8px"/>
-</div>
-<div><div class="field-label">Description</div><textarea id="privateContentDescription" maxlength="3000" placeholder="Optional description"></textarea></div>
-<div><div class="field-label">Creator / studio</div><input id="privateContentCreator" maxlength="180" placeholder="Optional"/></div>
-<div><div class="field-label">Licence</div><input id="privateContentLicence" maxlength="180" placeholder="e.g. CC0 / CC BY-SA 4.0"/></div>
-<div><div class="field-label">Attribution</div><input id="privateContentAttribution" maxlength="500" placeholder="Required attribution text if applicable"/></div>
-<div><div class="field-label">Source / licence page</div><input id="privateContentSourceUrl" placeholder="Optional https://..."/></div>
-<div><div class="field-label">Sort order</div><input id="privateContentSortOrder" type="number" value="100"/></div>
-<label class="private-check-card"><input checked="" id="privateContentEnabled" type="checkbox"/><span><strong>Enabled</strong><div class="small-text">Disabled titles stay in the panel but are never returned to Panther.</div></span></label>
-<div class="cache-actions">
-<button class="primary" id="savePrivateContentBtn">Add title</button>
-<button class="hidden" id="cancelPrivateContentEditBtn">Cancel edit</button>
-<button id="reloadPrivateLibraryBtn">Reload</button>
-</div>
-</div>
-<div class="status" id="privateContentStatus"></div>
-</div>
-<div class="card-flat">
-<div class="section-heading">
-<div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
-<span class="pill" id="privateContentCount">0</span>
-</div>
-<div class="private-upload-row" style="margin-bottom:12px">
-<label for="adultLibraryFolderFilter" class="field-label" style="margin:0">Show folder</label>
-<select id="adultLibraryFolderFilter" style="flex:1;min-width:160px"><option value="">All folders</option></select>
-</div>
-<details id="manualSceneCollectionsPanel" class="add-service-panel" style="margin-bottom:12px">
-  <summary>Manual Scene Collections</summary>
-  <div class="add-service-body">
-    <div class="small-text">Select videos below (newly published or existing). Select in the order they should play; enter a collection title and save. Only videos from the same folder can be grouped.</div>
-    <div class="private-library-form" style="margin-top:10px">
-      <div><div class="field-label">Collection title</div><input id="manualCollectionTitle" placeholder="e.g. My Film — all scenes" maxlength="180"></div>
-      <div class="small-text" id="manualCollectionSelection">No videos selected</div>
-      <div class="cache-actions">
-        <button class="primary" id="saveManualCollectionBtn" type="button">Group selected videos</button>
-        <button id="removeManualCollectionBtn" type="button">Ungroup selected videos</button>
-        <button id="clearManualCollectionBtn" type="button">Clear selection</button>
+          <div class="wide">
+            <div class="field-label">Catalogue file</div>
+            <input id="privateCatalogueFile" type="file" accept=".csv,.json,text/csv,application/json">
+            <div class="small-text">
+              Supported: CSV or JSON. JSON may be an array or an object containing an
+              <strong>items</strong>, <strong>content</strong>, <strong>catalogue</strong> or
+              <strong>videos</strong> array.
+            </div>
+          </div>
+
+          <div class="wide">
+            <div class="field-label">Or paste CSV / JSON</div>
+            <textarea id="privateCatalogueText" rows="7" placeholder="title,video_url,poster_url,category&#10;Example Title,https://example.com/video.mp4,https://example.com/poster.jpg,Private"></textarea>
+          </div>
+
+          <label class="private-check-card">
+            <input id="privateCatalogueEnabled" type="checkbox" checked>
+            <span><strong>Enable imported titles</strong><div class="small-text">Turn off if you want to review the imported catalogue first.</div></span>
+          </label>
+
+          <label class="private-check-card">
+            <input id="privateCatalogueSkipDuplicates" type="checkbox" checked>
+            <span><strong>Skip duplicate titles</strong><div class="small-text">Existing Private Library titles with the same name will not be added again.</div></span>
+          </label>
+        </div>
+
+        <div class="cache-actions" style="margin-top:12px">
+          <button id="loadPrivateCatalogueFeedBtn">Load feed</button>
+          <button id="previewPrivateCatalogueBtn">Preview catalogue</button>
+          <button id="importPrivateCatalogueBtn" class="primary">Import catalogue</button>
+          <button id="clearPrivateCatalogueBtn">Clear</button>
+        </div>
+
+        <div id="privateCatalogueStatus" class="status"></div>
+        <div id="privateCatalogueSummary" class="private-bulk-summary">Choose a CSV/JSON file or paste a catalogue to preview it.</div>
+        <div id="privateCatalogueQueue" class="private-bulk-queue"></div>
+
+        <div class="small-text" style="margin-top:10px">
+          Recognised fields: title, video_url, stream_url, playback_url, poster_url, category,
+          description, creator, licence, attribution, source_url, enabled and sort_order.
+          A normal web-page URL or embed URL is not treated as a playable video URL.
+        </div>
       </div>
-      <div class="status" id="manualCollectionStatus"></div>
+
+      <div style="height:14px"></div>
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left">
+            <div class="section-title-text">
+              <h2>Bulk upload</h2>
+              <div>Select multiple videos at once. Matching posters are paired automatically by filename.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="private-bulk-grid">
+          <div class="wide">
+            <div class="field-label">Import a whole folder</div>
+            <input id="privateBulkFolder" type="file" webkitdirectory directory multiple>
+            <div class="small-text">Choose one folder containing videos and optional matching posters. Subfolders can automatically become categories.</div>
+          </div>
+
+          <label class="private-check-card wide">
+            <input id="privateBulkUseSubfolderCategory" type="checkbox" checked>
+            <span><strong>Use subfolder names as categories</strong><div class="small-text">Example: My Library/Category Name/Video.mp4 will import into “Category Name”. Files in the main folder use the default category below.</div></span>
+          </label>
+
+          <div class="wide">
+            <div class="field-label">Or choose videos</div>
+            <input id="privateBulkVideos" type="file" multiple accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
+            <div class="small-text">Example: My Movie.mp4</div>
+          </div>
+
+          <div class="wide">
+            <div class="field-label">Optional posters</div>
+            <input id="privateBulkPosters" type="file" multiple accept="image/*,.jpg,.jpeg,.png,.webp">
+            <div class="small-text">Use the same base filename, for example My Movie.jpg, and Panther will match it to My Movie.mp4.</div>
+          </div>
+
+          <div>
+            <div class="field-label">Category</div>
+            <input id="privateBulkCategory" maxlength="100" value="Private" placeholder="Private">
+          </div>
+
+          <div>
+            <div class="field-label">Creator / studio</div>
+            <input id="privateBulkCreator" maxlength="180" placeholder="Optional default for the whole batch">
+          </div>
+
+          <div>
+            <div class="field-label">Licence</div>
+            <input id="privateBulkLicence" maxlength="180" placeholder="Optional default for the whole batch">
+          </div>
+
+          <div>
+            <div class="field-label">Starting sort order</div>
+            <input id="privateBulkSortOrder" type="number" value="100">
+          </div>
+
+          <label class="private-check-card">
+            <input id="privateBulkEnabled" type="checkbox" checked>
+            <span><strong>Enable imported titles</strong><div class="small-text">Turn off if you want to review everything before it appears in Panther.</div></span>
+          </label>
+
+          <label class="private-check-card">
+            <input id="privateBulkSkipDuplicates" type="checkbox" checked>
+            <span><strong>Skip duplicate titles</strong><div class="small-text">Prevents a filename from creating another title when that title already exists.</div></span>
+          </label>
+        </div>
+
+        <div class="cache-actions" style="margin-top:12px">
+          <button id="startPrivateBulkUploadBtn" class="primary">Upload batch</button>
+          <button id="clearPrivateBulkUploadBtn">Clear</button>
+        </div>
+
+        <div id="privateBulkStatus" class="status"></div>
+        <div id="privateBulkSummary" class="private-bulk-summary">Choose one or more videos to build the upload queue.</div>
+        <div id="privateBulkQueue" class="private-bulk-queue"></div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="private-library-grid">
+        <div class="card-flat">
+          <div class="section-heading">
+            <div class="section-heading-left">
+              <div class="section-title-text"><h2 id="privateContentFormTitle">Add content</h2><div>Upload your own video/poster or paste an existing direct URL.</div></div>
+            </div>
+          </div>
+
+          <div class="private-library-form">
+            <div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"></div>
+            <div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"></div>
+            <div class="wide">
+              <div class="field-label">Video</div>
+              <div class="private-upload-row">
+                <input id="privateContentVideoFile" type="file" accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
+                <button id="uploadPrivateVideoBtn" type="button">Upload video</button>
+              </div>
+              <div id="privateVideoUploadStatus" class="small-text"></div>
+              <input id="privateContentVideoUrl" style="margin-top:8px" placeholder="Or paste a direct video URL">
+            </div>
+
+            <div class="wide">
+              <div class="field-label">Poster</div>
+              <div class="private-upload-row">
+                <input id="privateContentPosterFile" type="file" accept="image/*,.jpg,.jpeg,.png,.webp">
+                <button id="uploadPrivatePosterBtn" type="button">Upload poster</button>
+              </div>
+              <div id="privatePosterUploadStatus" class="small-text"></div>
+              <input id="privateContentPosterUrl" style="margin-top:8px" placeholder="Optional poster URL">
+            </div>
+            <div><div class="field-label">Description</div><textarea id="privateContentDescription" maxlength="3000" placeholder="Optional description"></textarea></div>
+            <div><div class="field-label">Creator / studio</div><input id="privateContentCreator" maxlength="180" placeholder="Optional"></div>
+            <div><div class="field-label">Licence</div><input id="privateContentLicence" maxlength="180" placeholder="e.g. CC0 / CC BY-SA 4.0"></div>
+            <div><div class="field-label">Attribution</div><input id="privateContentAttribution" maxlength="500" placeholder="Required attribution text if applicable"></div>
+            <div><div class="field-label">Source / licence page</div><input id="privateContentSourceUrl" placeholder="Optional https://..."></div>
+            <div><div class="field-label">Sort order</div><input id="privateContentSortOrder" type="number" value="100"></div>
+            <label class="private-check-card"><input id="privateContentEnabled" type="checkbox" checked><span><strong>Enabled</strong><div class="small-text">Disabled titles stay in the panel but are never returned to Panther.</div></span></label>
+            <div class="cache-actions">
+              <button id="savePrivateContentBtn" class="primary">Add title</button>
+              <button id="cancelPrivateContentEditBtn" class="hidden">Cancel edit</button>
+              <button id="reloadPrivateLibraryBtn">Reload</button>
+            </div>
+          </div>
+          <div id="privateContentStatus" class="status"></div>
+        </div>
+
+        <div class="card-flat">
+          <div class="section-heading">
+            <div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
+            <span id="privateContentCount" class="pill">0</span>
+          </div>
+          <div id="privateContentList" class="private-content-list"></div>
+        </div>
+      </div>
+
+      <div style="height:16px"></div>
+
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
+          <button id="reloadPrivateAccountsBtn" class="small">Reload accounts</button>
+        </div>
+        <div id="privateAccountStatus" class="status"></div>
+        <div id="privateAccountsList" class="private-account-list"></div>
+      </div>
+
+      <div id="privateTitleAccessPanel" class="private-title-access hidden">
+        <div class="section-heading">
+          <div class="section-heading-left"><div class="section-title-text"><h2>Individual title access</h2><div id="privateTitleAccessAccount">Select an account.</div></div></div>
+          <button id="closePrivateTitleAccessBtn" class="small">Close</button>
+        </div>
+        <div class="update-help">These selections are used when <strong>Allow all titles</strong> is turned off for the account.</div>
+        <div id="privateTitleAccessList" class="private-title-access-list"></div>
+        <div class="cache-actions" style="margin-top:12px">
+          <button id="savePrivateTitleAccessBtn" class="primary">Save title access</button>
+        </div>
+        <div id="privateTitleAccessStatus" class="status"></div>
+      </div>
     </div>
-  </div>
-</details>
-<details id="privateTitlesListPanel" class="add-service-panel" style="margin-bottom:0">
-  <summary>Show / hide library titles <span class="pill" style="margin-left:auto;margin-right:12px">Tap to expand</span></summary>
-  <div class="add-service-body">
-    <div class="private-content-list" id="privateContentList"></div>
-  </div>
-</details>
-</div>
-</div>
-<div style="height:16px"></div>
-<div class="card-flat">
-<div class="section-heading">
-<div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
-<button class="small" id="reloadPrivateAccountsBtn">Reload accounts</button>
-</div>
-<div style="margin:12px 0 10px">
-  <label class="field-label" for="privateAccountUsernameSearch">Search account username</label>
-  <input id="privateAccountUsernameSearch" type="search" placeholder="Type a username to find an account..." autocomplete="off" spellcheck="false" aria-controls="privateAccountsList">
-  <div id="privateAccountSearchCount" class="small-text" style="margin-top:7px" aria-live="polite"></div>
-</div>
-<div class="status" id="privateAccountStatus"></div>
-<div id="privateAccountNoMatches" class="empty-note hidden" style="margin-bottom:10px">No accounts match that username.</div>
-<div class="private-account-list" id="privateAccountsList"></div>
-</div>
-<div class="private-title-access hidden" id="privateTitleAccessPanel">
-<div class="section-heading">
-<div class="section-heading-left"><div class="section-title-text"><h2>Individual title access</h2><div id="privateTitleAccessAccount">Select an account.</div></div></div>
-<button class="small" id="closePrivateTitleAccessBtn">Close</button>
-</div>
-<div class="update-help">These selections are used when <strong>Allow all titles</strong> is turned off for the account.</div>
-<div class="private-title-access-list" id="privateTitleAccessList"></div>
-<div class="cache-actions" style="margin-top:12px">
-<button class="primary" id="savePrivateTitleAccessBtn">Save title access</button>
-</div>
-<div class="status" id="privateTitleAccessStatus"></div>
-</div>
-</div>
-</details>
+  </details>
 
 
   <details id="devicesSection" class="section-anchor collapse-card">
@@ -2361,6 +2611,7 @@ async function boot() {
     await loadCatalogCache();
     await loadFeatureFlags();
     await loadHomeConfig();
+    await loadRemoteSettingsPanel();
     await loadSeasonalTheme();
     await loadPrivateLibrary();
     await loadDevices();
@@ -2395,6 +2646,7 @@ $("loginBtn").onclick = async () => {
     await loadCatalogCache();
     await loadFeatureFlags();
     await loadHomeConfig();
+    await loadRemoteSettingsPanel();
     await loadSeasonalTheme();
     await loadPrivateLibrary();
     await loadDevices();
@@ -3648,6 +3900,521 @@ $("uploadPrivatePosterBtn")?.addEventListener(
 
 
 
+
+
+// ============================================================
+// REMOTE APP SETTINGS
+// ============================================================
+
+let remoteSettingsAccounts = [];
+
+
+function remoteSettingsTargetAccountScope(){
+  const value = $("remoteSettingsTarget")?.value || "__global__";
+  return value === "__global__" ? null : value;
+}
+
+
+function remoteNullableString(value){
+  const text = String(value ?? "").trim();
+  if(!text || text === "__local__") return null;
+  return text;
+}
+
+
+function remoteNullableBoolean(value){
+  const text = String(value ?? "").trim();
+  if(!text || text === "__local__") return null;
+  return text === "true";
+}
+
+
+function remoteSelectValue(value){
+  return value === null || value === undefined || value === ""
+    ? "__local__"
+    : String(value);
+}
+
+
+function remoteBooleanSelectValue(value){
+  if(value === null || value === undefined) return "__local__";
+  return value === true ? "true" : "false";
+}
+
+
+function remoteSettingsLabelForAccount(account){
+  if(!account) return "Unknown account";
+
+  const service = String(account.service_name || "").trim();
+  const username = String(account.username || "").trim();
+
+  if(service && username) return `${service} — ${username}`;
+  if(username) return username;
+  if(service) return service;
+
+  return account.account_scope_id || "Unknown account";
+}
+
+
+function remoteSettingsManagedCount(config){
+  const values = [
+    config?.live_tv_view_mode,
+    config?.movie_view_mode,
+    config?.series_view_mode,
+    config?.swipe_remote_navigation,
+    config?.auto_play_next_episode,
+    config?.show_epg_channel_list,
+    config?.show_continue_watching,
+    config?.default_player_live,
+    config?.default_player_movies,
+    config?.default_player_series
+  ];
+
+  return values.filter(value => value !== null && value !== undefined && value !== "").length;
+}
+
+
+function remoteSettingsConfigFromForm(){
+  return {
+    enabled: $("remoteSettingsEnabled")?.checked === true,
+    ignore_global: $("remoteSettingsIgnoreGlobal")?.checked === true,
+    lock_settings: $("remoteSettingsLock")?.checked === true,
+
+    live_tv_view_mode:
+      remoteNullableString($("remoteLiveTvViewMode")?.value),
+
+    movie_view_mode:
+      remoteNullableString($("remoteMovieViewMode")?.value),
+
+    series_view_mode:
+      remoteNullableString($("remoteSeriesViewMode")?.value),
+
+    swipe_remote_navigation:
+      remoteNullableBoolean($("remoteSwipeNavigation")?.value),
+
+    auto_play_next_episode:
+      remoteNullableBoolean($("remoteAutoPlayNext")?.value),
+
+    show_epg_channel_list:
+      remoteNullableBoolean($("remoteShowEpg")?.value),
+
+    show_continue_watching:
+      remoteNullableBoolean($("remoteShowContinue")?.value),
+
+    default_player_live:
+      remoteNullableString($("remoteDefaultPlayerLive")?.value),
+
+    default_player_movies:
+      remoteNullableString($("remoteDefaultPlayerMovies")?.value),
+
+    default_player_series:
+      remoteNullableString($("remoteDefaultPlayerSeries")?.value)
+  };
+}
+
+
+function applyRemoteSettingsToForm(config){
+  const value = config || {};
+
+  $("remoteSettingsEnabled").checked = value.enabled === true;
+  $("remoteSettingsIgnoreGlobal").checked = value.ignore_global === true;
+  $("remoteSettingsLock").checked = value.lock_settings !== false;
+
+  $("remoteLiveTvViewMode").value =
+    remoteSelectValue(value.live_tv_view_mode);
+
+  $("remoteMovieViewMode").value =
+    remoteSelectValue(value.movie_view_mode);
+
+  $("remoteSeriesViewMode").value =
+    remoteSelectValue(value.series_view_mode);
+
+  $("remoteSwipeNavigation").value =
+    remoteBooleanSelectValue(value.swipe_remote_navigation);
+
+  $("remoteAutoPlayNext").value =
+    remoteBooleanSelectValue(value.auto_play_next_episode);
+
+  $("remoteShowEpg").value =
+    remoteBooleanSelectValue(value.show_epg_channel_list);
+
+  $("remoteShowContinue").value =
+    remoteBooleanSelectValue(value.show_continue_watching);
+
+  $("remoteDefaultPlayerLive").value =
+    remoteSelectValue(value.default_player_live);
+
+  $("remoteDefaultPlayerMovies").value =
+    remoteSelectValue(value.default_player_movies);
+
+  $("remoteDefaultPlayerSeries").value =
+    remoteSelectValue(value.default_player_series);
+
+  updateRemoteSettingsSummary(value);
+}
+
+
+function updateRemoteSettingsTargetUi(){
+  const accountScopeId = remoteSettingsTargetAccountScope();
+  const isGlobal = accountScopeId === null;
+
+  $("remoteSettingsIgnoreGlobalCard").style.display =
+    isGlobal ? "none" : "";
+
+  if(isGlobal){
+    $("remoteSettingsTargetInfo").textContent =
+      "Global values are inherited by all accounts unless an account override replaces them or ignores Global.";
+    return;
+  }
+
+  const account =
+    remoteSettingsAccounts.find(
+      item => item.account_scope_id === accountScopeId
+    );
+
+  if(!account){
+    $("remoteSettingsTargetInfo").textContent =
+      `Account scope: ${accountScopeId}`;
+    return;
+  }
+
+  const deviceCount = Number(account.device_count || 0);
+  const overrideText = account.has_override
+    ? (
+        account.override_enabled
+          ? "Account override exists and is enabled"
+          : "Account override exists but is disabled"
+      )
+    : "No account override saved yet";
+
+  $("remoteSettingsTargetInfo").textContent =
+    `${remoteSettingsLabelForAccount(account)} · ${deviceCount} device${deviceCount === 1 ? "" : "s"} · ${overrideText}`;
+}
+
+
+function updateRemoteSettingsSummary(config){
+  const host = $("remoteSettingsSummary");
+  if(!host) return;
+
+  const targetAccountScopeId = remoteSettingsTargetAccountScope();
+  const isGlobal = targetAccountScopeId === null;
+  const managedCount = remoteSettingsManagedCount(config);
+
+  let title = "🌍 Global";
+  if(!isGlobal){
+    const account =
+      remoteSettingsAccounts.find(
+        item => item.account_scope_id === targetAccountScopeId
+      );
+
+    title =
+      `👤 ${remoteSettingsLabelForAccount(account)}`;
+  }
+
+  const enabledText =
+    config?.enabled === true ? "Enabled" : "Disabled";
+
+  const behaviourText =
+    config?.lock_settings === false
+      ? "Push once — user can change locally afterwards"
+      : "Locked — Panther Admin enforces managed values";
+
+  const inheritedText =
+    !isGlobal && config?.ignore_global === true
+      ? "Global settings ignored"
+      : (
+          !isGlobal
+            ? "Inherits Global values where this override is Local"
+            : "Applies to accounts unless overridden"
+        );
+
+  host.innerHTML =
+    `<strong>${escapeHtml(title)}</strong><br>` +
+    `${escapeHtml(enabledText)} · ${escapeHtml(behaviourText)}<br>` +
+    `${escapeHtml(inheritedText)}<br>` +
+    `<span class="remote-managed-count">${managedCount} setting${managedCount === 1 ? "" : "s"} configured on this target</span>`;
+}
+
+
+async function loadRemoteSettingsAccounts(){
+  const rows =
+    await rpc(
+      "panther_admin_list_remote_setting_accounts",
+      {}
+    );
+
+  remoteSettingsAccounts =
+    Array.isArray(rows) ? rows : [];
+
+  const target = $("remoteSettingsTarget");
+  const previous = target.value || "__global__";
+
+  target.innerHTML =
+    `<option value="__global__">🌍 Global — all Panther accounts</option>`;
+
+  remoteSettingsAccounts.forEach(account => {
+    const option = document.createElement("option");
+    option.value = account.account_scope_id;
+    option.textContent =
+      `👤 ${remoteSettingsLabelForAccount(account)} (${Number(account.device_count || 0)} device${Number(account.device_count || 0) === 1 ? "" : "s"})`;
+    target.appendChild(option);
+  });
+
+  if(
+    previous === "__global__" ||
+    remoteSettingsAccounts.some(
+      item => item.account_scope_id === previous
+    )
+  ){
+    target.value = previous;
+  }
+
+  updateRemoteSettingsTargetUi();
+}
+
+
+async function loadRemoteSettingsForTarget(){
+  const accountScopeId =
+    remoteSettingsTargetAccountScope();
+
+  setStatus(
+    $("remoteSettingsStatus"),
+    "Loading remote settings..."
+  );
+
+  try{
+    const result =
+      await rpc(
+        "panther_admin_get_remote_app_settings",
+        {
+          p_account_scope_id: accountScopeId
+        }
+      );
+
+    applyRemoteSettingsToForm(
+      result || {}
+    );
+
+    updateRemoteSettingsTargetUi();
+
+    setStatus(
+      $("remoteSettingsStatus"),
+      ""
+    );
+
+  }catch(e){
+    setStatus(
+      $("remoteSettingsStatus"),
+      e?.message || String(e),
+      false
+    );
+  }
+}
+
+
+async function loadRemoteSettingsPanel(){
+  if(!$("remoteAppSettingsSection")) return;
+
+  try{
+    await loadRemoteSettingsAccounts();
+    await loadRemoteSettingsForTarget();
+
+  }catch(e){
+    setStatus(
+      $("remoteSettingsStatus"),
+      "Remote App Settings is not ready yet. Run Panther_Remote_App_Settings_V1.txt in Supabase first. " +
+        (e?.message || String(e)),
+      false
+    );
+  }
+}
+
+
+async function saveRemoteSettings(){
+  const button = $("saveRemoteSettingsBtn");
+  const accountScopeId =
+    remoteSettingsTargetAccountScope();
+
+  try{
+    button.disabled = true;
+
+    const config =
+      remoteSettingsConfigFromForm();
+
+    setStatus(
+      $("remoteSettingsStatus"),
+      "Saving remote settings..."
+    );
+
+    await rpc(
+      "panther_admin_save_remote_app_settings",
+      {
+        p_account_scope_id: accountScopeId,
+        p_enabled: config.enabled,
+        p_ignore_global:
+          accountScopeId === null
+            ? false
+            : config.ignore_global,
+        p_lock_settings: config.lock_settings,
+        p_live_tv_view_mode: config.live_tv_view_mode,
+        p_movie_view_mode: config.movie_view_mode,
+        p_series_view_mode: config.series_view_mode,
+        p_swipe_remote_navigation: config.swipe_remote_navigation,
+        p_auto_play_next_episode: config.auto_play_next_episode,
+        p_show_epg_channel_list: config.show_epg_channel_list,
+        p_show_continue_watching: config.show_continue_watching,
+        p_default_player_live: config.default_player_live,
+        p_default_player_movies: config.default_player_movies,
+        p_default_player_series: config.default_player_series
+      }
+    );
+
+    setStatus(
+      $("remoteSettingsStatus"),
+      accountScopeId === null
+        ? "Global remote settings saved."
+        : "Account remote settings saved.",
+      true
+    );
+
+    await loadRemoteSettingsAccounts();
+    await loadRemoteSettingsForTarget();
+
+  }catch(e){
+    setStatus(
+      $("remoteSettingsStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+async function resetRemoteSettingsTarget(){
+  const accountScopeId =
+    remoteSettingsTargetAccountScope();
+
+  try{
+    $("resetRemoteSettingsBtn").disabled = true;
+
+    if(accountScopeId === null){
+      await rpc(
+        "panther_admin_save_remote_app_settings",
+        {
+          p_account_scope_id: null,
+          p_enabled: false,
+          p_ignore_global: false,
+          p_lock_settings: true,
+          p_live_tv_view_mode: null,
+          p_movie_view_mode: null,
+          p_series_view_mode: null,
+          p_swipe_remote_navigation: null,
+          p_auto_play_next_episode: null,
+          p_show_epg_channel_list: null,
+          p_show_continue_watching: null,
+          p_default_player_live: null,
+          p_default_player_movies: null,
+          p_default_player_series: null
+        }
+      );
+
+      setStatus(
+        $("remoteSettingsStatus"),
+        "Global remote settings reset to local-device control.",
+        true
+      );
+
+    }else{
+      await rpc(
+        "panther_admin_delete_remote_app_settings",
+        {
+          p_account_scope_id: accountScopeId
+        }
+      );
+
+      setStatus(
+        $("remoteSettingsStatus"),
+        "Account override removed. It will inherit Global settings again.",
+        true
+      );
+    }
+
+    await loadRemoteSettingsAccounts();
+    await loadRemoteSettingsForTarget();
+
+  }catch(e){
+    setStatus(
+      $("remoteSettingsStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    $("resetRemoteSettingsBtn").disabled = false;
+  }
+}
+
+
+$("remoteSettingsTarget")?.addEventListener(
+  "change",
+  async () => {
+    updateRemoteSettingsTargetUi();
+    await loadRemoteSettingsForTarget();
+  }
+);
+
+
+[
+  "remoteSettingsEnabled",
+  "remoteSettingsLock",
+  "remoteSettingsIgnoreGlobal",
+  "remoteLiveTvViewMode",
+  "remoteMovieViewMode",
+  "remoteSeriesViewMode",
+  "remoteSwipeNavigation",
+  "remoteAutoPlayNext",
+  "remoteShowEpg",
+  "remoteShowContinue",
+  "remoteDefaultPlayerLive",
+  "remoteDefaultPlayerMovies",
+  "remoteDefaultPlayerSeries"
+].forEach(id => {
+  $(id)?.addEventListener(
+    "change",
+    () => {
+      try{
+        updateRemoteSettingsSummary(
+          remoteSettingsConfigFromForm()
+        );
+      }catch{
+      }
+    }
+  );
+});
+
+
+$("saveRemoteSettingsBtn")?.addEventListener(
+  "click",
+  saveRemoteSettings
+);
+
+
+$("reloadRemoteSettingsBtn")?.addEventListener(
+  "click",
+  loadRemoteSettingsForTarget
+);
+
+
+$("resetRemoteSettingsBtn")?.addEventListener(
+  "click",
+  resetRemoteSettingsTarget
+);
+
+
+
 // ============================================================
 // SEASONAL THEMES
 // ============================================================
@@ -3697,6 +4464,92 @@ const SEASONAL_PRESETS = {
   }
 };
 
+
+// Targeting is managed per IPTV account, not per device or profile.
+let seasonalRegisteredAccounts = [];
+let seasonalSelectedAccounts = [];
+
+function seasonalUpdateTargetUI(){
+  const selected = $("seasonalTargetMode")?.value === "selected";
+  $("seasonalAccountsContainer").style.display = selected ? "block" : "none";
+  const count = seasonalSelectedAccounts.length;
+  $("seasonalSelectedCount").textContent = `${count} account${count === 1 ? "" : "s"} selected`;
+}
+
+function seasonalRenderAccounts(){
+  const host = $("seasonalAccountsList");
+  const term = ($("seasonalAccountSearch")?.value || "").toLowerCase().trim();
+  const matches = seasonalRegisteredAccounts.filter(a =>
+    `${a.service_name} ${a.username} ${a.account_scope_id}`.toLowerCase().includes(term)
+  );
+  if(!matches.length){
+    host.innerHTML = '<div class="small-text" style="padding:10px">No matching registered accounts.</div>';
+  }else{
+    host.innerHTML = matches.map(account => {
+      const key = account.account_scope_id;
+      const checked = seasonalSelectedAccounts.includes(key) ? "checked" : "";
+      return `<label class="cache-switch-card" style="margin:0;cursor:pointer">
+        <input type="checkbox" data-seasonal-account="${esc(key)}" ${checked}>
+        <span><span class="cache-switch-title">${esc(account.service_name || "IPTV Service")} · ${esc(account.username || "Unknown user")}</span>
+        <span class="small-text">${Number(account.device_count) || 0} registered device(s)</span></span>
+      </label>`;
+    }).join("");
+    host.querySelectorAll("[data-seasonal-account]").forEach(input => {
+      input.addEventListener("change", () => {
+        const id = input.getAttribute("data-seasonal-account");
+        const set = new Set(seasonalSelectedAccounts);
+        if(input.checked) set.add(id); else set.delete(id);
+        seasonalSelectedAccounts = [...set];
+        seasonalUpdateTargetUI();
+      });
+    });
+  }
+  seasonalUpdateTargetUI();
+}
+
+async function seasonalLoadAccounts(){
+  const rows = await rpc("panther_admin_list_devices", {});
+  const grouped = new Map();
+  for(const d of (Array.isArray(rows) ? rows : [])){
+    const id = String(d.account_scope_id || "").trim();
+    if(!id) continue;
+    if(!grouped.has(id)){
+      grouped.set(id, {
+        account_scope_id: id,
+        service_name: String(d.service_name || ""),
+        username: String(d.username || ""),
+        device_count: 0
+      });
+    }
+    grouped.get(id).device_count++;
+  }
+  seasonalRegisteredAccounts = [...grouped.values()].sort((a,b) =>
+    `${a.service_name} ${a.username}`.localeCompare(`${b.service_name} ${b.username}`)
+  );
+  seasonalRenderAccounts();
+}
+
+$("seasonalTargetMode")?.addEventListener("change", seasonalUpdateTargetUI);
+$("seasonalAccountSearch")?.addEventListener("input", seasonalRenderAccounts);
+$("seasonalSelectAllAccountsBtn")?.addEventListener("click", () => {
+  seasonalSelectedAccounts = [...new Set([
+    ...seasonalSelectedAccounts,
+    ...seasonalRegisteredAccounts.map(a => a.account_scope_id)
+  ])];
+  seasonalRenderAccounts();
+});
+$("seasonalClearAccountsBtn")?.addEventListener("click", () => {
+  seasonalSelectedAccounts = [];
+  seasonalRenderAccounts();
+});
+$("seasonalReloadAccountsBtn")?.addEventListener("click", async () => {
+  try{
+    await seasonalLoadAccounts();
+    setStatus($("seasonalThemeStatus"), "Account list reloaded.", true);
+  }catch(e){
+    setStatus($("seasonalThemeStatus"), e?.message || String(e), false);
+  }
+});
 
 function seasonalDefaults(){
   return {
@@ -4006,9 +4859,17 @@ async function loadSeasonalTheme(){
       `select=${fields}&id=eq.1&limit=1`
     );
 
+    const targets = await rpc("panther_admin_get_seasonal_theme_targets", {});
+    $("seasonalTargetMode").value = targets?.target_mode === "selected" ? "selected" : "all";
+    seasonalSelectedAccounts = Array.isArray(targets?.account_scope_ids)
+      ? [...new Set(targets.account_scope_ids.filter(x => typeof x === "string" && x.trim()))]
+      : [];
+    await seasonalLoadAccounts();
+
     applySeasonalConfigToForm(
       rows[0] || seasonalDefaults()
     );
+    seasonalUpdateTargetUI();
 
     setStatus(
       $("seasonalThemeStatus"),
@@ -4050,35 +4911,28 @@ async function saveSeasonalTheme(){
       );
     }
 
+    const targetMode = $("seasonalTargetMode").value;
+    if(targetMode === "selected" && !seasonalSelectedAccounts.length && config.enabled){
+      throw new Error("Select at least one account, or choose All IPTV accounts.");
+    }
+
     setStatus(
       $("seasonalThemeStatus"),
-      "Publishing seasonal theme..."
+      "Publishing seasonal theme and account targeting..."
     );
 
     await rpc(
-      "panther_admin_save_seasonal_theme",
+      "panther_admin_publish_seasonal_theme",
       {
-        p_enabled: config.enabled,
-        p_force_active: config.force_active,
-        p_theme_key: config.theme_key,
-        p_title: config.title,
-        p_badge_text: config.badge_text,
-        p_accent_color: config.accent_color,
-        p_secondary_color: config.secondary_color,
-        p_background_url: config.background_url,
-        p_show_banner: config.show_banner,
-        p_theme_intensity: config.theme_intensity,
-        p_apply_button_colors: config.apply_button_colors,
-        p_decorate_header: config.decorate_header,
-        p_use_builtin_artwork: config.use_builtin_artwork,
-        p_start_at: config.start_at,
-        p_end_at: config.end_at
+        p_config: config,
+        p_target_mode: targetMode,
+        p_account_scope_ids: targetMode === "selected" ? seasonalSelectedAccounts : []
       }
     );
 
     setStatus(
       $("seasonalThemeStatus"),
-      "Seasonal theme published. Panther will apply it when Home refreshes.",
+      "Seasonal theme and targeting published. Panther will apply it when Home refreshes.",
       true
     );
 
@@ -4162,6 +5016,7 @@ $("seasonalDisableBtn")?.addEventListener(
     await saveSeasonalTheme();
   }
 );
+
 
 
 // ============================================================
@@ -5109,1445 +5964,6 @@ $("clearPrivateBulkUploadBtn")?.addEventListener("click", clearPrivateBulkUpload
 
 
 // ============================================================
-// ADULT M3U SOURCES
-// ============================================================
-
-let adultM3uSources = [];
-let editingAdultM3uSourceId = null;
-
-
-function resetAdultM3uForm(){
-  editingAdultM3uSourceId = null;
-
-  if($("adultM3uName")) $("adultM3uName").value = "";
-  if($("adultM3uUrl")) $("adultM3uUrl").value = "";
-  if($("adultM3uFile")) $("adultM3uFile").value = "";
-  if($("adultM3uDefaultCategory")) $("adultM3uDefaultCategory").value = "Adult";
-  if($("adultM3uSortOrder")) $("adultM3uSortOrder").value = "100";
-  if($("adultM3uEnabled")) $("adultM3uEnabled").checked = true;
-
-  if($("saveAdultM3uBtn")) $("saveAdultM3uBtn").textContent = "Save & Import";
-  $("cancelAdultM3uEditBtn")?.classList.add("hidden");
-}
-
-
-function adultM3uSafeUrlLabel(value){
-  const raw = String(value || "").trim();
-  if(!raw) return "Uploaded M3U file";
-
-  try{
-    const u = new URL(raw);
-    return `${u.origin}${u.pathname}`;
-  }catch{
-    return "Remote M3U URL";
-  }
-}
-
-
-function adultM3uDate(value){
-  if(!value) return "Never";
-
-  const date = new Date(value);
-  if(Number.isNaN(date.getTime())) return String(value);
-
-  return date.toLocaleString();
-}
-
-
-function renderAdultM3uSources(){
-  const host = $("adultM3uSourceList");
-  if(!host) return;
-
-  $("adultM3uSourceCount").textContent =
-    String(adultM3uSources.length);
-
-  if(!adultM3uSources.length){
-    host.innerHTML =
-      '<div class="empty-note">No Adult M3U sources configured yet.</div>';
-    return;
-  }
-
-  host.innerHTML = adultM3uSources.map(source => {
-    const sourceId = esc(source.id || "");
-    const isUpload = String(source.source_type || "url") === "upload";
-    const itemCount = Number(source.last_item_count || 0);
-    const error = String(source.last_error || "").trim();
-
-    return `
-      <div class="private-content-card">
-        <div class="private-content-head">
-          <div>
-            <div class="private-content-title">${esc(source.name || "Adult M3U")}</div>
-            <div class="private-content-meta">
-              ${isUpload ? "Uploaded M3U file" : esc(adultM3uSafeUrlLabel(source.playlist_url))}<br>
-              Default category: ${esc(source.default_category || "Adult")} · Sort ${Number(source.sort_order ?? 100)}<br>
-              ${itemCount} item${itemCount === 1 ? "" : "s"} · Last refreshed ${esc(adultM3uDate(source.last_refreshed_at))}
-              ${error ? `<br><span style="color:#ff8f8f">Last error: ${esc(error)}</span>` : ""}
-            </div>
-          </div>
-
-          <span class="pill ${source.enabled === false ? "disabled" : "enabled"}">
-            ${source.enabled === false ? "DISABLED" : "ENABLED"}
-          </span>
-        </div>
-
-        <div class="device-actions">
-          <button class="small edit-adult-m3u" data-id="${sourceId}">Edit</button>
-          <button class="small refresh-adult-m3u" data-id="${sourceId}">
-            ${isUpload ? "Re-upload" : "Refresh now"}
-          </button>
-          <button class="small danger delete-adult-m3u" data-id="${sourceId}">Delete</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  document.querySelectorAll(".edit-adult-m3u").forEach(button => {
-    button.onclick = () => editAdultM3uSource(button.dataset.id);
-  });
-
-  document.querySelectorAll(".refresh-adult-m3u").forEach(button => {
-    button.onclick = () => refreshAdultM3uSource(button.dataset.id);
-  });
-
-  document.querySelectorAll(".delete-adult-m3u").forEach(button => {
-    button.onclick = () => deleteAdultM3uSource(button.dataset.id);
-  });
-}
-
-
-async function loadAdultM3uSources(){
-  if(!$("adultM3uSourceList")) return;
-
-  setStatus(
-    $("adultM3uStatus"),
-    "Loading Adult M3U sources..."
-  );
-
-  try{
-    const rows =
-      await rpc(
-        "panther_admin_list_adult_m3u_sources",
-        {}
-      );
-
-    adultM3uSources =
-      Array.isArray(rows)
-        ? rows
-        : [];
-
-    renderAdultM3uSources();
-
-    setStatus(
-      $("adultM3uStatus"),
-      ""
-    );
-
-  }catch(e){
-    adultM3uSources = [];
-    renderAdultM3uSources();
-
-    setStatus(
-      $("adultM3uStatus"),
-      "Adult M3U setup is not ready yet. Run Panther_Adult_M3U.sql first. " +
-        (e?.message || String(e)),
-      false
-    );
-  }
-}
-
-
-function editAdultM3uSource(id){
-  const source =
-    adultM3uSources.find(
-      item => item.id === id
-    );
-
-  if(!source) return;
-
-  editingAdultM3uSourceId = id;
-
-  $("adultM3uName").value =
-    source.name || "";
-
-  $("adultM3uUrl").value =
-    source.source_type === "upload"
-      ? ""
-      : (source.playlist_url || "");
-
-  $("adultM3uFile").value = "";
-
-  $("adultM3uDefaultCategory").value =
-    source.default_category || "Adult";
-
-  $("adultM3uSortOrder").value =
-    String(source.sort_order ?? 100);
-
-  $("adultM3uEnabled").checked =
-    source.enabled !== false;
-
-  $("saveAdultM3uBtn").textContent =
-    source.source_type === "upload"
-      ? "Save / Re-import"
-      : "Save & Refresh";
-
-  $("cancelAdultM3uEditBtn").classList.remove("hidden");
-
-  openSection("privateLibrarySection");
-
-  setTimeout(
-    () => $("adultM3uName")?.focus(),
-    100
-  );
-}
-
-
-async function callAdultM3uAdmin(action, sourceId, playlistText = null){
-  const body = {
-    action,
-    source_id: sourceId
-  };
-
-  if(playlistText !== null){
-    body.playlist_text = playlistText;
-  }
-
-  const response =
-    await apiFetch(
-      "/functions/v1/panther-adult-m3u-admin",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      }
-    );
-
-  const data =
-    await readJson(response);
-
-  if(
-    !response.ok ||
-    data?.success === false
-  ){
-    throw new Error(
-      data?.error ||
-      data?.message ||
-      `Adult M3U request failed (HTTP ${response.status})`
-    );
-  }
-
-  return data;
-}
-
-
-function rpcUuid(value){
-  if(typeof value === "string") return value;
-
-  if(Array.isArray(value) && value.length){
-    const first = value[0];
-
-    if(typeof first === "string") return first;
-
-    if(first && typeof first === "object"){
-      return String(
-        first.panther_admin_save_adult_m3u_source ||
-        first.id ||
-        Object.values(first)[0] ||
-        ""
-      );
-    }
-  }
-
-  if(value && typeof value === "object"){
-    return String(
-      value.panther_admin_save_adult_m3u_source ||
-      value.id ||
-      Object.values(value)[0] ||
-      ""
-    );
-  }
-
-  return String(value || "");
-}
-
-
-async function saveAdultM3uSource(){
-  const button =
-    $("saveAdultM3uBtn");
-
-  const name =
-    String(
-      $("adultM3uName")?.value || ""
-    ).trim();
-
-  const url =
-    String(
-      $("adultM3uUrl")?.value || ""
-    ).trim();
-
-  const file =
-    $("adultM3uFile")?.files?.[0] || null;
-
-  const category =
-    String(
-      $("adultM3uDefaultCategory")?.value || "Adult"
-    ).trim() || "Adult";
-
-  const sortOrder =
-    Number.parseInt(
-      $("adultM3uSortOrder")?.value || "100",
-      10
-    ) || 100;
-
-  const enabled =
-    !!$("adultM3uEnabled")?.checked;
-
-
-  const existing =
-    editingAdultM3uSourceId
-      ? adultM3uSources.find(
-          item => item.id === editingAdultM3uSourceId
-        )
-      : null;
-
-
-  const sourceType =
-    file
-      ? "upload"
-      : (
-          existing?.source_type === "upload" &&
-          !url
-            ? "upload"
-            : "url"
-        );
-
-
-  if(!name){
-    setStatus(
-      $("adultM3uStatus"),
-      "Enter a source name.",
-      false
-    );
-    return;
-  }
-
-
-  if(sourceType === "url"){
-    try{
-      const parsed = new URL(url);
-
-      if(!["http:","https:"].includes(parsed.protocol)){
-        throw new Error();
-      }
-    }catch{
-      setStatus(
-        $("adultM3uStatus"),
-        "Enter a valid http:// or https:// M3U URL, or choose an M3U file.",
-        false
-      );
-      return;
-    }
-  }
-
-
-  if(
-    sourceType === "upload" &&
-    !file &&
-    !editingAdultM3uSourceId
-  ){
-    setStatus(
-      $("adultM3uStatus"),
-      "Choose an M3U file.",
-      false
-    );
-    return;
-  }
-
-
-  button.disabled = true;
-
-  setStatus(
-    $("adultM3uStatus"),
-    file
-      ? "Saving source and importing M3U file..."
-      : (
-          sourceType === "url"
-            ? "Saving source and refreshing M3U URL..."
-            : "Saving source..."
-        )
-  );
-
-
-  try{
-    const saved =
-      await rpc(
-        "panther_admin_save_adult_m3u_source",
-        {
-          p_id:
-            editingAdultM3uSourceId || null,
-
-          p_name:
-            name,
-
-          p_source_type:
-            sourceType,
-
-          p_playlist_url:
-            sourceType === "url"
-              ? url
-              : null,
-
-          p_default_category:
-            category,
-
-          p_enabled:
-            enabled,
-
-          p_sort_order:
-            sortOrder
-        }
-      );
-
-
-    const sourceId =
-      rpcUuid(saved);
-
-
-    if(!sourceId){
-      throw new Error(
-        "The source was saved but Panther could not read its ID."
-      );
-    }
-
-
-    let result = null;
-
-
-    if(file){
-      const text =
-        await file.text();
-
-      result =
-        await callAdultM3uAdmin(
-          "import_text",
-          sourceId,
-          text
-        );
-
-    }else if(sourceType === "url"){
-      result =
-        await callAdultM3uAdmin(
-          "refresh",
-          sourceId
-        );
-    }
-
-
-    resetAdultM3uForm();
-
-    await loadAdultM3uSources();
-
-    setStatus(
-      $("adultM3uStatus"),
-      result
-        ? `${result.item_count || 0} M3U item${Number(result.item_count || 0) === 1 ? "" : "s"} imported across ${result.category_count || 0} categor${Number(result.category_count || 0) === 1 ? "y" : "ies"}.`
-        : "Adult M3U source saved.",
-      true
-    );
-
-  }catch(e){
-    setStatus(
-      $("adultM3uStatus"),
-      e?.message || String(e),
-      false
-    );
-  }finally{
-    button.disabled = false;
-  }
-}
-
-
-async function refreshAdultM3uSource(id){
-  const source =
-    adultM3uSources.find(
-      item => item.id === id
-    );
-
-  if(!source) return;
-
-
-  if(source.source_type === "upload"){
-    editAdultM3uSource(id);
-
-    setStatus(
-      $("adultM3uStatus"),
-      "Choose the updated M3U file, then press Save / Re-import.",
-      true
-    );
-
-    $("adultM3uFile")?.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
-
-    return;
-  }
-
-
-  setStatus(
-    $("adultM3uStatus"),
-    `Refreshing ${source.name || "Adult M3U"}...`
-  );
-
-
-  try{
-    const result =
-      await callAdultM3uAdmin(
-        "refresh",
-        id
-      );
-
-    await loadAdultM3uSources();
-
-    setStatus(
-      $("adultM3uStatus"),
-      `${result.item_count || 0} item${Number(result.item_count || 0) === 1 ? "" : "s"} refreshed.`,
-      true
-    );
-
-  }catch(e){
-    await loadAdultM3uSources();
-
-    setStatus(
-      $("adultM3uStatus"),
-      e?.message || String(e),
-      false
-    );
-  }
-}
-
-
-async function deleteAdultM3uSource(id){
-  const source =
-    adultM3uSources.find(
-      item => item.id === id
-    );
-
-  if(!source) return;
-
-
-  if(
-    !confirm(
-      `Delete "${source.name || "Adult M3U"}" and all imported M3U entries?`
-    )
-  ){
-    return;
-  }
-
-
-  setStatus(
-    $("adultM3uStatus"),
-    "Deleting Adult M3U source..."
-  );
-
-
-  try{
-    await rpc(
-      "panther_admin_delete_adult_m3u_source",
-      {
-        p_id: id
-      }
-    );
-
-    if(editingAdultM3uSourceId === id){
-      resetAdultM3uForm();
-    }
-
-    await loadAdultM3uSources();
-
-    setStatus(
-      $("adultM3uStatus"),
-      "Adult M3U source deleted.",
-      true
-    );
-
-  }catch(e){
-    setStatus(
-      $("adultM3uStatus"),
-      e?.message || String(e),
-      false
-    );
-  }
-}
-
-
-$("saveAdultM3uBtn")?.addEventListener(
-  "click",
-  saveAdultM3uSource
-);
-
-
-$("cancelAdultM3uEditBtn")?.addEventListener(
-  "click",
-  () => {
-    resetAdultM3uForm();
-    setStatus($("adultM3uStatus"), "");
-  }
-);
-
-
-$("reloadAdultM3uBtn")?.addEventListener(
-  "click",
-  loadAdultM3uSources
-);
-
-
-
-// ============================================================
-// ADULT MAGNET / TORBOX
-// ============================================================
-
-let adultMagnetTorrentId = null;
-let adultMagnetTorrentReady = false;
-let adultMagnetFiles = [];
-let adultMagnetSelectedFileId = null;
-let adultMagnetLastStatus = null;
-let adultMagnetPollTimer = null;
-
-
-function adultMagnetFormatBytes(value){
-  const bytes = Number(value || 0);
-
-  if(!Number.isFinite(bytes) || bytes <= 0){
-    return "Unknown size";
-  }
-
-  const units = ["B","KB","MB","GB","TB"];
-  let amount = bytes;
-  let index = 0;
-
-  while(amount >= 1024 && index < units.length - 1){
-    amount /= 1024;
-    index += 1;
-  }
-
-  return `${amount >= 100 || index === 0 ? amount.toFixed(0) : amount.toFixed(1)} ${units[index]}`;
-}
-
-
-function adultMagnetCleanTitle(value){
-  return String(value || "")
-    .split("/")
-    .pop()
-    .replace(/\.[^.]+$/, "")
-    .replace(/[._]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-
-function setAdultMagnetPill(text, mode = ""){
-  const pill = $("adultMagnetStatePill");
-  if(!pill) return;
-
-  pill.textContent = text || "NOT ADDED";
-  pill.classList.remove("enabled","disabled");
-
-  if(mode === "ready"){
-    pill.classList.add("enabled");
-  }else if(mode === "error"){
-    pill.classList.add("disabled");
-  }
-}
-
-
-function stopAdultMagnetPolling(){
-  if(adultMagnetPollTimer){
-    clearTimeout(adultMagnetPollTimer);
-    adultMagnetPollTimer = null;
-  }
-}
-
-
-function resetAdultMagnetForm(){
-  stopAdultMagnetPolling();
-
-  adultMagnetTorrentId = null;
-  adultMagnetTorrentReady = false;
-  adultMagnetFiles = [];
-  adultMagnetSelectedFileId = null;
-  adultMagnetLastStatus = null;
-
-  if($("adultMagnetLink")) $("adultMagnetLink").value = "";
-  if($("adultMagnetTitle")) $("adultMagnetTitle").value = "";
-  if($("adultMagnetCategory")) $("adultMagnetCategory").value = $("adultMagnetFolder")?.value || "Adult";
-  if($("adultMagnetPosterUrl")) $("adultMagnetPosterUrl").value = "";
-  if($("adultMagnetDescription")) $("adultMagnetDescription").value = "";
-  if($("adultMagnetSortOrder")) $("adultMagnetSortOrder").value = "100";
-  if($("adultMagnetEnabled")) $("adultMagnetEnabled").checked = true;
-  if($("adultMagnetCachedOnly")) $("adultMagnetCachedOnly").checked = false;
-
-  if($("adultMagnetFiles")) $("adultMagnetFiles").innerHTML = "";
-  if($("adultMagnetSummary")){
-    $("adultMagnetSummary").textContent =
-      "Paste a magnet and press Inspect magnet or Add to TorBox.";
-  }
-
-  if($("refreshAdultMagnetBtn")) $("refreshAdultMagnetBtn").disabled = true;
-  if($("publishAdultMagnetBtn")) $("publishAdultMagnetBtn").disabled = true;
-
-  setAdultMagnetPill("NOT ADDED");
-  setStatus($("adultMagnetStatus"), "");
-}
-
-
-async function callAdultMagnetAdmin(action, extra = {}){
-  const controller =
-    new AbortController();
-
-  const timeoutMs =
-    action === "inspect"
-      ? 18000
-      : 45000;
-
-  const timer =
-    setTimeout(
-      () => controller.abort(),
-      timeoutMs
-    );
-
-  try{
-    const response =
-      await apiFetch(
-        "/functions/v1/panther-adult-magnet-admin",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            action,
-            ...extra
-          }),
-          signal: controller.signal
-        }
-      );
-
-    const data =
-      await readJson(response);
-
-    if(
-      !response.ok ||
-      data?.success === false
-    ){
-      throw new Error(
-        data?.error ||
-        data?.message ||
-        `Adult Magnet request failed (HTTP ${response.status})`
-      );
-    }
-
-    return data;
-
-  }catch(e){
-    if(e?.name === "AbortError"){
-      throw new Error(
-        action === "inspect"
-          ? "TorBox metadata lookup took too long. Press Add to TorBox instead — Panther can resolve the files after TorBox adds it."
-          : "TorBox took too long to respond. Try the action again."
-      );
-    }
-
-    throw e;
-
-  }finally{
-    clearTimeout(timer);
-  }
-}
-
-
-function adultMagnetValue(){
-  const magnet =
-    String(
-      $("adultMagnetLink")?.value || ""
-    ).trim();
-
-  if(!magnet.toLowerCase().startsWith("magnet:?")){
-    throw new Error("Paste a valid magnet link first.");
-  }
-
-  return magnet;
-}
-
-
-function renderAdultMagnetPreview(data){
-  const host = $("adultMagnetFiles");
-  if(!host) return;
-
-  const files =
-    Array.isArray(data?.files)
-      ? data.files
-      : [];
-
-  const name =
-    String(data?.name || "Torrent");
-
-  const titleInput =
-    $("adultMagnetTitle");
-
-  if(
-    titleInput &&
-    !String(titleInput.value || "").trim()
-  ){
-    titleInput.value =
-      adultMagnetCleanTitle(name) || name;
-  }
-
-  $("adultMagnetSummary").innerHTML = `
-    <strong>${esc(name)}</strong><br>
-    ${adultMagnetFormatBytes(data?.size)} · ${Number(data?.seeds || 0)} seed${Number(data?.seeds || 0) === 1 ? "" : "s"} ·
-    ${Number(data?.peers || 0)} peer${Number(data?.peers || 0) === 1 ? "" : "s"}<br>
-    ${files.length} video file${files.length === 1 ? "" : "s"} detected.
-    <div class="small-text" style="margin-top:5px">${data?.metadata_pending === true ? "Metadata lookup timed out — this does not stop you adding it to TorBox." : "Preview only — add the magnet to TorBox before choosing the final playable file."}</div>
-  `;
-
-  if(!files.length){
-    host.innerHTML =
-      data?.metadata_pending === true
-        ? '<div class="empty-note">TorBox did not return metadata quickly enough. Press <strong>Add to TorBox</strong>; Panther will load the video files from TorBox when the torrent is ready.</div>'
-        : '<div class="empty-note">No video files were detected in the magnet metadata yet.</div>';
-    return;
-  }
-
-  host.innerHTML =
-    files.map(file => `
-      <div class="private-content-card">
-        <div class="private-content-title">${esc(file.name || "Video")}</div>
-        <div class="private-content-meta">${esc(adultMagnetFormatBytes(file.size))}${file.mimetype ? ` · ${esc(file.mimetype)}` : ""}</div>
-      </div>
-    `).join("");
-}
-
-
-function renderAdultMagnetStatus(status){
-  adultMagnetLastStatus = status || null;
-  adultMagnetTorrentReady = status?.ready === true;
-  adultMagnetFiles =
-    Array.isArray(status?.files)
-      ? status.files
-      : [];
-
-  if(
-    adultMagnetFiles.length &&
-    (
-      adultMagnetSelectedFileId === null ||
-      !adultMagnetFiles.some(file => Number(file.id) === Number(adultMagnetSelectedFileId))
-    )
-  ){
-    const largest =
-      [...adultMagnetFiles]
-        .sort(
-          (a,b) =>
-            Number(b.size || 0) -
-            Number(a.size || 0)
-        )[0];
-
-    adultMagnetSelectedFileId =
-      largest
-        ? Number(largest.id)
-        : null;
-  }
-
-  const state =
-    String(status?.state || (adultMagnetTorrentReady ? "ready" : "processing"));
-
-  const progressRaw =
-    Number(status?.progress || 0);
-
-  const progress =
-    progressRaw <= 1 && progressRaw > 0
-      ? Math.round(progressRaw * 100)
-      : Math.round(progressRaw);
-
-  const name =
-    String(status?.name || "TorBox torrent");
-
-  const titleInput =
-    $("adultMagnetTitle");
-
-  if(
-    titleInput &&
-    !String(titleInput.value || "").trim()
-  ){
-    titleInput.value =
-      adultMagnetCleanTitle(name) || name;
-  }
-
-  $("adultMagnetSummary").innerHTML = `
-    <strong>${esc(name)}</strong><br>
-    State: ${esc(state || "Unknown")} · Progress ${Number.isFinite(progress) ? Math.max(0,Math.min(100,progress)) : 0}% ·
-    ${status?.cached === true ? "Cached" : "Not marked cached"}<br>
-    ${Number(status?.seeds || 0)} seed${Number(status?.seeds || 0) === 1 ? "" : "s"} ·
-    ${Number(status?.peers || 0)} peer${Number(status?.peers || 0) === 1 ? "" : "s"} ·
-    ${adultMagnetFormatBytes(status?.size)}
-  `;
-
-  setAdultMagnetPill(
-    adultMagnetTorrentReady
-      ? "READY"
-      : (state || "PROCESSING").toUpperCase(),
-    adultMagnetTorrentReady
-      ? "ready"
-      : ""
-  );
-
-  if($("refreshAdultMagnetBtn")){
-    $("refreshAdultMagnetBtn").disabled =
-      !adultMagnetTorrentId;
-  }
-
-  if($("publishAdultMagnetBtn")){
-    $("publishAdultMagnetBtn").disabled =
-      !(
-        adultMagnetTorrentReady &&
-        adultMagnetSelectedFileId !== null
-      );
-  }
-
-  const host =
-    $("adultMagnetFiles");
-
-  if(!host) return;
-
-  if(!adultMagnetFiles.length){
-    host.innerHTML =
-      '<div class="empty-note">No playable video files are available yet. If TorBox is still downloading metadata/content, refresh again shortly.</div>';
-    return;
-  }
-
-  host.innerHTML =
-    adultMagnetFiles.map(file => {
-      const id =
-        Number(file.id);
-
-      const selected =
-        Number(adultMagnetSelectedFileId) ===
-        id;
-
-      return `
-        <label class="private-check-card" style="display:flex;align-items:flex-start;gap:10px">
-          <input
-            type="radio"
-            name="adultMagnetVideoFile"
-            class="adult-magnet-file"
-            data-id="${id}"
-            ${selected ? "checked" : ""}>
-          <span>
-            <strong>${esc(file.name || "Video")}</strong>
-            <div class="small-text">${esc(adultMagnetFormatBytes(file.size))}${file.mimetype ? ` · ${esc(file.mimetype)}` : ""}</div>
-          </span>
-        </label>
-      `;
-    }).join("");
-
-  document
-    .querySelectorAll(".adult-magnet-file")
-    .forEach(input => {
-      input.addEventListener("change", () => {
-        adultMagnetSelectedFileId =
-          Number(input.dataset.id);
-
-        const selected =
-          adultMagnetFiles.find(
-            file =>
-              Number(file.id) ===
-              Number(adultMagnetSelectedFileId)
-          );
-
-        if(
-          selected &&
-          $("adultMagnetTitle") &&
-          !String($("adultMagnetTitle").value || "").trim()
-        ){
-          $("adultMagnetTitle").value =
-            adultMagnetCleanTitle(selected.name);
-        }
-
-        if($("publishAdultMagnetBtn")){
-          $("publishAdultMagnetBtn").disabled =
-            !(
-              adultMagnetTorrentReady &&
-              adultMagnetSelectedFileId !== null
-            );
-        }
-      });
-    });
-}
-
-
-function scheduleAdultMagnetPoll(){
-  stopAdultMagnetPolling();
-
-  if(
-    !adultMagnetTorrentId ||
-    adultMagnetTorrentReady
-  ){
-    return;
-  }
-
-  adultMagnetPollTimer =
-    setTimeout(
-      async () => {
-        try{
-          await refreshAdultMagnetStatus(true);
-        }catch(_){
-          // Keep the manual Refresh status button available if a background poll fails.
-        }
-
-        if(
-          adultMagnetTorrentId &&
-          !adultMagnetTorrentReady
-        ){
-          scheduleAdultMagnetPoll();
-        }
-      },
-      8000
-    );
-}
-
-
-async function inspectAdultMagnet(){
-  const button =
-    $("inspectAdultMagnetBtn");
-
-  try{
-    const magnet =
-      adultMagnetValue();
-
-    button.disabled = true;
-
-    setStatus(
-      $("adultMagnetStatus"),
-      "Reading magnet metadata from TorBox..."
-    );
-
-    const result =
-      await callAdultMagnetAdmin(
-        "inspect",
-        {
-          magnet
-        }
-      );
-
-    renderAdultMagnetPreview(
-      result?.data || {}
-    );
-
-    if(result?.data?.metadata_pending === true){
-      setAdultMagnetPill("READY TO ADD");
-
-      setStatus(
-        $("adultMagnetStatus"),
-        result?.data?.warning ||
-          "Metadata lookup took too long. Press Add to TorBox to continue.",
-        true
-      );
-    }else{
-      setStatus(
-        $("adultMagnetStatus"),
-        "Magnet metadata loaded. Press Add to TorBox when you are ready.",
-        true
-      );
-    }
-
-  }catch(e){
-    setAdultMagnetPill("ERROR","error");
-
-    setStatus(
-      $("adultMagnetStatus"),
-      e?.message || String(e),
-      false
-    );
-
-  }finally{
-    button.disabled = false;
-  }
-}
-
-
-async function addAdultMagnet(){
-  const button =
-    $("addAdultMagnetBtn");
-
-  try{
-    const magnet =
-      adultMagnetValue();
-
-    button.disabled = true;
-
-    setStatus(
-      $("adultMagnetStatus"),
-      "Adding magnet to TorBox..."
-    );
-
-    const result =
-      await callAdultMagnetAdmin(
-        "create",
-        {
-          magnet,
-          name:
-            String(
-              $("adultMagnetTitle")?.value || ""
-            ).trim(),
-          cached_only:
-            !!$("adultMagnetCachedOnly")?.checked
-        }
-      );
-
-    adultMagnetTorrentId =
-      Number(result?.torrent_id || 0) || null;
-
-    adultMagnetSelectedFileId =
-      null;
-
-    if(!adultMagnetTorrentId){
-      throw new Error("TorBox did not return a torrent ID.");
-    }
-
-    if(result?.status){
-      renderAdultMagnetStatus(
-        result.status
-      );
-    }else{
-      adultMagnetTorrentReady = false;
-      adultMagnetFiles = [];
-
-      setAdultMagnetPill("PROCESSING");
-
-      $("adultMagnetSummary").textContent =
-        `Added to TorBox as torrent #${adultMagnetTorrentId}. Waiting for metadata...`;
-
-      $("refreshAdultMagnetBtn").disabled = false;
-      $("publishAdultMagnetBtn").disabled = true;
-    }
-
-    setStatus(
-      $("adultMagnetStatus"),
-      adultMagnetTorrentReady
-        ? "TorBox is ready. Choose the video file and publish it."
-        : "Added to TorBox. Panther will keep checking until the video is ready.",
-      true
-    );
-
-    scheduleAdultMagnetPoll();
-
-  }catch(e){
-    setAdultMagnetPill("ERROR","error");
-
-    setStatus(
-      $("adultMagnetStatus"),
-      e?.message || String(e),
-      false
-    );
-
-  }finally{
-    button.disabled = false;
-  }
-}
-
-
-async function refreshAdultMagnetStatus(background = false){
-  if(!adultMagnetTorrentId){
-    if(!background){
-      setStatus(
-        $("adultMagnetStatus"),
-        "Add a magnet to TorBox first.",
-        false
-      );
-    }
-    return;
-  }
-
-  const button =
-    $("refreshAdultMagnetBtn");
-
-  if(button && !background){
-    button.disabled = true;
-  }
-
-  if(!background){
-    setStatus(
-      $("adultMagnetStatus"),
-      "Refreshing TorBox status..."
-    );
-  }
-
-  try{
-    const result =
-      await callAdultMagnetAdmin(
-        "status",
-        {
-          torrent_id:
-            adultMagnetTorrentId
-        }
-      );
-
-    renderAdultMagnetStatus(
-      result?.status || {}
-    );
-
-    if(!background){
-      setStatus(
-        $("adultMagnetStatus"),
-        adultMagnetTorrentReady
-          ? "Ready to publish."
-          : "TorBox is still preparing this torrent.",
-        adultMagnetTorrentReady
-      );
-    }
-
-  }catch(e){
-    if(!background){
-      setStatus(
-        $("adultMagnetStatus"),
-        e?.message || String(e),
-        false
-      );
-    }
-    throw e;
-
-  }finally{
-    if(button){
-      button.disabled =
-        !adultMagnetTorrentId;
-    }
-  }
-}
-
-
-let adultMagnetBulkPublishing = false;
-async function publishAllAdultMagnet(){
-  if(adultMagnetBulkPublishing) return;
-  adultMagnetBulkPublishing = true;
-  const button = $("publishAllAdultMagnetBtn");
-  if(!adultMagnetTorrentId || !adultMagnetTorrentReady || !adultMagnetFiles.length){
-    setStatus($("adultMagnetStatus"), "Wait until TorBox lists ready video files.", false);
-    return;
-  }
-  const files = [...adultMagnetFiles];
-  const baseTitle = String($("adultMagnetTitle")?.value || "").trim();
-  const folder = String($("adultMagnetFolder")?.value || "Adult").trim() || "Adult";
-  const common = {
-    torrent_id: adultMagnetTorrentId,
-    category: folder,
-    poster_url: String($("adultMagnetPosterUrl")?.value || "").trim(),
-    description: String($("adultMagnetDescription")?.value || "").trim(),
-    creator: "TorBox",
-    enabled: !!$("adultMagnetEnabled")?.checked,
-    sort_order: Number.parseInt($("adultMagnetSortOrder")?.value || "100", 10) || 100
-  };
-  button.disabled = true;
-  $("publishAdultMagnetBtn").disabled = true;
-  let succeeded = 0;
-  const failures = [];
-  try{
-    for(let i=0; i<files.length; i++){
-      const file = files[i];
-      const fileTitle = adultMagnetCleanTitle(file.name || `Scene ${i+1}`);
-      const title = baseTitle && files.length > 1
-        ? `${baseTitle} - ${fileTitle}`
-        : (baseTitle || fileTitle);
-      setStatus($("adultMagnetStatus"), `Publishing ${i+1} of ${files.length}: ${title}`);
-      try{
-        await callAdultMagnetAdmin("publish", {...common, file_id: Number(file.id), title});
-        succeeded++;
-      }catch(error){
-        failures.push(`${file.name || file.id}: ${error?.message || String(error)}`);
-      }
-    }
-    await loadPrivateContent();
-    const summary = `Published ${succeeded} of ${files.length} videos to folder "${folder}".`;
-    setStatus($("adultMagnetStatus"), failures.length
-      ? summary + " Failed: " + failures.join(" | ")
-      : summary,
-      failures.length === 0);
-    // Keep the torrent and file list available so failed files can be retried.
-  } finally {
-    adultMagnetBulkPublishing = false;
-    button.disabled = !(adultMagnetTorrentReady && adultMagnetFiles.length > 0);
-    $("publishAdultMagnetBtn").disabled = !(adultMagnetTorrentReady && adultMagnetSelectedFileId !== null);
-  }
-}
-
-async function publishAdultMagnet(){
-  if(
-    !adultMagnetTorrentId ||
-    adultMagnetSelectedFileId === null
-  ){
-    setStatus(
-      $("adultMagnetStatus"),
-      "Choose a ready TorBox video file first.",
-      false
-    );
-    return;
-  }
-
-  const button =
-    $("publishAdultMagnetBtn");
-
-  button.disabled = true;
-
-  setStatus(
-    $("adultMagnetStatus"),
-    "Publishing to Panther Adult / Private Library..."
-  );
-
-  try{
-    const selected =
-      adultMagnetFiles.find(
-        file =>
-          Number(file.id) ===
-          Number(adultMagnetSelectedFileId)
-      );
-
-    const title =
-      String(
-        $("adultMagnetTitle")?.value || ""
-      ).trim() ||
-      adultMagnetCleanTitle(
-        selected?.name || adultMagnetLastStatus?.name || "Adult video"
-      );
-
-    const result =
-      await callAdultMagnetAdmin(
-        "publish",
-        {
-          torrent_id:
-            adultMagnetTorrentId,
-
-          file_id:
-            adultMagnetSelectedFileId,
-
-          title,
-
-          category:
-            String(
-              $("adultMagnetFolder")?.value || "Adult"
-            ).trim() || "Adult",
-
-          poster_url:
-            String(
-              $("adultMagnetPosterUrl")?.value || ""
-            ).trim(),
-
-          description:
-            String(
-              $("adultMagnetDescription")?.value || ""
-            ).trim(),
-
-          creator:
-            "TorBox",
-
-          enabled:
-            !!$("adultMagnetEnabled")?.checked,
-
-          sort_order:
-            Number.parseInt(
-              $("adultMagnetSortOrder")?.value || "100",
-              10
-            ) || 100
-        }
-      );
-
-    await loadPrivateContent();
-
-    const savedTitle =
-      result?.item?.title ||
-      title;
-
-    resetAdultMagnetForm();
-
-    setStatus(
-      $("adultMagnetStatus"),
-      `"${savedTitle}" has been published to the Adult / Private Library.`,
-      true
-    );
-
-  }catch(e){
-    setStatus(
-      $("adultMagnetStatus"),
-      e?.message || String(e),
-      false
-    );
-
-    if(
-      adultMagnetTorrentId &&
-      !adultMagnetTorrentReady
-    ){
-      scheduleAdultMagnetPoll();
-    }
-
-  }finally{
-    button.disabled =
-      !(
-        adultMagnetTorrentReady &&
-        adultMagnetSelectedFileId !== null
-      );
-  }
-}
-
-
-$("inspectAdultMagnetBtn")?.addEventListener(
-  "click",
-  inspectAdultMagnet
-);
-
-
-$("addAdultMagnetBtn")?.addEventListener(
-  "click",
-  addAdultMagnet
-);
-
-
-$("refreshAdultMagnetBtn")?.addEventListener(
-  "click",
-  () =>
-    refreshAdultMagnetStatus(
-      false
-    )
-);
-
-
-$("publishAdultMagnetBtn")?.addEventListener(
-  "click",
-  publishAdultMagnet
-);
-
-$("publishAllAdultMagnetBtn")?.addEventListener("click", publishAllAdultMagnet);
-
-// Keep the bulk action in sync with the latest TorBox status, even after resetting.
-const publishAllButton = $("publishAllAdultMagnetBtn");
-if(publishAllButton){
-  const syncPublishAllState = () => {
-    publishAllButton.disabled = adultMagnetBulkPublishing || !(adultMagnetTorrentReady && adultMagnetFiles.length > 0);
-  };
-  const singleButton = $("publishAdultMagnetBtn");
-  if(singleButton){
-    new MutationObserver(syncPublishAllState).observe(singleButton, {attributes:true, attributeFilter:["disabled"]});
-  }
-  syncPublishAllState();
-}
-
-
-$("resetAdultMagnetBtn")?.addEventListener(
-  "click",
-  resetAdultMagnetForm
-);
-
-
-// ============================================================
 // PRIVATE LIBRARY
 // ============================================================
 
@@ -6560,8 +5976,7 @@ let privateTitleAccessAllowed = new Set();
 
 function resetPrivateContentForm(){
   privateEditingContentId = null;
-  $("privateContentEditorCard")?.classList.add("hidden");
-  $("privateContentFormTitle").textContent = "Edit existing title";
+  $("privateContentFormTitle").textContent = "Add content";
   $("savePrivateContentBtn").textContent = "Add title";
   $("cancelPrivateContentEditBtn").classList.add("hidden");
   $("privateContentTitle").value = "";
@@ -6582,216 +5997,6 @@ function resetPrivateContentForm(){
 }
 
 
-// Folders use the existing category field; no change to TorBox playback.
-// Empty folders are remembered by this browser until content is published in them.
-const adultFolderStorageKey = "panther_adult_folder_names_v1";
-const adultFolderImagesKey = "panther_adult_folder_images_v1";
-let adultFolderSharedImages = {};
-let adultFolderImagesLoaded = false;
-function getAdultFolderImages(){ return adultFolderSharedImages; }
-async function loadAdultFolderImages(){
-  const rows = await rpc("panther_admin_list_private_folder_artwork", {});
-  adultFolderSharedImages = {};
-  for(const row of (Array.isArray(rows) ? rows : [])) {
-    adultFolderSharedImages[String(row.folder_name || "").trim()] = String(row.image_url || "");
-  }
-  adultFolderImagesLoaded = true;
-  updateAdultFolderImagePreview();
-}
-async function saveAdultFolderImage(folder, url){
-  await rpc("panther_admin_set_private_folder_artwork", {p_folder_name:folder,p_image_url:url});
-  if(url) adultFolderSharedImages[folder] = url;
-  else delete adultFolderSharedImages[folder];
-  updateAdultFolderImagePreview();
-}
-function updateAdultFolderImagePreview(){
-  const folder = $("adultMagnetFolder")?.value || "Adult";
-  const url = getAdultFolderImages()[folder] || "";
-  const preview = $("adultFolderImagePreview");
-  const label = $("adultFolderImageLabel");
-  if(preview){
-    preview.style.display = url ? "block" : "none";
-    if(url) preview.src = url; else preview.removeAttribute("src");
-  }
-  if(label) label.textContent = url ? `Image set for ${folder}` : `No image for ${folder}`;
-  const urlInput = $("adultFolderImageUrl");
-  if(urlInput) urlInput.value = url;
-}
-$("adultSaveFolderImageUrlBtn")?.addEventListener("click", async () => {
-  const folder = $("adultMagnetFolder")?.value || "Adult";
-  const url = String($("adultFolderImageUrl")?.value || "").trim();
-  const status = $("adultFolderImageStatus");
-  if(!/^https:\/\/[^\s]+$/i.test(url)) {
-    setStatus(status, "Enter a valid HTTPS image URL.", false); return;
-  }
-  try {
-    await saveAdultFolderImage(folder,url);
-    setStatus(status, `Image URL saved for ${folder} to Supabase.`, true);
-  } catch(error) { setStatus(status, error?.message || "Unable to save folder image", false); }
-});
-$("adultUploadMagnetPosterBtn")?.addEventListener("click", async () => {
-  const file = $("adultMagnetPosterFile")?.files?.[0];
-  const button = $("adultUploadMagnetPosterBtn");
-  const status = $("adultMagnetPosterUploadStatus");
-  if(!file) { setStatus(status, "Choose a poster image first.", false); return; }
-  if(!/\.(jpe?g|png|webp|gif)$/i.test(file.name) || (file.type && !["image/jpeg","image/png","image/webp","image/gif"].includes(file.type))){
-    setStatus(status, "Choose a JPG, PNG, WebP or GIF image.", false); return;
-  }
-  if(file.size > 8 * 1024 * 1024){ setStatus(status, "Poster must be smaller than 8 MB.", false); return; }
-  button.disabled = true;
-  setStatus(status, "Uploading poster…");
-  try {
-    const result = await uploadPrivateMedia(file, "poster");
-    $("adultMagnetPosterUrl").value = result.url;
-    $("adultMagnetPosterFile").value = "";
-    setStatus(status, "Poster uploaded. Its URL will be used when publishing.", true);
-  } catch(error){ setStatus(status, error?.message || "Poster upload failed.", false); }
-  finally { button.disabled = false; }
-});
-$("adultUploadFolderImageBtn")?.addEventListener("click", async () => {
-  const file = $("adultFolderImageFile")?.files?.[0];
-  const status = $("adultFolderImageStatus");
-  const button = $("adultUploadFolderImageBtn");
-  const folder = $("adultMagnetFolder")?.value || "Adult";
-  if(!file){ setStatus(status, "Choose an image attachment first.", false); return; }
-  if(!/\.(jpe?g|png|webp|gif)$/i.test(file.name) || (file.type && !["image/jpeg","image/png","image/webp","image/gif"].includes(file.type))){
-    setStatus(status, "Use a JPG, PNG, WebP or GIF image.", false); return;
-  }
-  if(file.size > 8 * 1024 * 1024){ setStatus(status, "Folder image must be smaller than 8 MB.", false); return; }
-  button.disabled = true;
-  setStatus(status, `Uploading image for ${folder}…`);
-  try {
-    const result = await uploadPrivateMedia(file, "poster");
-    await saveAdultFolderImage(folder,result.url);
-    $("adultFolderImageFile").value = "";
-    setStatus(status, `Image uploaded and saved for ${folder} in Supabase.`, true);
-  } catch(error) { setStatus(status, error?.message || "Image upload failed.", false); }
-  finally { button.disabled = false; }
-});
-$("adultRemoveFolderImageBtn")?.addEventListener("click", async () => {
-  const folder = $("adultMagnetFolder")?.value || "Adult";
-  try {
-    await saveAdultFolderImage(folder,"");
-    setStatus($("adultFolderImageStatus"), `Folder image removed for ${folder}.`, true);
-  } catch(error) { setStatus($("adultFolderImageStatus"), error?.message || "Unable to remove image", false); }
-});
-function getAdultFolders(){
-  let saved = [];
-  try { saved = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]"); } catch(_) {}
-  const names = ["Adult", ...saved, ...privateLibraryContent.map(x => x.category || "Adult")];
-  return [...new Set(names.map(x => String(x || "").trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
-}
-function renderAdultFolderChoices(){
-  if(!adultFolderImagesLoaded && accessToken){
-    adultFolderImagesLoaded = true;
-    loadAdultFolderImages().catch(e => { adultFolderImagesLoaded = false; setStatus($("adultFolderImageStatus"), e?.message || "Unable to load shared folder images", false); });
-  }
-  const folderSelect = $("adultMagnetFolder");
-  const filter = $("adultLibraryFolderFilter");
-  const folders = getAdultFolders();
-  if(folderSelect){
-    const current = folderSelect.value || "Adult";
-    folderSelect.innerHTML = folders.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
-    folderSelect.value = folders.includes(current) ? current : "Adult";
-    if($("adultMagnetCategory")) $("adultMagnetCategory").value = folderSelect.value;
-    updateAdultFolderImagePreview();
-  }
-  if(filter){
-    const current = filter.value;
-    filter.innerHTML = '<option value="">All folders</option>' + folders.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
-    filter.value = folders.includes(current) ? current : "";
-  }
-}
-$("adultCreateFolderBtn")?.addEventListener("click", () => {
-  const name = String($("adultNewFolderName")?.value || "").trim();
-  if(!name){ alert("Enter a folder name."); return; }
-  const folders = getAdultFolders();
-  if(!folders.includes(name)){
-    try { localStorage.setItem(adultFolderStorageKey, JSON.stringify([...folders,name])); }
-    catch(_) { alert("Could not remember empty folder in this browser."); }
-  }
-  renderAdultFolderChoices();
-  $("adultMagnetFolder").value = name;
-  $("adultMagnetCategory").value = name;
-  updateAdultFolderImagePreview();
-  $("adultNewFolderName").value = "";
-  setStatus($("adultMagnetStatus"), `Folder "${name}" selected. Publish a video into it to store the folder in Supabase.`, true);
-});
-// Remove a folder safely without deleting TorBox downloads or Storage objects.
-let adultFolderDeletionBusy = false;
-async function deleteAdultLibraryFolder(deleteVideos) {
-  if(adultFolderDeletionBusy) return;
-  const folder = String($("adultMagnetFolder")?.value || "").trim();
-  const status = $("adultDeleteFolderStatus");
-  if(!folder) { setStatus(status,"Choose a folder first.",false); return; }
-  if(folder === "Adult") { setStatus(status,"Adult is the default folder and cannot be deleted. You can move its videos into another folder using Edit.",false); return; }
-  const matches = privateLibraryContent.filter(item => String(item.category || "Adult").trim() === folder);
-  const target = "Uncategorised";
-  if(!deleteVideos && folder === target) {
-    setStatus(status,"Uncategorised is the destination for retained videos and cannot be moved into itself.",false);
-    return;
-  }
-  const message = deleteVideos
-    ? `DELETE FOLDER AND VIDEOS?\n\nFolder: ${folder}\nPublished titles: ${matches.length}\n\nThis permanently deletes the library records, including title access assignments. It does NOT delete files from TorBox or Supabase Storage.\n\nContinue?`
-    : `DELETE FOLDER BUT KEEP VIDEOS?\n\nFolder: ${folder}\nPublished titles: ${matches.length}\n\nAll videos will move to ${target}. Their IDs and playback links will remain unchanged.\n\nContinue?`;
-  if(!confirm(message)) return;
-  if(deleteVideos && matches.length > 0 && !confirm(`FINAL CONFIRMATION: Delete ${matches.length} published title(s) in ${folder}?`)) return;
-  adultFolderDeletionBusy = true;
-  const buttons = [$("adultDeleteFolderOnlyBtn"),$("adultDeleteFolderAndVideosBtn")];
-  buttons.forEach(b=>{if(b)b.disabled=true;});
-  let done = 0;
-  try {
-    for(const item of matches) {
-      setStatus(status,`${deleteVideos ? "Deleting" : "Moving"} ${done+1} of ${matches.length}: ${item.title || "Untitled"}…`);
-      if(deleteVideos) {
-        await rpc("panther_admin_delete_private_content",{p_id:item.id});
-      } else {
-        await rpc("panther_admin_save_private_content",{
-          p_id:item.id,
-          p_title:item.title || "Private video",
-          p_description:item.description || "",
-          p_video_url:item.video_url || "",
-          p_poster_url:item.poster_url || "",
-          p_category:target,
-          p_creator:item.creator || "",
-          p_licence:item.licence || "",
-          p_attribution:item.attribution || "",
-          p_source_url:item.source_url || "",
-          p_enabled:item.enabled !== false,
-          p_sort_order:Number(item.sort_order ?? 100)
-        });
-      }
-      done++;
-    }
-    // Remove the artwork assignment, but never delete the actual image file.
-    if(getAdultFolderImages()[folder]) await saveAdultFolderImage(folder,"");
-    let saved = [];
-    try { saved = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]"); } catch(_) {}
-    localStorage.setItem(adultFolderStorageKey,JSON.stringify(
-      (Array.isArray(saved) ? saved : []).filter(name=>String(name).trim()!==folder)
-    ));
-    // Clear the chosen folder before rebuilding selectors.
-    if($("adultMagnetFolder")) $("adultMagnetFolder").value = "Adult";
-    if($("adultLibraryFolderFilter")) $("adultLibraryFolderFilter").value = "";
-    await loadPrivateContent();
-    setStatus(status,`Folder "${folder}" deleted. ${done} title(s) ${deleteVideos ? "removed from the library" : "moved to Uncategorised"}.`,true);
-  } catch(error) {
-    try { await loadPrivateContent(); } catch(_) {}
-    setStatus(status,`Stopped after ${done} of ${matches.length} title(s). ${error?.message || String(error)}. Resolve this error before retrying.`,false);
-  } finally {
-    adultFolderDeletionBusy = false;
-    buttons.forEach(b=>{if(b)b.disabled=false;});
-  }
-}
-$("adultDeleteFolderOnlyBtn")?.addEventListener("click",()=>deleteAdultLibraryFolder(false));
-$("adultDeleteFolderAndVideosBtn")?.addEventListener("click",()=>deleteAdultLibraryFolder(true));
-
-$("adultMagnetFolder")?.addEventListener("change", () => {
-  $("adultMagnetCategory").value = $("adultMagnetFolder").value;
-  updateAdultFolderImagePreview();
-});
-$("adultLibraryFolderFilter")?.addEventListener("change", renderPrivateContent);
-
 function renderPrivateContent(){
   const host = $("privateContentList");
   if(!host) return;
@@ -6799,33 +6004,21 @@ function renderPrivateContent(){
   $("privateContentCount").textContent = String(privateLibraryContent.length);
 
   if(!privateLibraryContent.length){
-    renderAdultFolderChoices();
-    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Add a magnet link above.</div>';
+    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Upload a video or add a direct streaming URL.</div>';
     renderPrivateTitleAccess();
     return;
   }
 
-  renderAdultFolderChoices();
-  const selectedFolder = $("adultLibraryFolderFilter")?.value || "";
-  const visibleItems = selectedFolder
-    ? privateLibraryContent.filter(item => (item.category || "Adult") === selectedFolder)
-    : privateLibraryContent;
-  host.innerHTML = visibleItems.length ? visibleItems.map(item => `
+  host.innerHTML = privateLibraryContent.map(item => `
     <div class="private-content-card">
       <div class="private-content-head">
         <div>
-          <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><input type="checkbox" class="manual-collection-select" data-id="${esc(item.id)}" ${manualCollectionSelected.includes(String(item.id)) ? "checked" : ""}><span class="small-text">Select for collection ${manualCollectionSelected.includes(String(item.id)) ? `(#${manualCollectionSelected.indexOf(String(item.id))+1})` : ""}</span></label>
           <div class="private-content-title">${esc(item.title || "Untitled")}</div>
-          ${item.manual_group_title ? `<div class="small-text">Collection: ${esc(item.manual_group_title)} · Scene ${Number(item.manual_scene_order || 0)}</div>` : ""}
           <div class="private-content-meta">
             ${esc(item.category || "Private")} · Sort ${Number(item.sort_order ?? 100)}<br>
             ${item.creator ? `Creator: ${esc(item.creator)}<br>` : ""}
             ${item.licence ? `Licence: ${esc(item.licence)}<br>` : ""}
-            ${esc(
-              String(item.video_url || "").startsWith("panther-torbox://")
-                ? "TorBox magnet source"
-                : (item.video_url || "")
-            )}
+            ${esc(item.video_url || "")}
           </div>
         </div>
         <span class="pill ${item.enabled === false ? "disabled" : "enabled"}">${item.enabled === false ? "DISABLED" : "ENABLED"}</span>
@@ -6835,7 +6028,7 @@ function renderPrivateContent(){
         <button class="small danger delete-private-content" data-id="${esc(item.id)}">Delete</button>
       </div>
     </div>
-  `).join("") : '<div class="empty-note">No titles in this folder.</div>';
+  `).join("");
 
   document.querySelectorAll(".edit-private-content").forEach(button => {
     button.onclick = () => editPrivateContent(button.dataset.id);
@@ -6845,48 +6038,9 @@ function renderPrivateContent(){
     button.onclick = () => deletePrivateContent(button.dataset.id);
   });
 
-  document.querySelectorAll(".manual-collection-select").forEach(input => {
-    input.onchange = () => {
-      const id = String(input.dataset.id);
-      manualCollectionSelected = manualCollectionSelected.filter(x => x !== id);
-      if(input.checked) manualCollectionSelected.push(id);
-      renderPrivateContent();
-    };
-  });
-  updateManualSelection();
   renderPrivateTitleAccess();
 }
 
-let manualCollectionSelected = [];
-function updateManualSelection(){
-  const label = $("manualCollectionSelection");
-  if(!label) return;
-  label.textContent = manualCollectionSelected.length
-    ? `${manualCollectionSelected.length} selected · order: ` + manualCollectionSelected.map((id,i) => `${i+1}. ${privateLibraryContent.find(x=>String(x.id)===id)?.title || id}`).join(" → ")
-    : "No videos selected";
-}
-$("clearManualCollectionBtn")?.addEventListener("click", () => { manualCollectionSelected=[]; renderPrivateContent(); });
-async function assignManualCollection(title){
-  const items = manualCollectionSelected.map(id=>privateLibraryContent.find(x=>String(x.id)===id)).filter(Boolean);
-  if(!items.length) return setStatus($("manualCollectionStatus"),"Select at least one video.",false);
-  if(new Set(items.map(x=>(x.category||"Uncategorised").trim())).size!==1)
-    return setStatus($("manualCollectionStatus"),"Choose videos from the same folder.",false);
-  if(title && items.length < 2)
-    return setStatus($("manualCollectionStatus"),"Select at least two videos to form a collection.",false);
-  try {
-    setStatus($("manualCollectionStatus"), "Saving collection...");
-    await rpc("panther_admin_assign_private_collection", {p_content_ids:manualCollectionSelected,p_group_title:title});
-    manualCollectionSelected=[];
-    await loadPrivateContent();
-    setStatus($("manualCollectionStatus"), title ? "Collection saved. Restart/reopen the Private Library to refresh." : "Selected videos ungrouped.", true);
-  } catch(e){ setStatus($("manualCollectionStatus"),e?.message||String(e),false); }
-}
-$("saveManualCollectionBtn")?.addEventListener("click",()=>{
-  const title=$("manualCollectionTitle")?.value.trim()||"";
-  if(!title) return setStatus($("manualCollectionStatus"),"Enter a collection name.",false);
-  assignManualCollection(title);
-});
-$("removeManualCollectionBtn")?.addEventListener("click",()=>assignManualCollection(""));
 
 async function loadPrivateContent(){
   if(!$("privateLibrarySection")) return;
@@ -6916,8 +6070,6 @@ function editPrivateContent(id){
   if(!item) return;
 
   privateEditingContentId = id;
-  $("privateContentEditorCard")?.classList.remove("hidden");
-  $("privateContentEditorCard")?.scrollIntoView({behavior:"smooth",block:"start"});
   $("privateContentFormTitle").textContent = "Edit content";
   $("savePrivateContentBtn").textContent = "Save changes";
   $("cancelPrivateContentEditBtn").classList.remove("hidden");
@@ -7071,33 +6223,12 @@ function privateAccountLabel(account){
 }
 
 
-// Filter visible account cards without rebuilding forms, so unsaved edits stay intact.
-function filterPrivateAccountsByUsername(){
-  const input = $("privateAccountUsernameSearch");
-  const query = (input?.value || "").trim().toLocaleLowerCase();
-  const cards = document.querySelectorAll("#privateAccountsList .private-account-card");
-  let visible = 0;
-  cards.forEach(card => {
-    const username = (card.dataset.username || "").toLocaleLowerCase();
-    const match = !query || username.includes(query);
-    card.style.display = match ? "" : "none";
-    if(match) visible++;
-  });
-  const count = $("privateAccountSearchCount");
-  if(count) count.textContent = query
-    ? `${visible} of ${cards.length} accounts found`
-    : `${cards.length} registered account${cards.length === 1 ? "" : "s"}`;
-  const noMatches = $("privateAccountNoMatches");
-  if(noMatches) noMatches.classList.toggle("hidden", !query || visible !== 0 || cards.length === 0);
-}
-
 function renderPrivateAccounts(){
   const host = $("privateAccountsList");
   if(!host) return;
 
   if(!privateLibraryAccounts.length){
     host.innerHTML = '<div class="empty-note">No registered Panther accounts yet. Open Panther on a logged-in device first.</div>';
-    filterPrivateAccountsByUsername();
     return;
   }
 
@@ -7106,7 +6237,7 @@ function renderPrivateAccounts(){
     const expiry = toLocalDateTimeValue(account.expires_at);
 
     return `
-      <div class="private-account-card" data-username="${esc(account.username || "")}">
+      <div class="private-account-card">
         <div class="private-account-head">
           <div>
             <div class="private-account-title">${esc(privateAccountLabel(account))}</div>
@@ -7160,7 +6291,6 @@ function renderPrivateAccounts(){
   document.querySelectorAll(".manage-private-titles").forEach(button => {
     button.onclick = () => openPrivateTitleAccess(button.dataset.scope);
   });
-  filterPrivateAccountsByUsername();
 }
 
 
@@ -7306,7 +6436,6 @@ async function loadPrivateLibrary(){
 
 $("reloadPrivateLibraryBtn")?.addEventListener("click", loadPrivateLibrary);
 $("reloadPrivateAccountsBtn")?.addEventListener("click", loadPrivateAccounts);
-$("privateAccountUsernameSearch")?.addEventListener("input", filterPrivateAccountsByUsername);
 
 
 let pantherDevices = [];
@@ -8779,6 +7908,10 @@ $("quickHomeScreen")?.addEventListener("click", () => {
   openSection("homeScreenSection");
   loadHomeConfig();
 });
+$("quickRemoteAppSettings")?.addEventListener("click", () => {
+  openSection("remoteAppSettingsSection");
+  loadRemoteSettingsPanel();
+});
 $("quickSeasonalThemes")?.addEventListener("click", () => {
   openSection("seasonalThemesSection");
   loadSeasonalTheme();
@@ -8794,103 +7927,10 @@ $("quickDevices")?.addEventListener("click", () => {
 $("quickAnnouncements")?.addEventListener("click", () => openSection("announcementsSection"));
 $("quickUpdates")?.addEventListener("click", () => openSection("updatesSection"));
 
-
 initCollapsibleSections();
 
 boot();
 </script>
 
-
-<script>
-/* Secondary accordions: preserve every existing input, element ID and event handler.
-   Main sections are untouched; all nested sections default to collapsed. */
-(function () {
-  function initialiseNestedPanels() {
-    const layouts = {
-      overviewSection: [{title:'Dashboard overview',start:0,end:1}],
-      homeScreenSection: [
-        {title:'Home Screen settings',start:0,end:2},
-        {title:'Published Home Screen status',start:3,end:4}
-      ],
-      seasonalThemesSection: [
-        {title:'Seasonal theme settings and artwork',start:0,end:2},
-        {title:'Seasonal theme status',start:3,end:4}
-      ],
-      servicesSection: [
-        {title:'Service controls and add service',start:0,end:1},
-        {title:'Existing services',start:2,end:3}
-      ],
-      categoriesSection: [
-        {title:'Provider and category filters',start:0,end:1},
-        {title:'Grouping settings',start:2,end:3}
-      ],
-      groupsSection: [{title:'Groups and supplier categories',start:0,end:0}],
-      catalogCacheSection: [
-        {title:'Catalogue cache settings',start:0,end:2},
-        {title:'Cache status',start:3,end:4}
-      ],
-      featuresSection: [
-        {title:'Feature switches',start:0,end:2},
-        {title:'Current feature state',start:3,end:4}
-      ],
-      updatesSection: [
-        {title:'Publish new app version',start:0,end:1},
-        {title:'Release information and status',start:2,end:3}
-      ],
-      privateLibrarySection: [
-        {title:'Private Library information',start:0,end:2},
-        {title:'Magnet / TorBox and new content',start:3,end:6},
-        {title:'Edit existing titles and library list',start:7,end:7},
-        {title:'Account access and username search',start:9,end:9},
-        {title:'Individual account title access',start:10,end:10}
-      ],
-      devicesSection: [
-        {title:'Device overview',start:0,end:1},
-        {title:'Search, manage and browse devices',start:2,end:4}
-      ],
-      announcementsSection: [
-        {title:'Create announcement',start:0,end:1},
-        {title:'Existing announcements',start:2,end:2}
-      ]
-    };
-    Object.keys(layouts).forEach(function (id) {
-      const root = document.getElementById(id);
-      if (!root || root.dataset.nestedReady === '1') return;
-      const container = Array.from(root.children).find(function(el) {
-        return el.classList.contains('collapse-content');
-      });
-      if (!container) return;
-      const original = Array.from(container.children);
-      layouts[id].forEach(function (part) {
-        const elements = original.slice(part.start,part.end+1);
-        if (!elements.length) return;
-        const wrapper=document.createElement('details');
-        wrapper.className='nested-panel';
-        const heading=document.createElement('summary');
-        heading.textContent=part.title;
-        const body=document.createElement('div');
-        body.className='nested-panel-body';
-        wrapper.appendChild(heading);
-        wrapper.appendChild(body);
-        container.insertBefore(wrapper,elements[0]);
-        elements.forEach(function(el){body.appendChild(el)});
-        // Editing controls that become visible later must remain reachable.
-        body.querySelectorAll('.hidden').forEach(function(el){
-          const observer=new MutationObserver(function () {
-            if (!el.classList.contains('hidden') && getComputedStyle(el).display !== 'none') {
-              if (el.id === 'privateContentEditorCard' || el.id === 'privateTitleAccessPanel') wrapper.open=true;
-            }
-          });
-          observer.observe(el,{attributes:true,attributeFilter:['class']});
-        });
-      });
-      root.dataset.nestedReady='1';
-    });
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initialiseNestedPanels);
-  else initialiseNestedPanels();
-})();
-</script>
-
 </body>
-  </html>
+                                            </html>
