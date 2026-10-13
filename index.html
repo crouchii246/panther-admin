@@ -2025,256 +2025,182 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   </details>
 
 
-  <details id="privateLibrarySection" class="section-anchor collapse-card">
-    <summary>
-      <div class="section-heading-left">
-        <div class="section-icon">🔒</div>
-        <div class="section-title-text">
-          <h2>Private Library</h2>
-          <div>Manage streaming content and choose exactly which IPTV accounts can access it.</div>
-        </div>
-      </div>
-      <span class="collapse-arrow">▼</span>
-    </summary>
-
-    <div class="collapse-content">
-      <div class="cache-explainer">
-        <strong>Account-controlled library.</strong>
+  <details class="section-anchor collapse-card" id="privateLibrarySection">
+<summary>
+<div class="section-heading-left">
+<div class="section-icon">🔒</div>
+<div class="section-title-text">
+<h2>Private Library</h2>
+<div>Add content through Magnet Link / TorBox and control account access.</div>
+</div>
+</div>
+<span class="collapse-arrow">▼</span>
+</summary>
+<div class="collapse-content">
+<div class="cache-explainer">
+<strong>Account-controlled library.</strong>
         Panther only shows the Private Library button after the current registered device's IPTV account is approved here.
         You can require a 4–8 digit PIN, set an expiry date, allow the whole library, or select individual titles.
         Only add material you are legally permitted to store and stream, and only make explicit material available to adults.
       </div>
+<div style="height:14px"></div>
 
-      <div style="height:14px"></div>
-
-
-      <div class="card-flat">
-        <div class="section-heading">
-          <div class="section-heading-left">
-            <div class="section-title-text">
-              <h2>Catalogue import</h2>
-              <div>Import a licensed provider catalogue from CSV or JSON without uploading each title manually.</div>
+<div style="height:14px"></div>
+<div class="card-flat">
+<div class="section-heading">
+<div class="section-heading-left">
+<div class="section-title-text">
+<h2>Adult Magnet / TorBox</h2>
+<div>Paste a magnet link, add it to TorBox, choose the video file, then publish it into Panther's existing Adult / Private Library.</div>
+</div>
+</div>
+<span class="pill" id="adultMagnetStatePill">NOT ADDED</span>
+</div>
+<div class="cache-explainer">
+<strong>Server-side TorBox import.</strong>
+          The magnet link and TorBox API token are never sent to Panther devices.
+          When a user presses Play, Panther receives a temporary protected playback URL and the Adult stream function redirects to TorBox's temporary CDN link.
+          This keeps TorBox credentials out of the APK and avoids sending the video itself through Supabase.
+        </div>
+<div style="height:12px"></div>
+<div class="private-library-form">
+<div class="wide">
+<div class="field-label">Magnet link</div>
+<textarea id="adultMagnetLink" placeholder="magnet:?xt=urn:btih:..." rows="4" spellcheck="false"></textarea>
+<div class="small-text">
+              Paste a standard magnet URI. Panther does not scrape torrent websites; it only processes the magnet you supply.
             </div>
-          </div>
+</div>
+<div>
+<div class="field-label">Title</div>
+<input id="adultMagnetTitle" maxlength="180" placeholder="Auto-filled from TorBox"/>
+</div>
+<div>
+<div class="field-label">Category</div>
+<input id="adultMagnetCategory" maxlength="100" placeholder="Adult" value="Adult"/>
+</div>
+<div class="wide">
+<div class="field-label">Poster URL</div>
+<input id="adultMagnetPosterUrl" inputmode="url" placeholder="https://example.com/poster.jpg" type="url"/>
+<div class="small-text">Optional. You can also edit the title later in the normal Private Library content editor.</div>
+</div>
+<div class="wide">
+<div class="field-label">Description</div>
+<textarea id="adultMagnetDescription" placeholder="Optional description" rows="3"></textarea>
+</div>
+<div>
+<div class="field-label">Sort order</div>
+<input id="adultMagnetSortOrder" type="number" value="100"/>
+</div>
+<label class="private-check-card">
+<input checked="" id="adultMagnetEnabled" type="checkbox"/>
+<span>
+<strong>Enable after publishing</strong>
+<div class="small-text">Turn this off if you want to review the item before it appears in Panther.</div>
+</span>
+</label>
+<label class="private-check-card wide">
+<input id="adultMagnetCachedOnly" type="checkbox"/>
+<span>
+<strong>Cached only</strong>
+<div class="small-text">When enabled, TorBox refuses the import unless it is already cached. Leave off to allow TorBox to download an uncached torrent.</div>
+</span>
+</label>
+<div class="cache-actions wide">
+<button id="inspectAdultMagnetBtn">Inspect magnet</button>
+<button class="primary" id="addAdultMagnetBtn">Add to TorBox</button>
+<button disabled="" id="refreshAdultMagnetBtn">Refresh status</button>
+<button class="primary" disabled="" id="publishAdultMagnetBtn">Publish to Adult</button>
+<button id="resetAdultMagnetBtn">Clear</button>
+</div>
+</div>
+<div class="status" id="adultMagnetStatus"></div>
+<div style="height:12px"></div>
+<div class="private-bulk-summary" id="adultMagnetSummary">
+          Paste a magnet and press Inspect magnet or Add to TorBox.
         </div>
+<div style="height:10px"></div>
+<div class="private-content-list" id="adultMagnetFiles"></div>
+</div>
+<div style="height:14px"></div>
 
-        <div class="private-bulk-grid">
-          <div class="wide">
-            <div class="field-label">Feed URL</div>
-            <input
-              id="privateCatalogueFeedUrl"
-              type="url"
-              inputmode="url"
-              placeholder="https://provider.example/catalogue.json">
-            <div class="small-text">
-              Paste a JSON/CSV catalogue URL from a provider you are authorised to use.
-              The feed must include a direct playable <strong>video_url</strong>,
-              <strong>stream_url</strong> or <strong>playback_url</strong> for each title.
-            </div>
-          </div>
+<div style="height:14px"></div>
 
-          <div class="wide">
-            <div class="field-label">Catalogue file</div>
-            <input id="privateCatalogueFile" type="file" accept=".csv,.json,text/csv,application/json">
-            <div class="small-text">
-              Supported: CSV or JSON. JSON may be an array or an object containing an
-              <strong>items</strong>, <strong>content</strong>, <strong>catalogue</strong> or
-              <strong>videos</strong> array.
-            </div>
-          </div>
-
-          <div class="wide">
-            <div class="field-label">Or paste CSV / JSON</div>
-            <textarea id="privateCatalogueText" rows="7" placeholder="title,video_url,poster_url,category&#10;Example Title,https://example.com/video.mp4,https://example.com/poster.jpg,Private"></textarea>
-          </div>
-
-          <label class="private-check-card">
-            <input id="privateCatalogueEnabled" type="checkbox" checked>
-            <span><strong>Enable imported titles</strong><div class="small-text">Turn off if you want to review the imported catalogue first.</div></span>
-          </label>
-
-          <label class="private-check-card">
-            <input id="privateCatalogueSkipDuplicates" type="checkbox" checked>
-            <span><strong>Skip duplicate titles</strong><div class="small-text">Existing Private Library titles with the same name will not be added again.</div></span>
-          </label>
-        </div>
-
-        <div class="cache-actions" style="margin-top:12px">
-          <button id="loadPrivateCatalogueFeedBtn">Load feed</button>
-          <button id="previewPrivateCatalogueBtn">Preview catalogue</button>
-          <button id="importPrivateCatalogueBtn" class="primary">Import catalogue</button>
-          <button id="clearPrivateCatalogueBtn">Clear</button>
-        </div>
-
-        <div id="privateCatalogueStatus" class="status"></div>
-        <div id="privateCatalogueSummary" class="private-bulk-summary">Choose a CSV/JSON file or paste a catalogue to preview it.</div>
-        <div id="privateCatalogueQueue" class="private-bulk-queue"></div>
-
-        <div class="small-text" style="margin-top:10px">
-          Recognised fields: title, video_url, stream_url, playback_url, poster_url, category,
-          description, creator, licence, attribution, source_url, enabled and sort_order.
-          A normal web-page URL or embed URL is not treated as a playable video URL.
-        </div>
-      </div>
-
-      <div style="height:14px"></div>
-      <div class="card-flat">
-        <div class="section-heading">
-          <div class="section-heading-left">
-            <div class="section-title-text">
-              <h2>Bulk upload</h2>
-              <div>Select multiple videos at once. Matching posters are paired automatically by filename.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="private-bulk-grid">
-          <div class="wide">
-            <div class="field-label">Import a whole folder</div>
-            <input id="privateBulkFolder" type="file" webkitdirectory directory multiple>
-            <div class="small-text">Choose one folder containing videos and optional matching posters. Subfolders can automatically become categories.</div>
-          </div>
-
-          <label class="private-check-card wide">
-            <input id="privateBulkUseSubfolderCategory" type="checkbox" checked>
-            <span><strong>Use subfolder names as categories</strong><div class="small-text">Example: My Library/Category Name/Video.mp4 will import into “Category Name”. Files in the main folder use the default category below.</div></span>
-          </label>
-
-          <div class="wide">
-            <div class="field-label">Or choose videos</div>
-            <input id="privateBulkVideos" type="file" multiple accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
-            <div class="small-text">Example: My Movie.mp4</div>
-          </div>
-
-          <div class="wide">
-            <div class="field-label">Optional posters</div>
-            <input id="privateBulkPosters" type="file" multiple accept="image/*,.jpg,.jpeg,.png,.webp">
-            <div class="small-text">Use the same base filename, for example My Movie.jpg, and Panther will match it to My Movie.mp4.</div>
-          </div>
-
-          <div>
-            <div class="field-label">Category</div>
-            <input id="privateBulkCategory" maxlength="100" value="Private" placeholder="Private">
-          </div>
-
-          <div>
-            <div class="field-label">Creator / studio</div>
-            <input id="privateBulkCreator" maxlength="180" placeholder="Optional default for the whole batch">
-          </div>
-
-          <div>
-            <div class="field-label">Licence</div>
-            <input id="privateBulkLicence" maxlength="180" placeholder="Optional default for the whole batch">
-          </div>
-
-          <div>
-            <div class="field-label">Starting sort order</div>
-            <input id="privateBulkSortOrder" type="number" value="100">
-          </div>
-
-          <label class="private-check-card">
-            <input id="privateBulkEnabled" type="checkbox" checked>
-            <span><strong>Enable imported titles</strong><div class="small-text">Turn off if you want to review everything before it appears in Panther.</div></span>
-          </label>
-
-          <label class="private-check-card">
-            <input id="privateBulkSkipDuplicates" type="checkbox" checked>
-            <span><strong>Skip duplicate titles</strong><div class="small-text">Prevents a filename from creating another title when that title already exists.</div></span>
-          </label>
-        </div>
-
-        <div class="cache-actions" style="margin-top:12px">
-          <button id="startPrivateBulkUploadBtn" class="primary">Upload batch</button>
-          <button id="clearPrivateBulkUploadBtn">Clear</button>
-        </div>
-
-        <div id="privateBulkStatus" class="status"></div>
-        <div id="privateBulkSummary" class="private-bulk-summary">Choose one or more videos to build the upload queue.</div>
-        <div id="privateBulkQueue" class="private-bulk-queue"></div>
-      </div>
-
-      <div style="height:14px"></div>
-
-      <div class="private-library-grid">
-        <div class="card-flat">
-          <div class="section-heading">
-            <div class="section-heading-left">
-              <div class="section-title-text"><h2 id="privateContentFormTitle">Add content</h2><div>Upload your own video/poster or paste an existing direct URL.</div></div>
-            </div>
-          </div>
-
-          <div class="private-library-form">
-            <div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"></div>
-            <div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"></div>
-            <div class="wide">
-              <div class="field-label">Video</div>
-              <div class="private-upload-row">
-                <input id="privateContentVideoFile" type="file" accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
-                <button id="uploadPrivateVideoBtn" type="button">Upload video</button>
-              </div>
-              <div id="privateVideoUploadStatus" class="small-text"></div>
-              <input id="privateContentVideoUrl" style="margin-top:8px" placeholder="Or paste a direct video URL">
-            </div>
-
-            <div class="wide">
-              <div class="field-label">Poster</div>
-              <div class="private-upload-row">
-                <input id="privateContentPosterFile" type="file" accept="image/*,.jpg,.jpeg,.png,.webp">
-                <button id="uploadPrivatePosterBtn" type="button">Upload poster</button>
-              </div>
-              <div id="privatePosterUploadStatus" class="small-text"></div>
-              <input id="privateContentPosterUrl" style="margin-top:8px" placeholder="Optional poster URL">
-            </div>
-            <div><div class="field-label">Description</div><textarea id="privateContentDescription" maxlength="3000" placeholder="Optional description"></textarea></div>
-            <div><div class="field-label">Creator / studio</div><input id="privateContentCreator" maxlength="180" placeholder="Optional"></div>
-            <div><div class="field-label">Licence</div><input id="privateContentLicence" maxlength="180" placeholder="e.g. CC0 / CC BY-SA 4.0"></div>
-            <div><div class="field-label">Attribution</div><input id="privateContentAttribution" maxlength="500" placeholder="Required attribution text if applicable"></div>
-            <div><div class="field-label">Source / licence page</div><input id="privateContentSourceUrl" placeholder="Optional https://..."></div>
-            <div><div class="field-label">Sort order</div><input id="privateContentSortOrder" type="number" value="100"></div>
-            <label class="private-check-card"><input id="privateContentEnabled" type="checkbox" checked><span><strong>Enabled</strong><div class="small-text">Disabled titles stay in the panel but are never returned to Panther.</div></span></label>
-            <div class="cache-actions">
-              <button id="savePrivateContentBtn" class="primary">Add title</button>
-              <button id="cancelPrivateContentEditBtn" class="hidden">Cancel edit</button>
-              <button id="reloadPrivateLibraryBtn">Reload</button>
-            </div>
-          </div>
-          <div id="privateContentStatus" class="status"></div>
-        </div>
-
-        <div class="card-flat">
-          <div class="section-heading">
-            <div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
-            <span id="privateContentCount" class="pill">0</span>
-          </div>
-          <div id="privateContentList" class="private-content-list"></div>
-        </div>
-      </div>
-
-      <div style="height:16px"></div>
-
-      <div class="card-flat">
-        <div class="section-heading">
-          <div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
-          <button id="reloadPrivateAccountsBtn" class="small">Reload accounts</button>
-        </div>
-        <div id="privateAccountStatus" class="status"></div>
-        <div id="privateAccountsList" class="private-account-list"></div>
-      </div>
-
-      <div id="privateTitleAccessPanel" class="private-title-access hidden">
-        <div class="section-heading">
-          <div class="section-heading-left"><div class="section-title-text"><h2>Individual title access</h2><div id="privateTitleAccessAccount">Select an account.</div></div></div>
-          <button id="closePrivateTitleAccessBtn" class="small">Close</button>
-        </div>
-        <div class="update-help">These selections are used when <strong>Allow all titles</strong> is turned off for the account.</div>
-        <div id="privateTitleAccessList" class="private-title-access-list"></div>
-        <div class="cache-actions" style="margin-top:12px">
-          <button id="savePrivateTitleAccessBtn" class="primary">Save title access</button>
-        </div>
-        <div id="privateTitleAccessStatus" class="status"></div>
-      </div>
-    </div>
-  </details>
+<div style="height:14px"></div>
+<div class="private-library-grid">
+<div class="card-flat hidden" id="privateContentEditorCard">
+<div class="section-heading">
+<div class="section-heading-left">
+<div class="section-title-text"><h2 id="privateContentFormTitle">Edit existing title</h2><div>Edit the title and metadata of an existing entry.</div></div>
+</div>
+</div>
+<div class="private-library-form">
+<div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"/></div>
+<div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"/></div>
+<div class="wide hidden">
+<div class="field-label">Video</div>
+<div class="private-upload-row">
+<input accept="video/*,.mp4,.webm,.m4v,.mov,.mkv" disabled="" id="privateContentVideoFile" type="file"/>
+<button disabled="" id="uploadPrivateVideoBtn" type="button">Upload video</button>
+</div>
+<div class="small-text" id="privateVideoUploadStatus"></div>
+<input id="privateContentVideoUrl" placeholder="Or paste a direct video URL" style="margin-top:8px"/>
+</div>
+<div class="wide">
+<div class="field-label">Poster</div>
+<div class="private-upload-row hidden">
+<input accept="image/*,.jpg,.jpeg,.png,.webp" disabled="" id="privateContentPosterFile" type="file"/>
+<button disabled="" id="uploadPrivatePosterBtn" type="button">Upload poster</button>
+</div>
+<div class="small-text" id="privatePosterUploadStatus"></div>
+<input id="privateContentPosterUrl" placeholder="Optional poster URL" style="margin-top:8px"/>
+</div>
+<div><div class="field-label">Description</div><textarea id="privateContentDescription" maxlength="3000" placeholder="Optional description"></textarea></div>
+<div><div class="field-label">Creator / studio</div><input id="privateContentCreator" maxlength="180" placeholder="Optional"/></div>
+<div><div class="field-label">Licence</div><input id="privateContentLicence" maxlength="180" placeholder="e.g. CC0 / CC BY-SA 4.0"/></div>
+<div><div class="field-label">Attribution</div><input id="privateContentAttribution" maxlength="500" placeholder="Required attribution text if applicable"/></div>
+<div><div class="field-label">Source / licence page</div><input id="privateContentSourceUrl" placeholder="Optional https://..."/></div>
+<div><div class="field-label">Sort order</div><input id="privateContentSortOrder" type="number" value="100"/></div>
+<label class="private-check-card"><input checked="" id="privateContentEnabled" type="checkbox"/><span><strong>Enabled</strong><div class="small-text">Disabled titles stay in the panel but are never returned to Panther.</div></span></label>
+<div class="cache-actions">
+<button class="primary" id="savePrivateContentBtn">Add title</button>
+<button class="hidden" id="cancelPrivateContentEditBtn">Cancel edit</button>
+<button id="reloadPrivateLibraryBtn">Reload</button>
+</div>
+</div>
+<div class="status" id="privateContentStatus"></div>
+</div>
+<div class="card-flat">
+<div class="section-heading">
+<div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
+<span class="pill" id="privateContentCount">0</span>
+</div>
+<div class="private-content-list" id="privateContentList"></div>
+</div>
+</div>
+<div style="height:16px"></div>
+<div class="card-flat">
+<div class="section-heading">
+<div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
+<button class="small" id="reloadPrivateAccountsBtn">Reload accounts</button>
+</div>
+<div class="status" id="privateAccountStatus"></div>
+<div class="private-account-list" id="privateAccountsList"></div>
+</div>
+<div class="private-title-access hidden" id="privateTitleAccessPanel">
+<div class="section-heading">
+<div class="section-heading-left"><div class="section-title-text"><h2>Individual title access</h2><div id="privateTitleAccessAccount">Select an account.</div></div></div>
+<button class="small" id="closePrivateTitleAccessBtn">Close</button>
+</div>
+<div class="update-help">These selections are used when <strong>Allow all titles</strong> is turned off for the account.</div>
+<div class="private-title-access-list" id="privateTitleAccessList"></div>
+<div class="cache-actions" style="margin-top:12px">
+<button class="primary" id="savePrivateTitleAccessBtn">Save title access</button>
+</div>
+<div class="status" id="privateTitleAccessStatus"></div>
+</div>
+</div>
+</details>
 
 
   <details id="devicesSection" class="section-anchor collapse-card">
@@ -6180,6 +6106,779 @@ $("clearPrivateBulkUploadBtn")?.addEventListener("click", clearPrivateBulkUpload
 
 
 // ============================================================
+// ADULT MAGNET / TORBOX
+// ============================================================
+
+let adultMagnetTorrentId = null;
+let adultMagnetTorrentReady = false;
+let adultMagnetFiles = [];
+let adultMagnetSelectedFileId = null;
+let adultMagnetLastStatus = null;
+let adultMagnetPollTimer = null;
+
+
+function adultMagnetFormatBytes(value){
+  const bytes = Number(value || 0);
+
+  if(!Number.isFinite(bytes) || bytes <= 0){
+    return "Unknown size";
+  }
+
+  const units = ["B","KB","MB","GB","TB"];
+  let amount = bytes;
+  let index = 0;
+
+  while(amount >= 1024 && index < units.length - 1){
+    amount /= 1024;
+    index += 1;
+  }
+
+  return `${amount >= 100 || index === 0 ? amount.toFixed(0) : amount.toFixed(1)} ${units[index]}`;
+}
+
+
+function adultMagnetCleanTitle(value){
+  return String(value || "")
+    .split("/")
+    .pop()
+    .replace(/\.[^.]+$/, "")
+    .replace(/[._]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+
+function setAdultMagnetPill(text, mode = ""){
+  const pill = $("adultMagnetStatePill");
+  if(!pill) return;
+
+  pill.textContent = text || "NOT ADDED";
+  pill.classList.remove("enabled","disabled");
+
+  if(mode === "ready"){
+    pill.classList.add("enabled");
+  }else if(mode === "error"){
+    pill.classList.add("disabled");
+  }
+}
+
+
+function stopAdultMagnetPolling(){
+  if(adultMagnetPollTimer){
+    clearTimeout(adultMagnetPollTimer);
+    adultMagnetPollTimer = null;
+  }
+}
+
+
+function resetAdultMagnetForm(){
+  stopAdultMagnetPolling();
+
+  adultMagnetTorrentId = null;
+  adultMagnetTorrentReady = false;
+  adultMagnetFiles = [];
+  adultMagnetSelectedFileId = null;
+  adultMagnetLastStatus = null;
+
+  if($("adultMagnetLink")) $("adultMagnetLink").value = "";
+  if($("adultMagnetTitle")) $("adultMagnetTitle").value = "";
+  if($("adultMagnetCategory")) $("adultMagnetCategory").value = "Adult";
+  if($("adultMagnetPosterUrl")) $("adultMagnetPosterUrl").value = "";
+  if($("adultMagnetDescription")) $("adultMagnetDescription").value = "";
+  if($("adultMagnetSortOrder")) $("adultMagnetSortOrder").value = "100";
+  if($("adultMagnetEnabled")) $("adultMagnetEnabled").checked = true;
+  if($("adultMagnetCachedOnly")) $("adultMagnetCachedOnly").checked = false;
+
+  if($("adultMagnetFiles")) $("adultMagnetFiles").innerHTML = "";
+  if($("adultMagnetSummary")){
+    $("adultMagnetSummary").textContent =
+      "Paste a magnet and press Inspect magnet or Add to TorBox.";
+  }
+
+  if($("refreshAdultMagnetBtn")) $("refreshAdultMagnetBtn").disabled = true;
+  if($("publishAdultMagnetBtn")) $("publishAdultMagnetBtn").disabled = true;
+
+  setAdultMagnetPill("NOT ADDED");
+  setStatus($("adultMagnetStatus"), "");
+}
+
+
+async function callAdultMagnetAdmin(action, extra = {}){
+  const controller =
+    new AbortController();
+
+  const timeoutMs =
+    action === "inspect"
+      ? 18000
+      : 45000;
+
+  const timer =
+    setTimeout(
+      () => controller.abort(),
+      timeoutMs
+    );
+
+  try{
+    const response =
+      await apiFetch(
+        "/functions/v1/panther-adult-magnet-admin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            action,
+            ...extra
+          }),
+          signal: controller.signal
+        }
+      );
+
+    const data =
+      await readJson(response);
+
+    if(
+      !response.ok ||
+      data?.success === false
+    ){
+      throw new Error(
+        data?.error ||
+        data?.message ||
+        `Adult Magnet request failed (HTTP ${response.status})`
+      );
+    }
+
+    return data;
+
+  }catch(e){
+    if(e?.name === "AbortError"){
+      throw new Error(
+        action === "inspect"
+          ? "TorBox metadata lookup took too long. Press Add to TorBox instead — Panther can resolve the files after TorBox adds it."
+          : "TorBox took too long to respond. Try the action again."
+      );
+    }
+
+    throw e;
+
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+
+function adultMagnetValue(){
+  const magnet =
+    String(
+      $("adultMagnetLink")?.value || ""
+    ).trim();
+
+  if(!magnet.toLowerCase().startsWith("magnet:?")){
+    throw new Error("Paste a valid magnet link first.");
+  }
+
+  return magnet;
+}
+
+
+function renderAdultMagnetPreview(data){
+  const host = $("adultMagnetFiles");
+  if(!host) return;
+
+  const files =
+    Array.isArray(data?.files)
+      ? data.files
+      : [];
+
+  const name =
+    String(data?.name || "Torrent");
+
+  const titleInput =
+    $("adultMagnetTitle");
+
+  if(
+    titleInput &&
+    !String(titleInput.value || "").trim()
+  ){
+    titleInput.value =
+      adultMagnetCleanTitle(name) || name;
+  }
+
+  $("adultMagnetSummary").innerHTML = `
+    <strong>${esc(name)}</strong><br>
+    ${adultMagnetFormatBytes(data?.size)} · ${Number(data?.seeds || 0)} seed${Number(data?.seeds || 0) === 1 ? "" : "s"} ·
+    ${Number(data?.peers || 0)} peer${Number(data?.peers || 0) === 1 ? "" : "s"}<br>
+    ${files.length} video file${files.length === 1 ? "" : "s"} detected.
+    <div class="small-text" style="margin-top:5px">${data?.metadata_pending === true ? "Metadata lookup timed out — this does not stop you adding it to TorBox." : "Preview only — add the magnet to TorBox before choosing the final playable file."}</div>
+  `;
+
+  if(!files.length){
+    host.innerHTML =
+      data?.metadata_pending === true
+        ? '<div class="empty-note">TorBox did not return metadata quickly enough. Press <strong>Add to TorBox</strong>; Panther will load the video files from TorBox when the torrent is ready.</div>'
+        : '<div class="empty-note">No video files were detected in the magnet metadata yet.</div>';
+    return;
+  }
+
+  host.innerHTML =
+    files.map(file => `
+      <div class="private-content-card">
+        <div class="private-content-title">${esc(file.name || "Video")}</div>
+        <div class="private-content-meta">${esc(adultMagnetFormatBytes(file.size))}${file.mimetype ? ` · ${esc(file.mimetype)}` : ""}</div>
+      </div>
+    `).join("");
+}
+
+
+function renderAdultMagnetStatus(status){
+  adultMagnetLastStatus = status || null;
+  adultMagnetTorrentReady = status?.ready === true;
+  adultMagnetFiles =
+    Array.isArray(status?.files)
+      ? status.files
+      : [];
+
+  if(
+    adultMagnetFiles.length &&
+    (
+      adultMagnetSelectedFileId === null ||
+      !adultMagnetFiles.some(file => Number(file.id) === Number(adultMagnetSelectedFileId))
+    )
+  ){
+    const largest =
+      [...adultMagnetFiles]
+        .sort(
+          (a,b) =>
+            Number(b.size || 0) -
+            Number(a.size || 0)
+        )[0];
+
+    adultMagnetSelectedFileId =
+      largest
+        ? Number(largest.id)
+        : null;
+  }
+
+  const state =
+    String(status?.state || (adultMagnetTorrentReady ? "ready" : "processing"));
+
+  const progressRaw =
+    Number(status?.progress || 0);
+
+  const progress =
+    progressRaw <= 1 && progressRaw > 0
+      ? Math.round(progressRaw * 100)
+      : Math.round(progressRaw);
+
+  const name =
+    String(status?.name || "TorBox torrent");
+
+  const titleInput =
+    $("adultMagnetTitle");
+
+  if(
+    titleInput &&
+    !String(titleInput.value || "").trim()
+  ){
+    titleInput.value =
+      adultMagnetCleanTitle(name) || name;
+  }
+
+  $("adultMagnetSummary").innerHTML = `
+    <strong>${esc(name)}</strong><br>
+    State: ${esc(state || "Unknown")} · Progress ${Number.isFinite(progress) ? Math.max(0,Math.min(100,progress)) : 0}% ·
+    ${status?.cached === true ? "Cached" : "Not marked cached"}<br>
+    ${Number(status?.seeds || 0)} seed${Number(status?.seeds || 0) === 1 ? "" : "s"} ·
+    ${Number(status?.peers || 0)} peer${Number(status?.peers || 0) === 1 ? "" : "s"} ·
+    ${adultMagnetFormatBytes(status?.size)}
+  `;
+
+  setAdultMagnetPill(
+    adultMagnetTorrentReady
+      ? "READY"
+      : (state || "PROCESSING").toUpperCase(),
+    adultMagnetTorrentReady
+      ? "ready"
+      : ""
+  );
+
+  if($("refreshAdultMagnetBtn")){
+    $("refreshAdultMagnetBtn").disabled =
+      !adultMagnetTorrentId;
+  }
+
+  if($("publishAdultMagnetBtn")){
+    $("publishAdultMagnetBtn").disabled =
+      !(
+        adultMagnetTorrentReady &&
+        adultMagnetSelectedFileId !== null
+      );
+  }
+
+  const host =
+    $("adultMagnetFiles");
+
+  if(!host) return;
+
+  if(!adultMagnetFiles.length){
+    host.innerHTML =
+      '<div class="empty-note">No playable video files are available yet. If TorBox is still downloading metadata/content, refresh again shortly.</div>';
+    return;
+  }
+
+  host.innerHTML =
+    adultMagnetFiles.map(file => {
+      const id =
+        Number(file.id);
+
+      const selected =
+        Number(adultMagnetSelectedFileId) ===
+        id;
+
+      return `
+        <label class="private-check-card" style="display:flex;align-items:flex-start;gap:10px">
+          <input
+            type="radio"
+            name="adultMagnetVideoFile"
+            class="adult-magnet-file"
+            data-id="${id}"
+            ${selected ? "checked" : ""}>
+          <span>
+            <strong>${esc(file.name || "Video")}</strong>
+            <div class="small-text">${esc(adultMagnetFormatBytes(file.size))}${file.mimetype ? ` · ${esc(file.mimetype)}` : ""}</div>
+          </span>
+        </label>
+      `;
+    }).join("");
+
+  document
+    .querySelectorAll(".adult-magnet-file")
+    .forEach(input => {
+      input.addEventListener("change", () => {
+        adultMagnetSelectedFileId =
+          Number(input.dataset.id);
+
+        const selected =
+          adultMagnetFiles.find(
+            file =>
+              Number(file.id) ===
+              Number(adultMagnetSelectedFileId)
+          );
+
+        if(
+          selected &&
+          $("adultMagnetTitle") &&
+          !String($("adultMagnetTitle").value || "").trim()
+        ){
+          $("adultMagnetTitle").value =
+            adultMagnetCleanTitle(selected.name);
+        }
+
+        if($("publishAdultMagnetBtn")){
+          $("publishAdultMagnetBtn").disabled =
+            !(
+              adultMagnetTorrentReady &&
+              adultMagnetSelectedFileId !== null
+            );
+        }
+      });
+    });
+}
+
+
+function scheduleAdultMagnetPoll(){
+  stopAdultMagnetPolling();
+
+  if(
+    !adultMagnetTorrentId ||
+    adultMagnetTorrentReady
+  ){
+    return;
+  }
+
+  adultMagnetPollTimer =
+    setTimeout(
+      async () => {
+        try{
+          await refreshAdultMagnetStatus(true);
+        }catch(_){
+          // Keep the manual Refresh status button available if a background poll fails.
+        }
+
+        if(
+          adultMagnetTorrentId &&
+          !adultMagnetTorrentReady
+        ){
+          scheduleAdultMagnetPoll();
+        }
+      },
+      8000
+    );
+}
+
+
+async function inspectAdultMagnet(){
+  const button =
+    $("inspectAdultMagnetBtn");
+
+  try{
+    const magnet =
+      adultMagnetValue();
+
+    button.disabled = true;
+
+    setStatus(
+      $("adultMagnetStatus"),
+      "Reading magnet metadata from TorBox..."
+    );
+
+    const result =
+      await callAdultMagnetAdmin(
+        "inspect",
+        {
+          magnet
+        }
+      );
+
+    renderAdultMagnetPreview(
+      result?.data || {}
+    );
+
+    if(result?.data?.metadata_pending === true){
+      setAdultMagnetPill("READY TO ADD");
+
+      setStatus(
+        $("adultMagnetStatus"),
+        result?.data?.warning ||
+          "Metadata lookup took too long. Press Add to TorBox to continue.",
+        true
+      );
+    }else{
+      setStatus(
+        $("adultMagnetStatus"),
+        "Magnet metadata loaded. Press Add to TorBox when you are ready.",
+        true
+      );
+    }
+
+  }catch(e){
+    setAdultMagnetPill("ERROR","error");
+
+    setStatus(
+      $("adultMagnetStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+async function addAdultMagnet(){
+  const button =
+    $("addAdultMagnetBtn");
+
+  try{
+    const magnet =
+      adultMagnetValue();
+
+    button.disabled = true;
+
+    setStatus(
+      $("adultMagnetStatus"),
+      "Adding magnet to TorBox..."
+    );
+
+    const result =
+      await callAdultMagnetAdmin(
+        "create",
+        {
+          magnet,
+          name:
+            String(
+              $("adultMagnetTitle")?.value || ""
+            ).trim(),
+          cached_only:
+            !!$("adultMagnetCachedOnly")?.checked
+        }
+      );
+
+    adultMagnetTorrentId =
+      Number(result?.torrent_id || 0) || null;
+
+    adultMagnetSelectedFileId =
+      null;
+
+    if(!adultMagnetTorrentId){
+      throw new Error("TorBox did not return a torrent ID.");
+    }
+
+    if(result?.status){
+      renderAdultMagnetStatus(
+        result.status
+      );
+    }else{
+      adultMagnetTorrentReady = false;
+      adultMagnetFiles = [];
+
+      setAdultMagnetPill("PROCESSING");
+
+      $("adultMagnetSummary").textContent =
+        `Added to TorBox as torrent #${adultMagnetTorrentId}. Waiting for metadata...`;
+
+      $("refreshAdultMagnetBtn").disabled = false;
+      $("publishAdultMagnetBtn").disabled = true;
+    }
+
+    setStatus(
+      $("adultMagnetStatus"),
+      adultMagnetTorrentReady
+        ? "TorBox is ready. Choose the video file and publish it."
+        : "Added to TorBox. Panther will keep checking until the video is ready.",
+      true
+    );
+
+    scheduleAdultMagnetPoll();
+
+  }catch(e){
+    setAdultMagnetPill("ERROR","error");
+
+    setStatus(
+      $("adultMagnetStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+async function refreshAdultMagnetStatus(background = false){
+  if(!adultMagnetTorrentId){
+    if(!background){
+      setStatus(
+        $("adultMagnetStatus"),
+        "Add a magnet to TorBox first.",
+        false
+      );
+    }
+    return;
+  }
+
+  const button =
+    $("refreshAdultMagnetBtn");
+
+  if(button && !background){
+    button.disabled = true;
+  }
+
+  if(!background){
+    setStatus(
+      $("adultMagnetStatus"),
+      "Refreshing TorBox status..."
+    );
+  }
+
+  try{
+    const result =
+      await callAdultMagnetAdmin(
+        "status",
+        {
+          torrent_id:
+            adultMagnetTorrentId
+        }
+      );
+
+    renderAdultMagnetStatus(
+      result?.status || {}
+    );
+
+    if(!background){
+      setStatus(
+        $("adultMagnetStatus"),
+        adultMagnetTorrentReady
+          ? "Ready to publish."
+          : "TorBox is still preparing this torrent.",
+        adultMagnetTorrentReady
+      );
+    }
+
+  }catch(e){
+    if(!background){
+      setStatus(
+        $("adultMagnetStatus"),
+        e?.message || String(e),
+        false
+      );
+    }
+    throw e;
+
+  }finally{
+    if(button){
+      button.disabled =
+        !adultMagnetTorrentId;
+    }
+  }
+}
+
+
+async function publishAdultMagnet(){
+  if(
+    !adultMagnetTorrentId ||
+    adultMagnetSelectedFileId === null
+  ){
+    setStatus(
+      $("adultMagnetStatus"),
+      "Choose a ready TorBox video file first.",
+      false
+    );
+    return;
+  }
+
+  const button =
+    $("publishAdultMagnetBtn");
+
+  button.disabled = true;
+
+  setStatus(
+    $("adultMagnetStatus"),
+    "Publishing to Panther Adult / Private Library..."
+  );
+
+  try{
+    const selected =
+      adultMagnetFiles.find(
+        file =>
+          Number(file.id) ===
+          Number(adultMagnetSelectedFileId)
+      );
+
+    const title =
+      String(
+        $("adultMagnetTitle")?.value || ""
+      ).trim() ||
+      adultMagnetCleanTitle(
+        selected?.name || adultMagnetLastStatus?.name || "Adult video"
+      );
+
+    const result =
+      await callAdultMagnetAdmin(
+        "publish",
+        {
+          torrent_id:
+            adultMagnetTorrentId,
+
+          file_id:
+            adultMagnetSelectedFileId,
+
+          title,
+
+          category:
+            String(
+              $("adultMagnetCategory")?.value || "Adult"
+            ).trim() || "Adult",
+
+          poster_url:
+            String(
+              $("adultMagnetPosterUrl")?.value || ""
+            ).trim(),
+
+          description:
+            String(
+              $("adultMagnetDescription")?.value || ""
+            ).trim(),
+
+          creator:
+            "TorBox",
+
+          enabled:
+            !!$("adultMagnetEnabled")?.checked,
+
+          sort_order:
+            Number.parseInt(
+              $("adultMagnetSortOrder")?.value || "100",
+              10
+            ) || 100
+        }
+      );
+
+    await loadPrivateContent();
+
+    const savedTitle =
+      result?.item?.title ||
+      title;
+
+    resetAdultMagnetForm();
+
+    setStatus(
+      $("adultMagnetStatus"),
+      `"${savedTitle}" has been published to the Adult / Private Library.`,
+      true
+    );
+
+  }catch(e){
+    setStatus(
+      $("adultMagnetStatus"),
+      e?.message || String(e),
+      false
+    );
+
+    if(
+      adultMagnetTorrentId &&
+      !adultMagnetTorrentReady
+    ){
+      scheduleAdultMagnetPoll();
+    }
+
+  }finally{
+    button.disabled =
+      !(
+        adultMagnetTorrentReady &&
+        adultMagnetSelectedFileId !== null
+      );
+  }
+}
+
+
+$("inspectAdultMagnetBtn")?.addEventListener(
+  "click",
+  inspectAdultMagnet
+);
+
+
+$("addAdultMagnetBtn")?.addEventListener(
+  "click",
+  addAdultMagnet
+);
+
+
+$("refreshAdultMagnetBtn")?.addEventListener(
+  "click",
+  () =>
+    refreshAdultMagnetStatus(
+      false
+    )
+);
+
+
+$("publishAdultMagnetBtn")?.addEventListener(
+  "click",
+  publishAdultMagnet
+);
+
+
+$("resetAdultMagnetBtn")?.addEventListener(
+  "click",
+  resetAdultMagnetForm
+);
+
+
+// ============================================================
 // PRIVATE LIBRARY
 // ============================================================
 
@@ -6192,7 +6891,8 @@ let privateTitleAccessAllowed = new Set();
 
 function resetPrivateContentForm(){
   privateEditingContentId = null;
-  $("privateContentFormTitle").textContent = "Add content";
+  $("privateContentEditorCard")?.classList.add("hidden");
+  $("privateContentFormTitle").textContent = "Edit existing title";
   $("savePrivateContentBtn").textContent = "Add title";
   $("cancelPrivateContentEditBtn").classList.add("hidden");
   $("privateContentTitle").value = "";
@@ -6220,7 +6920,7 @@ function renderPrivateContent(){
   $("privateContentCount").textContent = String(privateLibraryContent.length);
 
   if(!privateLibraryContent.length){
-    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Upload a video or add a direct streaming URL.</div>';
+    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Add a magnet link above.</div>';
     renderPrivateTitleAccess();
     return;
   }
@@ -6234,7 +6934,11 @@ function renderPrivateContent(){
             ${esc(item.category || "Private")} · Sort ${Number(item.sort_order ?? 100)}<br>
             ${item.creator ? `Creator: ${esc(item.creator)}<br>` : ""}
             ${item.licence ? `Licence: ${esc(item.licence)}<br>` : ""}
-            ${esc(item.video_url || "")}
+            ${esc(
+              String(item.video_url || "").startsWith("panther-torbox://")
+                ? "TorBox magnet source"
+                : (item.video_url || "")
+            )}
           </div>
         </div>
         <span class="pill ${item.enabled === false ? "disabled" : "enabled"}">${item.enabled === false ? "DISABLED" : "ENABLED"}</span>
@@ -6286,6 +6990,8 @@ function editPrivateContent(id){
   if(!item) return;
 
   privateEditingContentId = id;
+  $("privateContentEditorCard")?.classList.remove("hidden");
+  $("privateContentEditorCard")?.scrollIntoView({behavior:"smooth",block:"start"});
   $("privateContentFormTitle").textContent = "Edit content";
   $("savePrivateContentBtn").textContent = "Save changes";
   $("cancelPrivateContentEditBtn").classList.remove("hidden");
