@@ -2076,13 +2076,50 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <input id="adultMagnetTitle" maxlength="180" placeholder="Auto-filled from TorBox"/>
 </div>
 <div>
-<div class="field-label">Category</div>
-<input id="adultMagnetCategory" maxlength="100" placeholder="Adult" value="Adult"/>
+<div class="field-label">Folder</div>
+<select id="adultMagnetFolder"><option value="Adult">Adult</option></select>
+<div class="small-text">Choose the folder for this video before publishing.</div>
+</div>
+<div>
+<div class="card-flat" style="margin-top:12px">
+  <div class="field-label">Delete existing folder</div>
+  <div class="small-text">Select the folder above, then choose whether to keep or delete its published videos. This does not delete TorBox downloads.</div>
+  <div class="cache-actions" style="margin-top:10px">
+    <button id="adultDeleteFolderOnlyBtn" type="button">Delete folder — keep videos</button>
+    <button id="adultDeleteFolderAndVideosBtn" type="button" class="danger">Delete folder and videos</button>
+  </div>
+  <div class="status" id="adultDeleteFolderStatus"></div>
+</div>
+<div class="field-label">Create new folder</div>
+<div class="private-upload-row"><input id="adultNewFolderName" maxlength="100" placeholder="New folder name"><button id="adultCreateFolderBtn" type="button">Create folder</button></div>
+<input id="adultMagnetCategory" type="hidden" value="Adult"/>
+<div class="card-flat" style="margin-top:12px">
+  <div class="field-label">Folder image — upload or URL</div>
+  <div class="small-text">Select a folder above. Upload an image from your device OR paste a direct image URL.</div>
+  <input id="adultFolderImageUrl" type="url" inputmode="url" placeholder="https://example.com/folder.jpg" style="margin-top:10px"/>
+  <button id="adultSaveFolderImageUrlBtn" type="button" style="margin-top:8px">Use image URL</button>
+  <div class="private-upload-row" style="margin-top:10px">
+    <input id="adultFolderImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/>
+    <button id="adultUploadFolderImageBtn" type="button">Upload folder image</button>
+    <button id="adultRemoveFolderImageBtn" type="button" class="danger">Remove image</button>
+  </div>
+  <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <img id="adultFolderImagePreview" alt="Selected folder artwork" style="display:none;object-fit:cover;width:140px;height:90px;border-radius:10px;border:1px solid #33404c"/>
+    <span id="adultFolderImageLabel" class="small-text">No folder image assigned</span>
+  </div>
+  <div id="adultFolderImageStatus" class="status"></div>
+  <div class="small-text">Folder images are saved in Supabase and displayed in Panther after the Android update. Existing browser-only images must be saved again once after the SQL setup.</div>
+</div>
 </div>
 <div class="wide">
-<div class="field-label">Poster URL</div>
+<div class="field-label">Video poster — upload or URL</div>
 <input id="adultMagnetPosterUrl" inputmode="url" placeholder="https://example.com/poster.jpg" type="url"/>
-<div class="small-text">Optional. You can also edit the title later in the normal Private Library content editor.</div>
+<div class="private-upload-row" style="margin-top:10px">
+  <input id="adultMagnetPosterFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/>
+  <button id="adultUploadMagnetPosterBtn" type="button">Upload poster</button>
+</div>
+<div id="adultMagnetPosterUploadStatus" class="status"></div>
+<div class="small-text">Choose either a direct image URL or attach an image. Uploaded images automatically fill in the URL field.</div>
 </div>
 <div class="wide">
 <div class="field-label">Description</div>
@@ -2111,6 +2148,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <button class="primary" id="addAdultMagnetBtn">Add to TorBox</button>
 <button disabled="" id="refreshAdultMagnetBtn">Refresh status</button>
 <button class="primary" disabled="" id="publishAdultMagnetBtn">Publish to Adult</button>
+<button class="primary" disabled="" id="publishAllAdultMagnetBtn">Publish ALL video files</button>
 <button id="resetAdultMagnetBtn">Clear</button>
 </div>
 </div>
@@ -2148,9 +2186,9 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 </div>
 <div class="wide">
 <div class="field-label">Poster</div>
-<div class="private-upload-row hidden">
-<input accept="image/*,.jpg,.jpeg,.png,.webp" disabled="" id="privateContentPosterFile" type="file"/>
-<button disabled="" id="uploadPrivatePosterBtn" type="button">Upload poster</button>
+<div class="private-upload-row">
+<input accept="image/*,.jpg,.jpeg,.png,.webp" id="privateContentPosterFile" type="file"/>
+<button id="uploadPrivatePosterBtn" type="button">Upload poster</button>
 </div>
 <div class="small-text" id="privatePosterUploadStatus"></div>
 <input id="privateContentPosterUrl" placeholder="Optional poster URL" style="margin-top:8px"/>
@@ -2175,7 +2213,32 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
 <span class="pill" id="privateContentCount">0</span>
 </div>
-<div class="private-content-list" id="privateContentList"></div>
+<div class="private-upload-row" style="margin-bottom:12px">
+<label for="adultLibraryFolderFilter" class="field-label" style="margin:0">Show folder</label>
+<select id="adultLibraryFolderFilter" style="flex:1;min-width:160px"><option value="">All folders</option></select>
+</div>
+<details id="manualSceneCollectionsPanel" class="add-service-panel" style="margin-bottom:12px">
+  <summary>Manual Scene Collections</summary>
+  <div class="add-service-body">
+    <div class="small-text">Select videos below (newly published or existing). Select in the order they should play; enter a collection title and save. Only videos from the same folder can be grouped.</div>
+    <div class="private-library-form" style="margin-top:10px">
+      <div><div class="field-label">Collection title</div><input id="manualCollectionTitle" placeholder="e.g. My Film — all scenes" maxlength="180"></div>
+      <div class="small-text" id="manualCollectionSelection">No videos selected</div>
+      <div class="cache-actions">
+        <button class="primary" id="saveManualCollectionBtn" type="button">Group selected videos</button>
+        <button id="removeManualCollectionBtn" type="button">Ungroup selected videos</button>
+        <button id="clearManualCollectionBtn" type="button">Clear selection</button>
+      </div>
+      <div class="status" id="manualCollectionStatus"></div>
+    </div>
+  </div>
+</details>
+<details id="privateTitlesListPanel" class="add-service-panel" style="margin-bottom:0">
+  <summary>Show / hide library titles <span class="pill" style="margin-left:auto;margin-right:12px">Tap to expand</span></summary>
+  <div class="add-service-body">
+    <div class="private-content-list" id="privateContentList"></div>
+  </div>
+</details>
 </div>
 </div>
 <div style="height:16px"></div>
@@ -2184,7 +2247,13 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 <div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
 <button class="small" id="reloadPrivateAccountsBtn">Reload accounts</button>
 </div>
+<div style="margin:12px 0 10px">
+  <label class="field-label" for="privateAccountUsernameSearch">Search account username</label>
+  <input id="privateAccountUsernameSearch" type="search" placeholder="Type a username to find an account..." autocomplete="off" spellcheck="false" aria-controls="privateAccountsList">
+  <div id="privateAccountSearchCount" class="small-text" style="margin-top:7px" aria-live="polite"></div>
+</div>
 <div class="status" id="privateAccountStatus"></div>
+<div id="privateAccountNoMatches" class="empty-note hidden" style="margin-bottom:10px">No accounts match that username.</div>
 <div class="private-account-list" id="privateAccountsList"></div>
 </div>
 <div class="private-title-access hidden" id="privateTitleAccessPanel">
@@ -6182,7 +6251,7 @@ function resetAdultMagnetForm(){
 
   if($("adultMagnetLink")) $("adultMagnetLink").value = "";
   if($("adultMagnetTitle")) $("adultMagnetTitle").value = "";
-  if($("adultMagnetCategory")) $("adultMagnetCategory").value = "Adult";
+  if($("adultMagnetCategory")) $("adultMagnetCategory").value = $("adultMagnetFolder")?.value || "Adult";
   if($("adultMagnetPosterUrl")) $("adultMagnetPosterUrl").value = "";
   if($("adultMagnetDescription")) $("adultMagnetDescription").value = "";
   if($("adultMagnetSortOrder")) $("adultMagnetSortOrder").value = "100";
@@ -6727,6 +6796,60 @@ async function refreshAdultMagnetStatus(background = false){
 }
 
 
+let adultMagnetBulkPublishing = false;
+async function publishAllAdultMagnet(){
+  if(adultMagnetBulkPublishing) return;
+  adultMagnetBulkPublishing = true;
+  const button = $("publishAllAdultMagnetBtn");
+  if(!adultMagnetTorrentId || !adultMagnetTorrentReady || !adultMagnetFiles.length){
+    setStatus($("adultMagnetStatus"), "Wait until TorBox lists ready video files.", false);
+    return;
+  }
+  const files = [...adultMagnetFiles];
+  const baseTitle = String($("adultMagnetTitle")?.value || "").trim();
+  const folder = String($("adultMagnetFolder")?.value || "Adult").trim() || "Adult";
+  const common = {
+    torrent_id: adultMagnetTorrentId,
+    category: folder,
+    poster_url: String($("adultMagnetPosterUrl")?.value || "").trim(),
+    description: String($("adultMagnetDescription")?.value || "").trim(),
+    creator: "TorBox",
+    enabled: !!$("adultMagnetEnabled")?.checked,
+    sort_order: Number.parseInt($("adultMagnetSortOrder")?.value || "100", 10) || 100
+  };
+  button.disabled = true;
+  $("publishAdultMagnetBtn").disabled = true;
+  let succeeded = 0;
+  const failures = [];
+  try{
+    for(let i=0; i<files.length; i++){
+      const file = files[i];
+      const fileTitle = adultMagnetCleanTitle(file.name || `Scene ${i+1}`);
+      const title = baseTitle && files.length > 1
+        ? `${baseTitle} - ${fileTitle}`
+        : (baseTitle || fileTitle);
+      setStatus($("adultMagnetStatus"), `Publishing ${i+1} of ${files.length}: ${title}`);
+      try{
+        await callAdultMagnetAdmin("publish", {...common, file_id: Number(file.id), title});
+        succeeded++;
+      }catch(error){
+        failures.push(`${file.name || file.id}: ${error?.message || String(error)}`);
+      }
+    }
+    await loadPrivateContent();
+    const summary = `Published ${succeeded} of ${files.length} videos to folder "${folder}".`;
+    setStatus($("adultMagnetStatus"), failures.length
+      ? summary + " Failed: " + failures.join(" | ")
+      : summary,
+      failures.length === 0);
+    // Keep the torrent and file list available so failed files can be retried.
+  } finally {
+    adultMagnetBulkPublishing = false;
+    button.disabled = !(adultMagnetTorrentReady && adultMagnetFiles.length > 0);
+    $("publishAdultMagnetBtn").disabled = !(adultMagnetTorrentReady && adultMagnetSelectedFileId !== null);
+  }
+}
+
 async function publishAdultMagnet(){
   if(
     !adultMagnetTorrentId ||
@@ -6780,7 +6903,7 @@ async function publishAdultMagnet(){
 
           category:
             String(
-              $("adultMagnetCategory")?.value || "Adult"
+              $("adultMagnetFolder")?.value || "Adult"
             ).trim() || "Adult",
 
           poster_url:
@@ -6871,6 +6994,21 @@ $("publishAdultMagnetBtn")?.addEventListener(
   publishAdultMagnet
 );
 
+$("publishAllAdultMagnetBtn")?.addEventListener("click", publishAllAdultMagnet);
+
+// Keep the bulk action in sync with the latest TorBox status, even after resetting.
+const publishAllButton = $("publishAllAdultMagnetBtn");
+if(publishAllButton){
+  const syncPublishAllState = () => {
+    publishAllButton.disabled = adultMagnetBulkPublishing || !(adultMagnetTorrentReady && adultMagnetFiles.length > 0);
+  };
+  const singleButton = $("publishAdultMagnetBtn");
+  if(singleButton){
+    new MutationObserver(syncPublishAllState).observe(singleButton, {attributes:true, attributeFilter:["disabled"]});
+  }
+  syncPublishAllState();
+}
+
 
 $("resetAdultMagnetBtn")?.addEventListener(
   "click",
@@ -6913,6 +7051,216 @@ function resetPrivateContentForm(){
 }
 
 
+// Folders use the existing category field; no change to TorBox playback.
+// Empty folders are remembered by this browser until content is published in them.
+const adultFolderStorageKey = "panther_adult_folder_names_v1";
+const adultFolderImagesKey = "panther_adult_folder_images_v1";
+let adultFolderSharedImages = {};
+let adultFolderImagesLoaded = false;
+function getAdultFolderImages(){ return adultFolderSharedImages; }
+async function loadAdultFolderImages(){
+  const rows = await rpc("panther_admin_list_private_folder_artwork", {});
+  adultFolderSharedImages = {};
+  for(const row of (Array.isArray(rows) ? rows : [])) {
+    adultFolderSharedImages[String(row.folder_name || "").trim()] = String(row.image_url || "");
+  }
+  adultFolderImagesLoaded = true;
+  updateAdultFolderImagePreview();
+}
+async function saveAdultFolderImage(folder, url){
+  await rpc("panther_admin_set_private_folder_artwork", {p_folder_name:folder,p_image_url:url});
+  if(url) adultFolderSharedImages[folder] = url;
+  else delete adultFolderSharedImages[folder];
+  updateAdultFolderImagePreview();
+}
+function updateAdultFolderImagePreview(){
+  const folder = $("adultMagnetFolder")?.value || "Adult";
+  const url = getAdultFolderImages()[folder] || "";
+  const preview = $("adultFolderImagePreview");
+  const label = $("adultFolderImageLabel");
+  if(preview){
+    preview.style.display = url ? "block" : "none";
+    if(url) preview.src = url; else preview.removeAttribute("src");
+  }
+  if(label) label.textContent = url ? `Image set for ${folder}` : `No image for ${folder}`;
+  const urlInput = $("adultFolderImageUrl");
+  if(urlInput) urlInput.value = url;
+}
+$("adultSaveFolderImageUrlBtn")?.addEventListener("click", async () => {
+  const folder = $("adultMagnetFolder")?.value || "Adult";
+  const url = String($("adultFolderImageUrl")?.value || "").trim();
+  const status = $("adultFolderImageStatus");
+  if(!/^https:\/\/[^\s]+$/i.test(url)) {
+    setStatus(status, "Enter a valid HTTPS image URL.", false); return;
+  }
+  try {
+    await saveAdultFolderImage(folder,url);
+    setStatus(status, `Image URL saved for ${folder} to Supabase.`, true);
+  } catch(error) { setStatus(status, error?.message || "Unable to save folder image", false); }
+});
+$("adultUploadMagnetPosterBtn")?.addEventListener("click", async () => {
+  const file = $("adultMagnetPosterFile")?.files?.[0];
+  const button = $("adultUploadMagnetPosterBtn");
+  const status = $("adultMagnetPosterUploadStatus");
+  if(!file) { setStatus(status, "Choose a poster image first.", false); return; }
+  if(!/\.(jpe?g|png|webp|gif)$/i.test(file.name) || (file.type && !["image/jpeg","image/png","image/webp","image/gif"].includes(file.type))){
+    setStatus(status, "Choose a JPG, PNG, WebP or GIF image.", false); return;
+  }
+  if(file.size > 8 * 1024 * 1024){ setStatus(status, "Poster must be smaller than 8 MB.", false); return; }
+  button.disabled = true;
+  setStatus(status, "Uploading poster…");
+  try {
+    const result = await uploadPrivateMedia(file, "poster");
+    $("adultMagnetPosterUrl").value = result.url;
+    $("adultMagnetPosterFile").value = "";
+    setStatus(status, "Poster uploaded. Its URL will be used when publishing.", true);
+  } catch(error){ setStatus(status, error?.message || "Poster upload failed.", false); }
+  finally { button.disabled = false; }
+});
+$("adultUploadFolderImageBtn")?.addEventListener("click", async () => {
+  const file = $("adultFolderImageFile")?.files?.[0];
+  const status = $("adultFolderImageStatus");
+  const button = $("adultUploadFolderImageBtn");
+  const folder = $("adultMagnetFolder")?.value || "Adult";
+  if(!file){ setStatus(status, "Choose an image attachment first.", false); return; }
+  if(!/\.(jpe?g|png|webp|gif)$/i.test(file.name) || (file.type && !["image/jpeg","image/png","image/webp","image/gif"].includes(file.type))){
+    setStatus(status, "Use a JPG, PNG, WebP or GIF image.", false); return;
+  }
+  if(file.size > 8 * 1024 * 1024){ setStatus(status, "Folder image must be smaller than 8 MB.", false); return; }
+  button.disabled = true;
+  setStatus(status, `Uploading image for ${folder}…`);
+  try {
+    const result = await uploadPrivateMedia(file, "poster");
+    await saveAdultFolderImage(folder,result.url);
+    $("adultFolderImageFile").value = "";
+    setStatus(status, `Image uploaded and saved for ${folder} in Supabase.`, true);
+  } catch(error) { setStatus(status, error?.message || "Image upload failed.", false); }
+  finally { button.disabled = false; }
+});
+$("adultRemoveFolderImageBtn")?.addEventListener("click", async () => {
+  const folder = $("adultMagnetFolder")?.value || "Adult";
+  try {
+    await saveAdultFolderImage(folder,"");
+    setStatus($("adultFolderImageStatus"), `Folder image removed for ${folder}.`, true);
+  } catch(error) { setStatus($("adultFolderImageStatus"), error?.message || "Unable to remove image", false); }
+});
+function getAdultFolders(){
+  let saved = [];
+  try { saved = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]"); } catch(_) {}
+  const names = ["Adult", ...saved, ...privateLibraryContent.map(x => x.category || "Adult")];
+  return [...new Set(names.map(x => String(x || "").trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+}
+function renderAdultFolderChoices(){
+  if(!adultFolderImagesLoaded && accessToken){
+    adultFolderImagesLoaded = true;
+    loadAdultFolderImages().catch(e => { adultFolderImagesLoaded = false; setStatus($("adultFolderImageStatus"), e?.message || "Unable to load shared folder images", false); });
+  }
+  const folderSelect = $("adultMagnetFolder");
+  const filter = $("adultLibraryFolderFilter");
+  const folders = getAdultFolders();
+  if(folderSelect){
+    const current = folderSelect.value || "Adult";
+    folderSelect.innerHTML = folders.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
+    folderSelect.value = folders.includes(current) ? current : "Adult";
+    if($("adultMagnetCategory")) $("adultMagnetCategory").value = folderSelect.value;
+    updateAdultFolderImagePreview();
+  }
+  if(filter){
+    const current = filter.value;
+    filter.innerHTML = '<option value="">All folders</option>' + folders.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
+    filter.value = folders.includes(current) ? current : "";
+  }
+}
+$("adultCreateFolderBtn")?.addEventListener("click", () => {
+  const name = String($("adultNewFolderName")?.value || "").trim();
+  if(!name){ alert("Enter a folder name."); return; }
+  const folders = getAdultFolders();
+  if(!folders.includes(name)){
+    try { localStorage.setItem(adultFolderStorageKey, JSON.stringify([...folders,name])); }
+    catch(_) { alert("Could not remember empty folder in this browser."); }
+  }
+  renderAdultFolderChoices();
+  $("adultMagnetFolder").value = name;
+  $("adultMagnetCategory").value = name;
+  updateAdultFolderImagePreview();
+  $("adultNewFolderName").value = "";
+  setStatus($("adultMagnetStatus"), `Folder "${name}" selected. Publish a video into it to store the folder in Supabase.`, true);
+});
+// Remove a folder safely without deleting TorBox downloads or Storage objects.
+let adultFolderDeletionBusy = false;
+async function deleteAdultLibraryFolder(deleteVideos) {
+  if(adultFolderDeletionBusy) return;
+  const folder = String($("adultMagnetFolder")?.value || "").trim();
+  const status = $("adultDeleteFolderStatus");
+  if(!folder) { setStatus(status,"Choose a folder first.",false); return; }
+  if(folder === "Adult") { setStatus(status,"Adult is the default folder and cannot be deleted. You can move its videos into another folder using Edit.",false); return; }
+  const matches = privateLibraryContent.filter(item => String(item.category || "Adult").trim() === folder);
+  const target = "Uncategorised";
+  if(!deleteVideos && folder === target) {
+    setStatus(status,"Uncategorised is the destination for retained videos and cannot be moved into itself.",false);
+    return;
+  }
+  const message = deleteVideos
+    ? `DELETE FOLDER AND VIDEOS?\n\nFolder: ${folder}\nPublished titles: ${matches.length}\n\nThis permanently deletes the library records, including title access assignments. It does NOT delete files from TorBox or Supabase Storage.\n\nContinue?`
+    : `DELETE FOLDER BUT KEEP VIDEOS?\n\nFolder: ${folder}\nPublished titles: ${matches.length}\n\nAll videos will move to ${target}. Their IDs and playback links will remain unchanged.\n\nContinue?`;
+  if(!confirm(message)) return;
+  if(deleteVideos && matches.length > 0 && !confirm(`FINAL CONFIRMATION: Delete ${matches.length} published title(s) in ${folder}?`)) return;
+  adultFolderDeletionBusy = true;
+  const buttons = [$("adultDeleteFolderOnlyBtn"),$("adultDeleteFolderAndVideosBtn")];
+  buttons.forEach(b=>{if(b)b.disabled=true;});
+  let done = 0;
+  try {
+    for(const item of matches) {
+      setStatus(status,`${deleteVideos ? "Deleting" : "Moving"} ${done+1} of ${matches.length}: ${item.title || "Untitled"}…`);
+      if(deleteVideos) {
+        await rpc("panther_admin_delete_private_content",{p_id:item.id});
+      } else {
+        await rpc("panther_admin_save_private_content",{
+          p_id:item.id,
+          p_title:item.title || "Private video",
+          p_description:item.description || "",
+          p_video_url:item.video_url || "",
+          p_poster_url:item.poster_url || "",
+          p_category:target,
+          p_creator:item.creator || "",
+          p_licence:item.licence || "",
+          p_attribution:item.attribution || "",
+          p_source_url:item.source_url || "",
+          p_enabled:item.enabled !== false,
+          p_sort_order:Number(item.sort_order ?? 100)
+        });
+      }
+      done++;
+    }
+    // Remove the artwork assignment, but never delete the actual image file.
+    if(getAdultFolderImages()[folder]) await saveAdultFolderImage(folder,"");
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]"); } catch(_) {}
+    localStorage.setItem(adultFolderStorageKey,JSON.stringify(
+      (Array.isArray(saved) ? saved : []).filter(name=>String(name).trim()!==folder)
+    ));
+    // Clear the chosen folder before rebuilding selectors.
+    if($("adultMagnetFolder")) $("adultMagnetFolder").value = "Adult";
+    if($("adultLibraryFolderFilter")) $("adultLibraryFolderFilter").value = "";
+    await loadPrivateContent();
+    setStatus(status,`Folder "${folder}" deleted. ${done} title(s) ${deleteVideos ? "removed from the library" : "moved to Uncategorised"}.`,true);
+  } catch(error) {
+    try { await loadPrivateContent(); } catch(_) {}
+    setStatus(status,`Stopped after ${done} of ${matches.length} title(s). ${error?.message || String(error)}. Resolve this error before retrying.`,false);
+  } finally {
+    adultFolderDeletionBusy = false;
+    buttons.forEach(b=>{if(b)b.disabled=false;});
+  }
+}
+$("adultDeleteFolderOnlyBtn")?.addEventListener("click",()=>deleteAdultLibraryFolder(false));
+$("adultDeleteFolderAndVideosBtn")?.addEventListener("click",()=>deleteAdultLibraryFolder(true));
+
+$("adultMagnetFolder")?.addEventListener("change", () => {
+  $("adultMagnetCategory").value = $("adultMagnetFolder").value;
+  updateAdultFolderImagePreview();
+});
+$("adultLibraryFolderFilter")?.addEventListener("change", renderPrivateContent);
+
 function renderPrivateContent(){
   const host = $("privateContentList");
   if(!host) return;
@@ -6920,16 +7268,24 @@ function renderPrivateContent(){
   $("privateContentCount").textContent = String(privateLibraryContent.length);
 
   if(!privateLibraryContent.length){
+    renderAdultFolderChoices();
     host.innerHTML = '<div class="empty-note">No Private Library titles yet. Add a magnet link above.</div>';
     renderPrivateTitleAccess();
     return;
   }
 
-  host.innerHTML = privateLibraryContent.map(item => `
+  renderAdultFolderChoices();
+  const selectedFolder = $("adultLibraryFolderFilter")?.value || "";
+  const visibleItems = selectedFolder
+    ? privateLibraryContent.filter(item => (item.category || "Adult") === selectedFolder)
+    : privateLibraryContent;
+  host.innerHTML = visibleItems.length ? visibleItems.map(item => `
     <div class="private-content-card">
       <div class="private-content-head">
         <div>
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><input type="checkbox" class="manual-collection-select" data-id="${esc(item.id)}" ${manualCollectionSelected.includes(String(item.id)) ? "checked" : ""}><span class="small-text">Select for collection ${manualCollectionSelected.includes(String(item.id)) ? `(#${manualCollectionSelected.indexOf(String(item.id))+1})` : ""}</span></label>
           <div class="private-content-title">${esc(item.title || "Untitled")}</div>
+          ${item.manual_group_title ? `<div class="small-text">Collection: ${esc(item.manual_group_title)} · Scene ${Number(item.manual_scene_order || 0)}</div>` : ""}
           <div class="private-content-meta">
             ${esc(item.category || "Private")} · Sort ${Number(item.sort_order ?? 100)}<br>
             ${item.creator ? `Creator: ${esc(item.creator)}<br>` : ""}
@@ -6948,7 +7304,7 @@ function renderPrivateContent(){
         <button class="small danger delete-private-content" data-id="${esc(item.id)}">Delete</button>
       </div>
     </div>
-  `).join("");
+  `).join("") : '<div class="empty-note">No titles in this folder.</div>';
 
   document.querySelectorAll(".edit-private-content").forEach(button => {
     button.onclick = () => editPrivateContent(button.dataset.id);
@@ -6958,9 +7314,48 @@ function renderPrivateContent(){
     button.onclick = () => deletePrivateContent(button.dataset.id);
   });
 
+  document.querySelectorAll(".manual-collection-select").forEach(input => {
+    input.onchange = () => {
+      const id = String(input.dataset.id);
+      manualCollectionSelected = manualCollectionSelected.filter(x => x !== id);
+      if(input.checked) manualCollectionSelected.push(id);
+      renderPrivateContent();
+    };
+  });
+  updateManualSelection();
   renderPrivateTitleAccess();
 }
 
+let manualCollectionSelected = [];
+function updateManualSelection(){
+  const label = $("manualCollectionSelection");
+  if(!label) return;
+  label.textContent = manualCollectionSelected.length
+    ? `${manualCollectionSelected.length} selected · order: ` + manualCollectionSelected.map((id,i) => `${i+1}. ${privateLibraryContent.find(x=>String(x.id)===id)?.title || id}`).join(" → ")
+    : "No videos selected";
+}
+$("clearManualCollectionBtn")?.addEventListener("click", () => { manualCollectionSelected=[]; renderPrivateContent(); });
+async function assignManualCollection(title){
+  const items = manualCollectionSelected.map(id=>privateLibraryContent.find(x=>String(x.id)===id)).filter(Boolean);
+  if(!items.length) return setStatus($("manualCollectionStatus"),"Select at least one video.",false);
+  if(new Set(items.map(x=>(x.category||"Uncategorised").trim())).size!==1)
+    return setStatus($("manualCollectionStatus"),"Choose videos from the same folder.",false);
+  if(title && items.length < 2)
+    return setStatus($("manualCollectionStatus"),"Select at least two videos to form a collection.",false);
+  try {
+    setStatus($("manualCollectionStatus"), "Saving collection...");
+    await rpc("panther_admin_assign_private_collection", {p_content_ids:manualCollectionSelected,p_group_title:title});
+    manualCollectionSelected=[];
+    await loadPrivateContent();
+    setStatus($("manualCollectionStatus"), title ? "Collection saved. Restart/reopen the Private Library to refresh." : "Selected videos ungrouped.", true);
+  } catch(e){ setStatus($("manualCollectionStatus"),e?.message||String(e),false); }
+}
+$("saveManualCollectionBtn")?.addEventListener("click",()=>{
+  const title=$("manualCollectionTitle")?.value.trim()||"";
+  if(!title) return setStatus($("manualCollectionStatus"),"Enter a collection name.",false);
+  assignManualCollection(title);
+});
+$("removeManualCollectionBtn")?.addEventListener("click",()=>assignManualCollection(""));
 
 async function loadPrivateContent(){
   if(!$("privateLibrarySection")) return;
@@ -7145,12 +7540,33 @@ function privateAccountLabel(account){
 }
 
 
+// Filter visible account cards without rebuilding forms, so unsaved edits stay intact.
+function filterPrivateAccountsByUsername(){
+  const input = $("privateAccountUsernameSearch");
+  const query = (input?.value || "").trim().toLocaleLowerCase();
+  const cards = document.querySelectorAll("#privateAccountsList .private-account-card");
+  let visible = 0;
+  cards.forEach(card => {
+    const username = (card.dataset.username || "").toLocaleLowerCase();
+    const match = !query || username.includes(query);
+    card.style.display = match ? "" : "none";
+    if(match) visible++;
+  });
+  const count = $("privateAccountSearchCount");
+  if(count) count.textContent = query
+    ? `${visible} of ${cards.length} accounts found`
+    : `${cards.length} registered account${cards.length === 1 ? "" : "s"}`;
+  const noMatches = $("privateAccountNoMatches");
+  if(noMatches) noMatches.classList.toggle("hidden", !query || visible !== 0 || cards.length === 0);
+}
+
 function renderPrivateAccounts(){
   const host = $("privateAccountsList");
   if(!host) return;
 
   if(!privateLibraryAccounts.length){
     host.innerHTML = '<div class="empty-note">No registered Panther accounts yet. Open Panther on a logged-in device first.</div>';
+    filterPrivateAccountsByUsername();
     return;
   }
 
@@ -7159,7 +7575,7 @@ function renderPrivateAccounts(){
     const expiry = toLocalDateTimeValue(account.expires_at);
 
     return `
-      <div class="private-account-card">
+      <div class="private-account-card" data-username="${esc(account.username || "")}">
         <div class="private-account-head">
           <div>
             <div class="private-account-title">${esc(privateAccountLabel(account))}</div>
@@ -7213,6 +7629,7 @@ function renderPrivateAccounts(){
   document.querySelectorAll(".manage-private-titles").forEach(button => {
     button.onclick = () => openPrivateTitleAccess(button.dataset.scope);
   });
+  filterPrivateAccountsByUsername();
 }
 
 
@@ -7358,6 +7775,7 @@ async function loadPrivateLibrary(){
 
 $("reloadPrivateLibraryBtn")?.addEventListener("click", loadPrivateLibrary);
 $("reloadPrivateAccountsBtn")?.addEventListener("click", loadPrivateAccounts);
+$("privateAccountUsernameSearch")?.addEventListener("input", filterPrivateAccountsByUsername);
 
 
 let pantherDevices = [];
@@ -8855,4 +9273,4 @@ boot();
 </script>
 
 </body>
-  </html>
+        </html>
