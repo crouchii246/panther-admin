@@ -2092,6 +2092,15 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 </div>
 <div class="field-label">Create new folder</div>
 <div class="private-upload-row"><input id="adultNewFolderName" maxlength="100" placeholder="New folder name"><button id="adultCreateFolderBtn" type="button">Create folder</button></div>
+<div class="card-flat" style="margin-top:12px">
+  <div class="field-label">Rename selected folder</div>
+  <div class="small-text">Choose the existing folder above and enter its new name. All published videos, scene collections and the folder artwork stay with it. The default Adult folder cannot be renamed.</div>
+  <div class="private-upload-row" style="margin-top:10px">
+    <input id="adultRenameFolderName" maxlength="100" placeholder="New folder name" aria-label="New name for selected folder"/>
+    <button id="adultRenameFolderBtn" type="button" class="primary">Rename folder</button>
+  </div>
+  <div class="status" id="adultRenameFolderStatus" aria-live="polite"></div>
+</div>
 <input id="adultMagnetCategory" type="hidden" value="Adult"/>
 <div class="card-flat" style="margin-top:12px">
   <div class="field-label">Folder image — upload or URL</div>
@@ -7147,7 +7156,9 @@ $("adultRemoveFolderImageBtn")?.addEventListener("click", async () => {
 function getAdultFolders(){
   let saved = [];
   try { saved = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]"); } catch(_) {}
-  const names = ["Adult", ...saved, ...privateLibraryContent.map(x => x.category || "Adult")];
+  const inProgressRename = readAdultPendingRename();
+  const recoveryNames = inProgressRename ? [inProgressRename.from,inProgressRename.to] : [];
+  const names = ["Adult", ...saved, ...privateLibraryContent.map(x => x.category || "Adult"), ...recoveryNames];
   return [...new Set(names.map(x => String(x || "").trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
 }
 function renderAdultFolderChoices(){
@@ -7186,10 +7197,151 @@ $("adultCreateFolderBtn")?.addEventListener("click", () => {
   $("adultNewFolderName").value = "";
   setStatus($("adultMagnetStatus"), `Folder "${name}" selected. Publish a video into it to store the folder in Supabase.`, true);
 });
+// Rename a folder without deleting videos or changing their IDs, TorBox links,
+// existing title-access assignments, collection membership, or watched progress.
+// Uses the same authenticated Admin RPC already used by folder deletion; no new
+// database function, SQL change, or storage upload is required.
+const adultFolderPendingRenameKey = "panther_adult_folder_pending_rename_v1";
+let adultFolderRenameBusy = false;
+
+function readAdultPendingRename(){
+  try {
+    const value = JSON.parse(localStorage.getItem(adultFolderPendingRenameKey) || "null");
+    return value && typeof value.from === "string" && typeof value.to === "string" ? value : null;
+  } catch(_) { return null; }
+}
+
+function readAdultSavedFolders(){
+  try {
+    const value = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]");
+    return Array.isArray(value) ? value.filter(v => typeof v === "string") : [];
+  } catch(_) { return []; }
+}
+
+async function renameAdultLibraryFolder(){
+  if(adultFolderRenameBusy || adultFolderDeletionBusy) return;
+  const folderSelect = $("adultMagnetFolder");
+  const field = $("adultRenameFolderName");
+  const button = $("adultRenameFolderBtn");
+  const status = $("adultRenameFolderStatus");
+  const original = String(folderSelect?.value || "").trim();
+  const next = String(field?.value || "").trim();
+  if(!original){ setStatus(status,"Select the folder you want to rename.",false); return; }
+  if(original === "Adult"){
+    setStatus(status,"Adult is Panther's default folder and cannot be renamed. Create a new folder and move individual videos instead.",false);
+    return;
+  }
+  if(!next || next.length > 100 || /[\r\n\u0000-\u001f\u007f]/.test(next)){
+    setStatus(status,"Enter a valid folder name (1–100 characters, no line breaks).",false);
+    return;
+  }
+  if(next === original){ setStatus(status,"Enter a different folder name.",false); return; }
+  if(next.toLocaleLowerCase() === "adult"){
+    setStatus(status,"Adult is reserved for the default folder.",false);
+    return;
+  }
+  const pending = readAdultPendingRename();
+  if(pending && (pending.from !== original || pending.to !== next)){
+    setStatus(status,`A previous rename from "${pending.from}" to "${pending.to}" is incomplete. Select that original folder and enter the same new name to finish it.`,false);
+    return;
+  }
+  const resuming = !!pending;
+  const locallyKnown = getAdultFolders();
+  if(!resuming && locallyKnown.some(name => name.toLocaleLowerCase() === next.toLocaleLowerCase() && name !== original)){
+    setStatus(status,`A folder called "${next}" already exists. Choose another name to avoid merging folders.`,false);
+    return;
+  }
+  adultFolderRenameBusy = true;
+  if(button) button.disabled = true;
+  try {
+    // Refresh before changing records so we don't skip videos added in another
+    // admin browser after this panel was last loaded.
+    setStatus(status,"Checking existing folders and published videos…");
+    const currentRows = await rpc("panther_admin_list_private_content",{});
+    if(!Array.isArray(currentRows)) throw new Error("Could not confirm the current Private Library catalogue.");
+    // Also load the shared artwork map, not just browser-local image data.
+    await loadAdultFolderImages();
+    const oldEntries = currentRows.filter(item => String(item.category || "Adult").trim() === original);
+    const targetEntries = currentRows.filter(item => String(item.category || "Adult").trim().toLocaleLowerCase() === next.toLocaleLowerCase());
+    if(!resuming && targetEntries.length){
+      throw new Error(`A folder called "${next}" already contains videos. Choose a different name.`);
+    }
+    if(!resuming && Object.keys(getAdultFolderImages()).some(name => name.toLocaleLowerCase() === next.toLocaleLowerCase() && name !== original)){
+      throw new Error(`The name "${next}" already has folder artwork assigned. Choose a different name.`);
+    }
+    const saved = readAdultSavedFolders();
+    const originalExists = oldEntries.length || saved.includes(original) || Object.prototype.hasOwnProperty.call(getAdultFolderImages(),original);
+    if(!originalExists && !resuming) throw new Error("That folder no longer exists. Reload the library and select a folder.");
+    if(!confirm(`Rename Private Library folder?\n\n${original}  →  ${next}\n\n${oldEntries.length} published video(s) will be moved without changing their playback links, IDs, watched progress or access permissions. Folder artwork will also move.\n\nContinue?`)){
+      setStatus(status,"");
+      return;
+    }
+    // Keep a recovery hint so an interrupted multi-video rename can be
+    // resumed even after reloading the panel.
+    localStorage.setItem(adultFolderPendingRenameKey,JSON.stringify({from:original,to:next}));
+    let moved=0;
+    for(const item of oldEntries){
+      setStatus(status,`Renaming folder: updating video ${moved+1} of ${oldEntries.length}…`);
+      await rpc("panther_admin_save_private_content",{
+        p_id:item.id,
+        p_title:item.title || "Private video",
+        p_description:item.description || "",
+        p_video_url:item.video_url || "",
+        p_poster_url:item.poster_url || "",
+        p_category:next,
+        p_creator:item.creator || "",
+        p_licence:item.licence || "",
+        p_attribution:item.attribution || "",
+        p_source_url:item.source_url || "",
+        p_enabled:item.enabled !== false,
+        p_sort_order:Number(item.sort_order ?? 100)
+      });
+      moved++;
+    }
+    // Copy the shared artwork to the renamed folder BEFORE removing the old
+    // mapping; this prevents losing its image if the network fails midway.
+    const oldArtwork = getAdultFolderImages()[original] || "";
+    if(oldArtwork) await saveAdultFolderImage(next,oldArtwork);
+    if(Object.prototype.hasOwnProperty.call(getAdultFolderImages(),original)) {
+      await saveAdultFolderImage(original,"");
+    }
+    // Empty folders are browser-local until a video is published, matching
+    // Panther Admin's existing Create Folder behaviour.
+    const updatedSaved = [...new Set([
+      ...saved.filter(name => name !== original && name !== next),
+      next
+    ])];
+    localStorage.setItem(adultFolderStorageKey,JSON.stringify(updatedSaved));
+    localStorage.removeItem(adultFolderPendingRenameKey);
+    await loadPrivateContent();
+    renderAdultFolderChoices();
+    if($("adultMagnetFolder")) $("adultMagnetFolder").value = next;
+    if($("adultMagnetCategory")) $("adultMagnetCategory").value = next;
+    if($("adultLibraryFolderFilter")) $("adultLibraryFolderFilter").value = next;
+    if(field) field.value = "";
+    updateAdultFolderImagePreview();
+    renderPrivateContent();
+    setStatus(status,`Folder renamed from "${original}" to "${next}". ${moved} video(s) updated${resuming ? " in this attempt" : ""}. Reopen Private Library in Panther to see the new name.`,true);
+  } catch(error){
+    try { await loadPrivateContent(); } catch(_) {}
+    setStatus(status,`Folder rename not completed: ${error?.message || String(error)}. If some videos moved, select the original folder and retry using the SAME new name to finish.`,false);
+  } finally {
+    adultFolderRenameBusy = false;
+    if(button) button.disabled = false;
+  }
+}
+$("adultRenameFolderBtn")?.addEventListener("click",renameAdultLibraryFolder);
+$("adultRenameFolderName")?.addEventListener("keydown",event=>{
+  if(event.key === "Enter"){
+    event.preventDefault();
+    renameAdultLibraryFolder();
+  }
+});
+
 // Remove a folder safely without deleting TorBox downloads or Storage objects.
 let adultFolderDeletionBusy = false;
 async function deleteAdultLibraryFolder(deleteVideos) {
-  if(adultFolderDeletionBusy) return;
+  if(adultFolderDeletionBusy || adultFolderRenameBusy) return;
   const folder = String($("adultMagnetFolder")?.value || "").trim();
   const status = $("adultDeleteFolderStatus");
   if(!folder) { setStatus(status,"Choose a folder first.",false); return; }
@@ -9273,4 +9425,4 @@ boot();
 </script>
 
 </body>
-        </html>
+            </html>
