@@ -906,6 +906,24 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 .support-thread small{display:block;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
 .support-thread strong{display:inline-block;font-size:14px}
 .support-thread .support-unread{color:#55d98b;font-size:11px;font-weight:bold;margin-left:5px}
+/* Dashboard: corner badge sits on Customer Support, not in its label. */
+#quickSupport{position:relative;overflow:visible;isolation:isolate}
+#quickSupport.has-support-unread{
+  border-color:#fa5970;
+  box-shadow:0 0 0 1px rgba(250,89,112,.28),inset 0 0 0 1px rgba(250,89,112,.15);
+}
+.support-quick-unread{
+  position:absolute;top:-9px;right:-8px;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  min-width:27px;height:27px;padding:0 6px;margin:0;
+  border-radius:100px;background:#e52042;color:#fff;
+  border:2px solid #10171f;
+  box-shadow:0 2px 8px rgba(0,0,0,.55);
+  font-weight:900;font-size:13px;line-height:1;
+  pointer-events:none;
+}
+.support-quick-unread[hidden]{display:none!important}
+
 .support-conversation{display:flex;flex-direction:column;min-width:0;border:1px solid var(--border);border-radius:12px;padding:14px;background:var(--panel)}
 .support-conversation-header{font-weight:700;border-bottom:1px solid var(--border);padding:0 0 12px;overflow-wrap:anywhere}
 .support-messages{flex:1;overflow:auto;max-height:380px;min-height:240px;padding:10px 0;display:flex;flex-direction:column;gap:10px}
@@ -1012,7 +1030,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickRemoteAppSettings" class="quick-action">🎛️ Remote Settings</button>
     <button id="quickSeasonalThemes" class="quick-action">🎄 Seasonal Themes</button>
     <button id="quickPrivateLibrary" class="quick-action">🔒 Private Library</button>
-    <button id="quickSupport" class="quick-action">✉ Customer Support</button>
+    <button id="quickSupport" class="quick-action">✉ Customer Support <span id="supportQuickUnreadBadge" class="support-quick-unread" hidden aria-label="Unread support conversations"></span></button>
     <button id="quickDevices" class="quick-action">📱 Devices</button>
     <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
     <button id="quickUpdates" class="quick-action">⬆ Updates</button>
@@ -2473,12 +2491,16 @@ function showLogin() {
   $("loginView").classList.remove("hidden");
   $("appView").classList.add("hidden");
   $("logoutBtn").classList.add("hidden");
+  // Never display the previous admin session's badge on the login screen.
+  supportSetQuickUnread(0);
 }
 
 function showApp() {
   $("loginView").classList.add("hidden");
   $("appView").classList.remove("hidden");
   $("logoutBtn").classList.remove("hidden");
+  // Update the support badge on first login, not only when the inbox opens.
+  window.setTimeout(supportRefreshQuickUnread, 350);
 }
 
 function saveTokens(data) {
@@ -8012,6 +8034,39 @@ function supportDate(value) {
   catch (_) {return String(value);}
 }
 
+// This badge counts conversations with unread customer messages, NOT just
+// conversations opened in the inbox. Does not acknowledge/read any message.
+function supportSetQuickUnread(count) {
+  const badge = $('supportQuickUnreadBadge');
+  const quickButton = $('quickSupport');
+  if (!badge || !quickButton) return;
+  const value = Math.max(0, Math.floor(Number(count) || 0));
+  badge.textContent = value > 99 ? '99+' : String(value);
+  badge.hidden = value === 0;
+  badge.setAttribute('aria-label', `${value} unread support conversations`);
+  quickButton.classList.toggle('has-support-unread', value > 0);
+  quickButton.setAttribute('aria-label', value > 0
+    ? `Customer Support – ${value} unread conversations`
+    : 'Customer Support');
+  quickButton.title = value > 0
+    ? `${value} support conversation${value === 1 ? '' : 's'} with new messages`
+    : 'Customer Support';
+}
+
+let supportQuickBadgeLoading = false;
+async function supportRefreshQuickUnread() {
+  if (!accessToken || $('appView').classList.contains('hidden') || document.hidden) return;
+  // Opening the inbox already polls the full list more frequently.
+  if ($('supportSection').open || supportLoading || supportQuickBadgeLoading) return;
+  supportQuickBadgeLoading = true;
+  try {
+    const result = await supportApi({action:'admin_list'});
+    supportSetQuickUnread((result.threads || []).filter(t=>t.unread).length);
+  } catch (_) {
+    // A temporary connection issue must not wipe out a previously seen badge.
+  } finally {supportQuickBadgeLoading = false;}
+}
+
 function supportRenderThreads() {
   const host = $('supportThreadList');
   host.replaceChildren();
@@ -8020,6 +8075,7 @@ function supportRenderThreads() {
   let unreadTotal = 0;
   for (const t of supportThreads) if(t.unread) unreadTotal++;
   $('supportUnreadCount').textContent = unreadTotal ? `(${unreadTotal} new)` : '';
+  supportSetQuickUnread(unreadTotal);
   const filtered = supportThreads.filter(t =>
     (!openOnly || t.status==='open') &&
     (!search || [t.device_id,t.profile_id,t.account_label,t.status]
@@ -8148,6 +8204,14 @@ $('supportSection').addEventListener('toggle',()=>{
 });
 
 initCollapsibleSections();
+
+// Keep the dashboard badge current without requiring the support section open.
+// Logged-in dashboard: check periodically; requests remain admin-authenticated.
+// This only reads unread status. It never marks messages as read.
+window.setInterval(supportRefreshQuickUnread, 15000);
+document.addEventListener('visibilitychange',()=>{
+  if (!document.hidden) supportRefreshQuickUnread();
+});
 
 boot();
 </script>
