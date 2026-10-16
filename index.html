@@ -934,6 +934,35 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 .support-conversation textarea{width:100%;resize:vertical;margin-top:8px}
 @media(max-width:780px){.support-shell{grid-template-columns:1fr}.support-threads{max-height:210px}.support-messages{min-height:260px}}
 
+
+/* Panther Support Inbox v2 — all other dashboard sections preserved */
+.support-toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.support-toolbar input[type=search]{flex:1 1 220px}
+.support-toolbar select{width:auto;min-width:125px}
+.support-toolbar label{font-size:12px;display:flex;align-items:center;gap:6px}
+.support-toolbar label input{width:auto}
+.support-thread-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.support-tag{font-size:10px;padding:3px 7px;border:1px solid #405060;border-radius:99px;color:#c7d7e5}
+.support-tag.urgent{color:#ff9c9c;border-color:#8c4040}
+.support-tag.pending{color:#ffd38b;border-color:#78613c}
+.support-message{position:relative;min-width:100px}
+.support-message .support-msg-footer{font-size:10px;color:#b6c7d7;text-align:right;margin-top:5px}
+.support-message .support-reply-quote{border-left:3px solid #59ccff;padding:5px 9px;margin:5px 0 8px;background:#0d2334;border-radius:5px;font-size:12px;color:#b9cad6}
+.support-message .support-msg-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.support-message .support-msg-actions button{font-size:11px;padding:4px 8px}
+.support-conversation-head-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--border)}
+.support-conversation-head-controls select{width:auto;flex:1;min-width:110px}
+.support-statusline{font-size:12px;color:#9eb5c8;min-height:20px;margin:8px 0}
+.support-compose-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}
+.support-compose-toolbar select{width:auto;max-width:210px}
+.support-quote-preview{padding:8px;border-left:3px solid #59ccff;color:#bbd3e5;font-size:12px;display:none;margin-top:8px}
+.support-quote-preview.visible{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.support-attachment{color:#a2e8ff;text-decoration:underline;cursor:pointer;font-size:12px;display:block;margin-top:8px}
+.support-quick-manager{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:#0b1219}
+.support-quick-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px}
+.support-quick-manager textarea{min-height:65px}
+@media(max-width:780px){.support-conversation-head-controls select{min-width:105px}.support-quick-grid{grid-template-columns:1fr}.support-toolbar select{width:100%}}
+
 </style>
 
 </head>
@@ -2329,10 +2358,12 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       </div><span class="collapse-arrow">▼</span>
     </summary>
     <div class="collapse-content">
-      <div class="row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
-        <button id="supportReloadBtn">↻ Refresh messages</button>
-        <label class="muted"><input type="checkbox" id="supportOpenOnly" checked> Open conversations only</label>
-        <input type="search" id="supportSearch" placeholder="Search service, account, device or profile" style="flex:1;min-width:230px">
+      <div class="support-toolbar">
+        <button id="supportReloadBtn">↻ Refresh</button>
+        <label><input type="checkbox" id="supportOpenOnly" checked> Open only</label>
+        <select id="supportTicketFilter" aria-label="Ticket status"><option value="all">All tickets</option><option value="open">Open</option><option value="pending">Pending</option><option value="resolved">Resolved</option></select>
+        <select id="supportPriorityFilter" aria-label="Priority"><option value="all">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select>
+        <input type="search" id="supportSearch" placeholder="Search customer, service, device or profile">
       </div>
       <div id="supportAdminStatus" class="status"></div>
       <div class="support-shell">
@@ -2341,12 +2372,32 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         </div>
         <div class="support-conversation">
           <div id="supportConversationHeader" class="support-conversation-header">Select a conversation</div>
+          <div id="supportPresence" class="support-statusline"></div>
+          <div class="support-conversation-head-controls">
+            <select id="supportTicketState" aria-label="Ticket status" disabled><option value="open">Open</option><option value="pending">Pending</option><option value="resolved">Resolved</option></select>
+            <select id="supportTicketPriority" aria-label="Ticket priority" disabled><option value="low">Low priority</option><option value="normal">Normal priority</option><option value="high">High priority</option><option value="urgent">Urgent priority</option></select>
+            <button id="supportSaveTicket" class="small" disabled>Save ticket</button>
+          </div>
           <div id="supportConversationMessages" class="support-messages"></div>
+          <div id="supportQuotePreview" class="support-quote-preview"><span id="supportQuoteText"></span><button id="supportQuoteCancel" class="small">Cancel reply</button></div>
           <textarea id="supportReply" rows="3" maxlength="4000" placeholder="Write your private reply…" disabled></textarea>
+          <div class="support-compose-toolbar">
+            <select id="supportQuickSelect" disabled><option value="">Insert quick reply…</option></select>
+            <button id="supportAttachButton" class="small" disabled>📎 Screenshot</button>
+            <input id="supportAttachFile" type="file" accept="image/jpeg,image/png,image/webp" class="hidden">
+            <span id="supportAttachLabel" class="small-text"></span>
+          </div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
             <button id="supportSendBtn" class="primary" disabled>Send Reply</button>
             <button id="supportToggleStatusBtn" disabled>Close conversation</button>
           </div>
+          <details class="support-quick-manager">
+            <summary>Manage saved quick replies</summary>
+            <div style="height:9px"></div>
+            <div class="support-quick-grid"><input id="supportQuickTitle" maxlength="100" placeholder="Title, e.g. Restart app"><input id="supportQuickOrder" type="number" min="0" value="0" aria-label="Sort order"><button id="supportQuickSave" class="small">Save quick reply</button></div>
+            <textarea id="supportQuickBody" maxlength="4000" placeholder="Quick reply message"></textarea>
+            <div id="supportQuickList" style="display:grid;gap:8px;margin-top:10px"></div>
+          </details>
         </div>
       </div>
     </div>
@@ -8008,199 +8059,209 @@ $("quickUpdates")?.addEventListener("click", () => openSection("updatesSection")
 
 
 // -----------------------------------------------------------------------------
-// SUPPORT INBOX: requires the existing Supabase Auth + panther_admin_require_admin.
-// Edge Function authorizes EACH operation; the frontend never gets service keys.
+// Panther Support Inbox v2. All requests use the existing authenticated Edge Function.
+// Maintains legacy actions, and never exposes the service role key to the browser.
 // -----------------------------------------------------------------------------
-let supportThreads = [];
-let supportThreadId = null;
-let supportActiveThread = null;
-let supportLoading = false;
-let supportPolling = null;
-
-async function supportApi(body) {
-  const response = await apiFetch('/functions/v1/panther-support', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(body)
+let supportThreads=[], supportThreadId=null, supportActiveThread=null;
+let supportLoading=false, supportPolling=null, supportQuickBadgeLoading=false;
+let supportMessages=[], supportQuickReplies=[], supportReplyTo=null, supportAttachment=null;
+let supportThreadBusy=false, supportTypingTimer=null, supportLastTyping=0;
+let supportPollCount=0, supportQuickEditId=null;
+const supportEl=id=>$(id);
+async function supportApi(body){
+  const response=await apiFetch('/functions/v1/panther-support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await readJson(response);
+  if(!response.ok||data?.error)throw new Error(data?.error||`Support request failed (HTTP ${response.status})`);
+  return data||{};
+}
+function supportDate(value){if(!value)return '';try{return new Date(value).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'});}catch(_){return String(value);}}
+function supportTime(value){if(!value)return '';try{return new Date(value).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}catch(_){return '';}}
+function supportSetQuickUnread(count){
+  const badge=supportEl('supportQuickUnreadBadge'),btn=supportEl('quickSupport');if(!badge||!btn)return;
+  const n=Math.max(0,Math.floor(Number(count)||0));badge.textContent=n>99?'99+':String(n);badge.hidden=n===0;
+  badge.setAttribute('aria-label',`${n} unread support conversations`);btn.classList.toggle('has-support-unread',n>0);
+  btn.setAttribute('aria-label',n?`Customer Support – ${n} unread conversations`:'Customer Support');
+  btn.title=n?`${n} support conversation${n===1?'':'s'} with new messages`:'Customer Support';
+}
+async function supportRefreshQuickUnread(){
+  if(!accessToken||supportEl('appView').classList.contains('hidden')||document.hidden||supportEl('supportSection').open||supportLoading||supportQuickBadgeLoading)return;
+  supportQuickBadgeLoading=true;
+  try{const result=await supportApi({action:'admin_list'});supportSetQuickUnread((result.threads||[]).filter(t=>t.unread).length);}catch(_){}finally{supportQuickBadgeLoading=false;}
+}
+function supportRenderThreads(){
+  const host=supportEl('supportThreadList');host.replaceChildren();
+  const search=supportEl('supportSearch').value.trim().toLowerCase(),openOnly=supportEl('supportOpenOnly').checked;
+  const status=supportEl('supportTicketFilter').value,priority=supportEl('supportPriorityFilter').value;
+  const unread=supportThreads.filter(t=>t.unread).length;
+  supportEl('supportUnreadCount').textContent=unread?`(${unread} new)`:'';supportSetQuickUnread(unread);
+  const filtered=supportThreads.filter(t=>{
+    const state=t.ticket_state||(t.status==='closed'?'resolved':'open');
+    return (!openOnly||t.status==='open')&&(status==='all'||state===status)&&(priority==='all'||(t.priority||'normal')===priority)
+      &&(!search||[t.device_id,t.profile_id,t.account_label,t.status,state,t.priority].some(v=>String(v||'').toLowerCase().includes(search)));
   });
-  const data = await readJson(response);
-  if (!response.ok || data?.error) throw new Error(data?.error || `Support request failed (HTTP ${response.status})`);
-  return data || {};
-}
-
-function supportDate(value) {
-  if (!value) return '';
-  try {return new Date(value).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'});}
-  catch (_) {return String(value);}
-}
-
-// This badge counts conversations with unread customer messages, NOT just
-// conversations opened in the inbox. Does not acknowledge/read any message.
-function supportSetQuickUnread(count) {
-  const badge = $('supportQuickUnreadBadge');
-  const quickButton = $('quickSupport');
-  if (!badge || !quickButton) return;
-  const value = Math.max(0, Math.floor(Number(count) || 0));
-  badge.textContent = value > 99 ? '99+' : String(value);
-  badge.hidden = value === 0;
-  badge.setAttribute('aria-label', `${value} unread support conversations`);
-  quickButton.classList.toggle('has-support-unread', value > 0);
-  quickButton.setAttribute('aria-label', value > 0
-    ? `Customer Support – ${value} unread conversations`
-    : 'Customer Support');
-  quickButton.title = value > 0
-    ? `${value} support conversation${value === 1 ? '' : 's'} with new messages`
-    : 'Customer Support';
-}
-
-let supportQuickBadgeLoading = false;
-async function supportRefreshQuickUnread() {
-  if (!accessToken || $('appView').classList.contains('hidden') || document.hidden) return;
-  // Opening the inbox already polls the full list more frequently.
-  if ($('supportSection').open || supportLoading || supportQuickBadgeLoading) return;
-  supportQuickBadgeLoading = true;
-  try {
-    const result = await supportApi({action:'admin_list'});
-    supportSetQuickUnread((result.threads || []).filter(t=>t.unread).length);
-  } catch (_) {
-    // A temporary connection issue must not wipe out a previously seen badge.
-  } finally {supportQuickBadgeLoading = false;}
-}
-
-function supportRenderThreads() {
-  const host = $('supportThreadList');
-  host.replaceChildren();
-  const search = $('supportSearch').value.trim().toLowerCase();
-  const openOnly = $('supportOpenOnly').checked;
-  let unreadTotal = 0;
-  for (const t of supportThreads) if(t.unread) unreadTotal++;
-  $('supportUnreadCount').textContent = unreadTotal ? `(${unreadTotal} new)` : '';
-  supportSetQuickUnread(unreadTotal);
-  const filtered = supportThreads.filter(t =>
-    (!openOnly || t.status==='open') &&
-    (!search || [t.device_id,t.profile_id,t.account_label,t.status]
-      .some(v=>String(v||'').toLowerCase().includes(search)))
-  );
-  if (!filtered.length) {
-    const empty = document.createElement('div');
-    empty.className='muted';
-    empty.textContent='No conversations match this filter.';
-    host.append(empty);
-    return;
-  }
-  for (const thread of filtered) {
-    const row = document.createElement('button');
-    row.className = 'support-thread' + (thread.id===supportThreadId?' active':'');
-    const heading = document.createElement('strong');
-    heading.textContent = thread.account_label || 'Panther customer';
-    row.append(heading);
-    if(thread.unread) {
-      const badge=document.createElement('span');
-      badge.className='support-unread';badge.textContent='● NEW';row.append(badge);
+  if(!filtered.length){const x=document.createElement('div');x.className='empty-note';x.textContent='No conversations match your filters.';host.append(x);return;}
+  for(const t of filtered){
+    const row=document.createElement('button');row.className='support-thread'+(t.id===supportThreadId?' active':'');
+    const h=document.createElement('strong');h.textContent=t.account_label||'Panther customer';row.append(h);
+    if(t.unread){const n=document.createElement('span');n.className='support-unread';n.textContent='● NEW';row.append(n);}
+    const meta=document.createElement('small');meta.textContent=`${supportDate(t.updated_at)} • ${t.device_id||'Device unknown'} • Profile ${t.profile_id||'—'}`;row.append(meta);
+    const tags=document.createElement('div');tags.className='support-thread-meta';
+    for(const [value,kind] of [[t.ticket_state||(t.status==='closed'?'resolved':'open'),'state'],[t.priority||'normal','priority']]){
+      const tag=document.createElement('span');tag.className='support-tag '+(value==='urgent'?'urgent':value==='pending'?'pending':'');tag.textContent=value.toUpperCase();tags.append(tag);
     }
-    const desc=document.createElement('small');
-    desc.textContent = `${thread.status==='closed'?'Closed':'Open'} • ${supportDate(thread.updated_at)} • ${thread.device_id || 'Device unknown'}`;
-    row.append(desc);
-    row.onclick=()=>supportOpenThread(thread.id);
-    host.append(row);
+    row.append(tags);row.onclick=()=>supportOpenThread(t.id);host.append(row);
   }
 }
-
-async function supportLoadThreads(silent=false) {
-  if (!accessToken || supportLoading) return;
-  supportLoading=true;
-  if (!silent) setStatus($('supportAdminStatus'),'Loading support conversations…');
-  try {
-    const result=await supportApi({action:'admin_list'});
-    supportThreads=result.threads||[];
-    supportRenderThreads();
-    if (!silent) setStatus($('supportAdminStatus'),`${supportThreads.length} conversations loaded.`,true);
-  } catch(e) {
-    setStatus($('supportAdminStatus'),e.message||String(e),false);
-  } finally {supportLoading=false;}
+async function supportLoadThreads(silent=false){
+  if(!accessToken||supportLoading)return;supportLoading=true;
+  if(!silent)setStatus(supportEl('supportAdminStatus'),'Loading conversations…');
+  try{const r=await supportApi({action:'admin_list'});supportThreads=r.threads||[];supportRenderThreads();if(!silent)setStatus(supportEl('supportAdminStatus'),`${supportThreads.length} conversations loaded.`,true);}
+  catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}finally{supportLoading=false;}
 }
-
-function supportRenderMessages(messages) {
-  const host=$('supportConversationMessages');
-  host.replaceChildren();
-  for (const msg of messages||[]) {
-    const bubble=document.createElement('div');
-    bubble.className='support-message '+(msg.sender==='admin'?'admin':'customer');
-    const who=document.createElement('small');
-    who.textContent=`${msg.sender==='admin'?'YOU':'CUSTOMER'} • ${supportDate(msg.created_at)}`;
-    const body=document.createElement('div');
-    body.textContent=msg.body||'';  // never inject customer HTML
-    bubble.append(who,body);
+function supportReplyPicker(message){
+  supportReplyTo=message?.id||null;
+  supportEl('supportQuotePreview').classList.toggle('visible',!!supportReplyTo);
+  supportEl('supportQuoteText').textContent=message?`Replying to ${message.sender==='admin'?'your message':'customer'}: ${(message.body||'Attachment').slice(0,130)}`:'';
+  if(message)supportEl('supportReply').focus();
+}
+async function supportViewAttachment(message){
+  try{const r=await supportApi({action:'admin_attachment',thread_id:supportThreadId,purpose:'download',path:message.attachment_path});
+    if(!r.signed_url)throw Error('No attachment URL returned');window.open(r.signed_url,'_blank','noopener,noreferrer');
+  }catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}
+}
+function supportRenderMessages(messages,silent=false){
+  const host=supportEl('supportConversationMessages');
+  const bottom=host.scrollHeight-host.scrollTop-host.clientHeight<100;
+  const focusKey=messages.map(m=>[m.id,m.delivered_at,m.read_at,m.deleted_at].join(':')).join('|');
+  if(silent&&host.dataset.signature===focusKey)return;
+  host.dataset.signature=focusKey;host.replaceChildren();
+  const lookup=new Map(messages.map(m=>[m.id,m]));let previousDay='';
+  for(const msg of messages){
+    const day=(msg.created_at||'').slice(0,10);
+    if(day&&day!==previousDay){const sep=document.createElement('div');sep.className='small-text';sep.style.textAlign='center';sep.style.padding='7px';sep.textContent=new Date(msg.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});host.append(sep);previousDay=day;}
+    const bubble=document.createElement('div');bubble.className='support-message '+(msg.sender==='admin'?'admin':'customer');
+    const who=document.createElement('small');who.textContent=msg.sender==='admin'?'YOU • PANTHER SUPPORT':'CUSTOMER';bubble.append(who);
+    if(msg.reply_to_message_id){const original=lookup.get(msg.reply_to_message_id),quote=document.createElement('div');quote.className='support-reply-quote';quote.textContent=original?(original.body||'Attachment').slice(0,150):'Reply to an earlier message';bubble.append(quote);}
+    const body=document.createElement('div');body.textContent=msg.deleted_at?'Message deleted':(msg.body||'');bubble.append(body);
+    if(msg.attachment_path&&!msg.deleted_at){const link=document.createElement('button');link.className='support-attachment';link.textContent='📷 Open '+(msg.attachment_name||'screenshot');link.onclick=()=>supportViewAttachment(msg);bubble.append(link);}
+    const footer=document.createElement('div');footer.className='support-msg-footer';
+    footer.textContent=supportTime(msg.created_at)+(msg.sender==='admin'?' • '+(msg.read_at?'✓✓ Read':msg.delivered_at?'✓✓ Delivered':'✓ Sent'):'');bubble.append(footer);
+    if(!msg.deleted_at){const actions=document.createElement('div');actions.className='support-msg-actions';
+      const reply=document.createElement('button');reply.textContent='↩ Reply';reply.onclick=()=>supportReplyPicker(msg);actions.append(reply);
+      const copy=document.createElement('button');copy.textContent='Copy';copy.onclick=()=>navigator.clipboard?.writeText(msg.body||'').catch(()=>{});actions.append(copy);
+      if(msg.sender==='admin'){const del=document.createElement('button');del.textContent='Delete';del.onclick=()=>supportDeleteMessage(msg);actions.append(del);}
+      bubble.append(actions);
+    }
     host.append(bubble);
   }
-  host.scrollTop=host.scrollHeight;
+  if(!silent||bottom)host.scrollTop=host.scrollHeight;
 }
-
-async function supportOpenThread(id, silent=false) {
-  supportThreadId=id;
-  try {
-    const result=await supportApi({action:'admin_thread',thread_id:id});
-    if (id!==supportThreadId) return;
-    supportActiveThread=result.thread;
-    const thread=result.thread||{};
-    $('supportConversationHeader').textContent =
-      `${thread.account_label||'Panther customer'} • ${thread.status||'open'} • Device: ${thread.device_id||'—'} • Profile: ${thread.profile_id||'—'}`;
-    supportRenderMessages(result.messages||[]);
-    $('supportReply').disabled=false;
-    $('supportSendBtn').disabled=false;
-    $('supportToggleStatusBtn').disabled=false;
-    $('supportToggleStatusBtn').textContent=thread.status==='closed'?'Reopen conversation':'Close conversation';
-    const existing=supportThreads.find(t=>t.id===id);
-    if(existing) existing.unread=false;
-    supportRenderThreads();
-    if(!silent) setStatus($('supportAdminStatus'),'Conversation loaded.',true);
-  } catch(e) {setStatus($('supportAdminStatus'),e.message||String(e),false);}
+async function supportDeleteMessage(msg){
+  if(!supportThreadId||!confirm('Delete this support message for everyone?'))return;
+  try{await supportApi({action:'admin_delete_message',thread_id:supportThreadId,message_id:msg.id});await supportOpenThread(supportThreadId,true);}
+  catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}
 }
-
-$('supportSendBtn').addEventListener('click',async()=>{
-  if(!supportThreadId) return;
-  const text=$('supportReply').value.trim();
-  if(!text) return setStatus($('supportAdminStatus'),'Write a reply first.',false);
-  const button=$('supportSendBtn');button.disabled=true;
-  try {
-    const result=await supportApi({action:'admin_reply',thread_id:supportThreadId,body:text});
-    $('supportReply').value='';
-    supportActiveThread=result.thread;
-    supportRenderMessages(result.messages);
-    setStatus($('supportAdminStatus'),'Reply sent.',true);
-    await supportLoadThreads(true);
-  } catch(e){setStatus($('supportAdminStatus'),e.message||String(e),false);}
-  finally {button.disabled=false;}
-});
-
-$('supportToggleStatusBtn').addEventListener('click',async()=>{
-  if(!supportThreadId) return;
-  const next=supportActiveThread?.status==='closed'?'open':'closed';
-  try {
-    await supportApi({action:'admin_set_status',thread_id:supportThreadId,status:next});
-    await supportOpenThread(supportThreadId,true);
-    await supportLoadThreads(true);
-    setStatus($('supportAdminStatus'),next==='closed'?'Conversation closed.':'Conversation reopened.',true);
-  } catch(e){setStatus($('supportAdminStatus'),e.message||String(e),false);}
-});
-
-$('supportReloadBtn').addEventListener('click',()=>supportLoadThreads());
-$('supportOpenOnly').addEventListener('change',supportRenderThreads);
-$('supportSearch').addEventListener('input',supportRenderThreads);
-$('quickSupport').addEventListener('click',()=>{openSection('supportSection');supportLoadThreads();});
-$('supportSection').addEventListener('toggle',()=>{
-  if ($('supportSection').open && accessToken) {
-    supportLoadThreads();
-    if (supportPolling===null) {
-      supportPolling=setInterval(async()=>{
-        if(!accessToken || !$('supportSection').open || $('appView').classList.contains('hidden')) return;
-        await supportLoadThreads(true);
-        if(supportThreadId && !$('supportReply').value.trim()) await supportOpenThread(supportThreadId,true);
-      },15000);
-    }
-  } else if (supportPolling!==null) {
-    clearInterval(supportPolling);supportPolling=null;
+async function supportOpenThread(id,silent=false){
+  if(supportThreadBusy)return;supportThreadId=id;supportThreadBusy=true;
+  try{
+    const r=await supportApi({action:'admin_thread',thread_id:id});if(id!==supportThreadId)return;
+    supportActiveThread=r.thread||{};supportMessages=r.messages||[];const t=supportActiveThread;
+    supportEl('supportConversationHeader').textContent=`${t.account_label||'Panther customer'} • Device ${t.device_id||'—'} • Profile ${t.profile_id||'—'}`;
+    supportEl('supportPresence').textContent=t.customer_typing?'● Customer is typing…':'Private customer conversation • Support is online while this inbox is open';
+    supportEl('supportTicketState').value=t.ticket_state||(t.status==='closed'?'resolved':'open');
+    supportEl('supportTicketPriority').value=t.priority||'normal';
+    for(const control of ['supportReply','supportSendBtn','supportToggleStatusBtn','supportTicketState','supportTicketPriority','supportSaveTicket','supportQuickSelect','supportAttachButton'])supportEl(control).disabled=false;
+    supportEl('supportToggleStatusBtn').textContent=t.status==='closed'?'Reopen conversation':'Close conversation';
+    supportRenderMessages(supportMessages,silent);
+    const existing=supportThreads.find(x=>x.id===id);if(existing)existing.unread=false;
+    supportRenderThreads();if(!silent)setStatus(supportEl('supportAdminStatus'),'Conversation loaded.',true);
+  }catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}
+  finally{supportThreadBusy=false;}
+}
+async function supportLoadQuickReplies(){
+  try{const r=await supportApi({action:'admin_quick_replies'});supportQuickReplies=r.quick_replies||[];supportRenderQuickReplies();}
+  catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}
+}
+function supportRenderQuickReplies(){
+  const dropdown=supportEl('supportQuickSelect');dropdown.replaceChildren(new Option('Insert quick reply…',''));
+  const list=supportEl('supportQuickList');list.replaceChildren();
+  for(const q of supportQuickReplies){
+    if(q.is_active)dropdown.add(new Option(q.title,q.id));
+    const row=document.createElement('div');row.className='support-thread-meta';row.style.alignItems='center';
+    const title=document.createElement('span');title.style.flex='1';title.textContent=q.title;row.append(title);
+    const edit=document.createElement('button');edit.className='small';edit.textContent='Edit';edit.onclick=()=>{supportQuickEditId=q.id;supportEl('supportQuickTitle').value=q.title;supportEl('supportQuickBody').value=q.body;supportEl('supportQuickOrder').value=q.sort_order||0;supportEl('supportQuickSave').textContent='Update quick reply';};row.append(edit);
+    const del=document.createElement('button');del.className='small danger';del.textContent='Delete';del.onclick=async()=>{if(!confirm('Delete this saved reply?'))return;try{await supportApi({action:'admin_delete_quick_reply',id:q.id});await supportLoadQuickReplies();}catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}};row.append(del);list.append(row);
   }
+}
+async function supportSend(){
+  const id=supportThreadId,text=supportEl('supportReply').value.trim();if(!id)return;
+  if(!text&&!supportAttachment)return setStatus(supportEl('supportAdminStatus'),'Write a reply or choose a screenshot.',false);
+  const button=supportEl('supportSendBtn');button.disabled=true;
+  try{
+    let attachmentFields={};
+    if(supportAttachment){
+      const file=supportAttachment;
+      const signed=await supportApi({action:'admin_attachment',thread_id:id,purpose:'upload',filename:file.name,mime:file.type});
+      if(!signed.signed_url||!signed.path)throw Error('Attachment upload link was not returned');
+      const uploaded=await fetch(signed.signed_url,{method:'PUT',headers:{'Content-Type':file.type},body:file});
+      if(!uploaded.ok)throw Error('Screenshot upload failed (HTTP '+uploaded.status+')');
+      attachmentFields={attachment_path:signed.path,attachment_name:file.name,attachment_mime:file.type};
+    }
+    const r=await supportApi({action:'admin_reply',thread_id:id,body:text,reply_to_message_id:supportReplyTo,...attachmentFields});
+    if(id!==supportThreadId)return;
+    supportEl('supportReply').value='';supportAttachment=null;supportEl('supportAttachFile').value='';supportEl('supportAttachLabel').textContent='';supportReplyPicker(null);
+    supportActiveThread=r.thread||supportActiveThread;supportMessages=r.messages||[];
+    supportRenderMessages(supportMessages);setStatus(supportEl('supportAdminStatus'),'Reply sent.',true);
+    await supportLoadThreads(true);
+  }catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}
+  finally{button.disabled=false;}
+}
+function supportTyping(){
+  const id=supportThreadId;if(!id)return;
+  const ts=Date.now();if(ts-supportLastTyping>4000){supportLastTyping=ts;supportApi({action:'admin_typing',thread_id:id,typing:true}).catch(()=>{});}
+  clearTimeout(supportTypingTimer);supportTypingTimer=setTimeout(()=>supportApi({action:'admin_typing',thread_id:id,typing:false}).catch(()=>{}),1600);
+}
+supportEl('supportSendBtn').addEventListener('click',supportSend);
+supportEl('supportReply').addEventListener('input',supportTyping);
+supportEl('supportQuoteCancel').addEventListener('click',()=>supportReplyPicker(null));
+supportEl('supportQuickSelect').addEventListener('change',e=>{const q=supportQuickReplies.find(x=>x.id===e.target.value);if(q){const input=supportEl('supportReply');input.value=(input.value.trim()?input.value.trim()+'\n':'')+q.body;input.focus();}e.target.value='';});
+supportEl('supportQuickSave').addEventListener('click',async()=>{
+  const title=supportEl('supportQuickTitle').value.trim(),body=supportEl('supportQuickBody').value.trim();
+  if(!title||!body)return setStatus(supportEl('supportAdminStatus'),'Enter a quick reply title and message.',false);
+  try{await supportApi({action:'admin_save_quick_reply',...(supportQuickEditId?{id:supportQuickEditId}:{}),title,body,sort_order:Number(supportEl('supportQuickOrder').value)||0});supportQuickEditId=null;supportEl('supportQuickTitle').value='';supportEl('supportQuickBody').value='';supportEl('supportQuickSave').textContent='Save quick reply';await supportLoadQuickReplies();setStatus(supportEl('supportAdminStatus'),'Quick reply saved.',true);}
+  catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}
+});
+supportEl('supportAttachButton').addEventListener('click',()=>supportEl('supportAttachFile').click());
+supportEl('supportAttachFile').addEventListener('change',e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10485760){e.target.value='';return setStatus(supportEl('supportAdminStatus'),'Choose JPG, PNG or WebP under 10 MB.',false);}
+  supportAttachment=file;supportEl('supportAttachLabel').textContent='📎 '+file.name;
+});
+supportEl('supportSaveTicket').addEventListener('click',async()=>{
+  if(!supportThreadId)return;
+  const id=supportThreadId;
+  try{await supportApi({action:'admin_set_ticket',thread_id:id,ticket_state:supportEl('supportTicketState').value,priority:supportEl('supportTicketPriority').value});await supportOpenThread(id,true);await supportLoadThreads(true);setStatus(supportEl('supportAdminStatus'),'Ticket updated.',true);}
+  catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}
+});
+supportEl('supportToggleStatusBtn').addEventListener('click',async()=>{
+  if(!supportThreadId)return;const id=supportThreadId,next=supportActiveThread?.status==='closed'?'open':'closed';
+  try{await supportApi({action:'admin_set_status',thread_id:id,status:next});await supportOpenThread(id,true);await supportLoadThreads(true);setStatus(supportEl('supportAdminStatus'),next==='closed'?'Conversation closed.':'Conversation reopened.',true);}
+  catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}
+});
+supportEl('supportReloadBtn').addEventListener('click',async()=>{await supportLoadThreads();if(supportThreadId)await supportOpenThread(supportThreadId,true);});
+for(const id of ['supportOpenOnly','supportTicketFilter','supportPriorityFilter'])supportEl(id).addEventListener('change',supportRenderThreads);
+supportEl('supportSearch').addEventListener('input',supportRenderThreads);
+supportEl('quickSupport').addEventListener('click',()=>{openSection('supportSection');supportLoadThreads();});
+supportEl('supportSection').addEventListener('toggle',()=>{
+  if(supportEl('supportSection').open&&accessToken){
+    supportLoadThreads();supportLoadQuickReplies();
+    if(supportPolling===null)supportPolling=setInterval(async()=>{
+      if(!accessToken||!supportEl('supportSection').open||supportEl('appView').classList.contains('hidden')||document.hidden)return;
+      await supportLoadThreads(true);
+      if(supportThreadId&& !supportThreadBusy)await supportOpenThread(supportThreadId,true);
+      if(supportThreadId&&++supportPollCount%4===0)supportApi({action:'admin_heartbeat',thread_id:supportThreadId}).catch(()=>{});
+    },5000);
+  }else if(supportPolling!==null){clearInterval(supportPolling);supportPolling=null;clearTimeout(supportTypingTimer);}
 });
 
 initCollapsibleSections();
