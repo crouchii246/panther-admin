@@ -897,6 +897,25 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   .remote-settings-grid{grid-template-columns:1fr}
 }
 
+
+/* Panther private support inbox - matches existing admin theme */
+.support-shell{display:grid;grid-template-columns:minmax(230px,1fr) minmax(300px,2fr);gap:12px;min-height:430px}
+.support-threads{border:1px solid var(--border);border-radius:12px;overflow:auto;max-height:600px;padding:8px;background:var(--panel3)}
+.support-thread{width:100%;display:block;text-align:left;border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:10px;margin-bottom:8px;padding:12px}
+.support-thread:hover,.support-thread.active{border-color:var(--accent);background:#172634}
+.support-thread small{display:block;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+.support-thread strong{display:inline-block;font-size:14px}
+.support-thread .support-unread{color:#55d98b;font-size:11px;font-weight:bold;margin-left:5px}
+.support-conversation{display:flex;flex-direction:column;min-width:0;border:1px solid var(--border);border-radius:12px;padding:14px;background:var(--panel)}
+.support-conversation-header{font-weight:700;border-bottom:1px solid var(--border);padding:0 0 12px;overflow-wrap:anywhere}
+.support-messages{flex:1;overflow:auto;max-height:380px;min-height:240px;padding:10px 0;display:flex;flex-direction:column;gap:10px}
+.support-message{max-width:88%;padding:10px 14px;border:1px solid var(--border);border-radius:12px;background:#222b36;white-space:pre-wrap;overflow-wrap:anywhere}
+.support-message.customer{align-self:flex-start}
+.support-message.admin{align-self:flex-end;background:#124358}
+.support-message small{display:block;color:#9cb0c3;margin-bottom:4px}
+.support-conversation textarea{width:100%;resize:vertical;margin-top:8px}
+@media(max-width:780px){.support-shell{grid-template-columns:1fr}.support-threads{max-height:210px}.support-messages{min-height:260px}}
+
 </style>
 
 </head>
@@ -924,6 +943,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#remoteAppSettingsSection">Remote Settings</a>
       <a href="#seasonalThemesSection">Seasonal Themes</a>
       <a href="#privateLibrarySection">Private Library</a>
+      <a href="#supportSection">Support Inbox</a>
       <a href="#devicesSection">Devices</a>
       <a href="#announcementsSection">Announcements</a>
       <a href="#updatesSection">Updates</a>
@@ -992,6 +1012,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickRemoteAppSettings" class="quick-action">🎛️ Remote Settings</button>
     <button id="quickSeasonalThemes" class="quick-action">🎄 Seasonal Themes</button>
     <button id="quickPrivateLibrary" class="quick-action">🔒 Private Library</button>
+    <button id="quickSupport" class="quick-action">✉ Customer Support</button>
     <button id="quickDevices" class="quick-action">📱 Devices</button>
     <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
     <button id="quickUpdates" class="quick-action">⬆ Updates</button>
@@ -2025,261 +2046,293 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   </details>
 
 
-  <details class="section-anchor collapse-card" id="privateLibrarySection">
-<summary>
-<div class="section-heading-left">
-<div class="section-icon">🔒</div>
-<div class="section-title-text">
-<h2>Private Library</h2>
-<div>Add content through Magnet Link / TorBox and control account access.</div>
-</div>
-</div>
-<span class="collapse-arrow">▼</span>
-</summary>
-<div class="collapse-content">
-<div class="cache-explainer">
-<strong>Account-controlled library.</strong>
+  <details id="privateLibrarySection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left">
+        <div class="section-icon">🔒</div>
+        <div class="section-title-text">
+          <h2>Private Library</h2>
+          <div>Manage streaming content and choose exactly which IPTV accounts can access it.</div>
+        </div>
+      </div>
+      <span class="collapse-arrow">▼</span>
+    </summary>
+
+    <div class="collapse-content">
+      <div class="cache-explainer">
+        <strong>Account-controlled library.</strong>
         Panther only shows the Private Library button after the current registered device's IPTV account is approved here.
         You can require a 4–8 digit PIN, set an expiry date, allow the whole library, or select individual titles.
         Only add material you are legally permitted to store and stream, and only make explicit material available to adults.
       </div>
-<div style="height:14px"></div>
 
-<div style="height:14px"></div>
-<div class="card-flat">
-<div class="section-heading">
-<div class="section-heading-left">
-<div class="section-title-text">
-<h2>Adult Magnet / TorBox</h2>
-<div>Paste a magnet link, add it to TorBox, choose the video file, then publish it into Panther's existing Adult / Private Library.</div>
-</div>
-</div>
-<span class="pill" id="adultMagnetStatePill">NOT ADDED</span>
-</div>
-<div class="cache-explainer">
-<strong>Server-side TorBox import.</strong>
-          The magnet link and TorBox API token are never sent to Panther devices.
-          When a user presses Play, Panther receives a temporary protected playback URL and the Adult stream function redirects to TorBox's temporary CDN link.
-          This keeps TorBox credentials out of the APK and avoids sending the video itself through Supabase.
-        </div>
-<div style="height:12px"></div>
-<div class="private-library-form">
-<div class="wide">
-<div class="field-label">Magnet link</div>
-<textarea id="adultMagnetLink" placeholder="magnet:?xt=urn:btih:..." rows="4" spellcheck="false"></textarea>
-<div class="small-text">
-              Paste a standard magnet URI. Panther does not scrape torrent websites; it only processes the magnet you supply.
+      <div style="height:14px"></div>
+
+
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left">
+            <div class="section-title-text">
+              <h2>Catalogue import</h2>
+              <div>Import a licensed provider catalogue from CSV or JSON without uploading each title manually.</div>
             </div>
-</div>
-<div>
-<div class="field-label">Title</div>
-<input id="adultMagnetTitle" maxlength="180" placeholder="Auto-filled from TorBox"/>
-</div>
-<div>
-<div class="field-label">Folder</div>
-<select id="adultMagnetFolder"><option value="Adult">Adult</option></select>
-<div class="small-text">Choose the folder for this video before publishing.</div>
-</div>
-<div>
-<div class="card-flat" style="margin-top:12px">
-  <div class="field-label">Delete existing folder</div>
-  <div class="small-text">Select the folder above, then choose whether to keep or delete its published videos. This does not delete TorBox downloads.</div>
-  <div class="cache-actions" style="margin-top:10px">
-    <button id="adultDeleteFolderOnlyBtn" type="button">Delete folder — keep videos</button>
-    <button id="adultDeleteFolderAndVideosBtn" type="button" class="danger">Delete folder and videos</button>
-  </div>
-  <div class="status" id="adultDeleteFolderStatus"></div>
-</div>
-<div class="field-label">Create new folder</div>
-<div class="private-upload-row"><input id="adultNewFolderName" maxlength="100" placeholder="New folder name"><button id="adultCreateFolderBtn" type="button">Create folder</button></div>
-<div class="card-flat" style="margin-top:12px">
-  <div class="field-label">Rename selected folder</div>
-  <div class="small-text">Choose the existing folder above and enter its new name. All published videos, scene collections and the folder artwork stay with it. The default Adult folder cannot be renamed.</div>
-  <div class="private-upload-row" style="margin-top:10px">
-    <input id="adultRenameFolderName" maxlength="100" placeholder="New folder name" aria-label="New name for selected folder"/>
-    <button id="adultRenameFolderBtn" type="button" class="primary">Rename folder</button>
-  </div>
-  <div class="status" id="adultRenameFolderStatus" aria-live="polite"></div>
-</div>
-<input id="adultMagnetCategory" type="hidden" value="Adult"/>
-<div class="card-flat" style="margin-top:12px">
-  <div class="field-label">Folder image — upload or URL</div>
-  <div class="small-text">Select a folder above. Upload an image from your device OR paste a direct image URL.</div>
-  <input id="adultFolderImageUrl" type="url" inputmode="url" placeholder="https://example.com/folder.jpg" style="margin-top:10px"/>
-  <button id="adultSaveFolderImageUrlBtn" type="button" style="margin-top:8px">Use image URL</button>
-  <div class="private-upload-row" style="margin-top:10px">
-    <input id="adultFolderImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/>
-    <button id="adultUploadFolderImageBtn" type="button">Upload folder image</button>
-    <button id="adultRemoveFolderImageBtn" type="button" class="danger">Remove image</button>
-  </div>
-  <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <img id="adultFolderImagePreview" alt="Selected folder artwork" style="display:none;object-fit:cover;width:140px;height:90px;border-radius:10px;border:1px solid #33404c"/>
-    <span id="adultFolderImageLabel" class="small-text">No folder image assigned</span>
-  </div>
-  <div id="adultFolderImageStatus" class="status"></div>
-  <div class="small-text">Folder images are saved in Supabase and displayed in Panther after the Android update. Existing browser-only images must be saved again once after the SQL setup.</div>
-</div>
-</div>
-<div class="wide">
-<div class="field-label">Video poster — upload or URL</div>
-<input id="adultMagnetPosterUrl" inputmode="url" placeholder="https://example.com/poster.jpg" type="url"/>
-<div class="private-upload-row" style="margin-top:10px">
-  <input id="adultMagnetPosterFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/>
-  <button id="adultUploadMagnetPosterBtn" type="button">Upload poster</button>
-</div>
-<div id="adultMagnetPosterUploadStatus" class="status"></div>
-<div class="small-text">Choose either a direct image URL or attach an image. Uploaded images automatically fill in the URL field.</div>
-</div>
-<div class="wide">
-<div class="field-label">Description</div>
-<textarea id="adultMagnetDescription" placeholder="Optional description" rows="3"></textarea>
-</div>
-<div>
-<div class="field-label">Sort order</div>
-<input id="adultMagnetSortOrder" type="number" value="100"/>
-</div>
-<label class="private-check-card">
-<input checked="" id="adultMagnetEnabled" type="checkbox"/>
-<span>
-<strong>Enable after publishing</strong>
-<div class="small-text">Turn this off if you want to review the item before it appears in Panther.</div>
-</span>
-</label>
-<label class="private-check-card wide">
-<input id="adultMagnetCachedOnly" type="checkbox"/>
-<span>
-<strong>Cached only</strong>
-<div class="small-text">When enabled, TorBox refuses the import unless it is already cached. Leave off to allow TorBox to download an uncached torrent.</div>
-</span>
-</label>
-<div class="cache-actions wide">
-<button id="inspectAdultMagnetBtn">Inspect magnet</button>
-<button class="primary" id="addAdultMagnetBtn">Add to TorBox</button>
-<button disabled="" id="refreshAdultMagnetBtn">Refresh status</button>
-<button class="primary" disabled="" id="publishAdultMagnetBtn">Publish to Adult</button>
-<button class="primary" disabled="" id="publishAllAdultMagnetBtn">Publish ALL video files</button>
-<button id="resetAdultMagnetBtn">Clear</button>
-</div>
-</div>
-<div class="status" id="adultMagnetStatus"></div>
-<div style="height:12px"></div>
-<div class="private-bulk-summary" id="adultMagnetSummary">
-          Paste a magnet and press Inspect magnet or Add to TorBox.
+          </div>
         </div>
-<div style="height:10px"></div>
-<div class="private-content-list" id="adultMagnetFiles"></div>
-</div>
-<div style="height:14px"></div>
 
-<div style="height:14px"></div>
+        <div class="private-bulk-grid">
+          <div class="wide">
+            <div class="field-label">Feed URL</div>
+            <input
+              id="privateCatalogueFeedUrl"
+              type="url"
+              inputmode="url"
+              placeholder="https://provider.example/catalogue.json">
+            <div class="small-text">
+              Paste a JSON/CSV catalogue URL from a provider you are authorised to use.
+              The feed must include a direct playable <strong>video_url</strong>,
+              <strong>stream_url</strong> or <strong>playback_url</strong> for each title.
+            </div>
+          </div>
 
-<div style="height:14px"></div>
-<div class="private-library-grid">
-<div class="card-flat hidden" id="privateContentEditorCard">
-<div class="section-heading">
-<div class="section-heading-left">
-<div class="section-title-text"><h2 id="privateContentFormTitle">Edit existing title</h2><div>Edit the title and metadata of an existing entry.</div></div>
-</div>
-</div>
-<div class="private-library-form">
-<div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"/></div>
-<div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"/></div>
-<div class="wide hidden">
-<div class="field-label">Video</div>
-<div class="private-upload-row">
-<input accept="video/*,.mp4,.webm,.m4v,.mov,.mkv" disabled="" id="privateContentVideoFile" type="file"/>
-<button disabled="" id="uploadPrivateVideoBtn" type="button">Upload video</button>
-</div>
-<div class="small-text" id="privateVideoUploadStatus"></div>
-<input id="privateContentVideoUrl" placeholder="Or paste a direct video URL" style="margin-top:8px"/>
-</div>
-<div class="wide">
-<div class="field-label">Poster</div>
-<div class="private-upload-row">
-<input accept="image/*,.jpg,.jpeg,.png,.webp" id="privateContentPosterFile" type="file"/>
-<button id="uploadPrivatePosterBtn" type="button">Upload poster</button>
-</div>
-<div class="small-text" id="privatePosterUploadStatus"></div>
-<input id="privateContentPosterUrl" placeholder="Optional poster URL" style="margin-top:8px"/>
-</div>
-<div><div class="field-label">Description</div><textarea id="privateContentDescription" maxlength="3000" placeholder="Optional description"></textarea></div>
-<div><div class="field-label">Creator / studio</div><input id="privateContentCreator" maxlength="180" placeholder="Optional"/></div>
-<div><div class="field-label">Licence</div><input id="privateContentLicence" maxlength="180" placeholder="e.g. CC0 / CC BY-SA 4.0"/></div>
-<div><div class="field-label">Attribution</div><input id="privateContentAttribution" maxlength="500" placeholder="Required attribution text if applicable"/></div>
-<div><div class="field-label">Source / licence page</div><input id="privateContentSourceUrl" placeholder="Optional https://..."/></div>
-<div><div class="field-label">Sort order</div><input id="privateContentSortOrder" type="number" value="100"/></div>
-<label class="private-check-card"><input checked="" id="privateContentEnabled" type="checkbox"/><span><strong>Enabled</strong><div class="small-text">Disabled titles stay in the panel but are never returned to Panther.</div></span></label>
-<div class="cache-actions">
-<button class="primary" id="savePrivateContentBtn">Add title</button>
-<button class="hidden" id="cancelPrivateContentEditBtn">Cancel edit</button>
-<button id="reloadPrivateLibraryBtn">Reload</button>
-</div>
-</div>
-<div class="status" id="privateContentStatus"></div>
-</div>
-<div class="card-flat">
-<div class="section-heading">
-<div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
-<span class="pill" id="privateContentCount">0</span>
-</div>
-<div class="private-upload-row" style="margin-bottom:12px">
-<label for="adultLibraryFolderFilter" class="field-label" style="margin:0">Show folder</label>
-<select id="adultLibraryFolderFilter" style="flex:1;min-width:160px"><option value="">All folders</option></select>
-</div>
-<details id="manualSceneCollectionsPanel" class="add-service-panel" style="margin-bottom:12px">
-  <summary>Manual Scene Collections</summary>
-  <div class="add-service-body">
-    <div class="small-text">Select videos below (newly published or existing). Select in the order they should play; enter a collection title and save. Only videos from the same folder can be grouped.</div>
-    <div class="private-library-form" style="margin-top:10px">
-      <div><div class="field-label">Collection title</div><input id="manualCollectionTitle" placeholder="e.g. My Film — all scenes" maxlength="180"></div>
-      <div class="small-text" id="manualCollectionSelection">No videos selected</div>
-      <div class="cache-actions">
-        <button class="primary" id="saveManualCollectionBtn" type="button">Group selected videos</button>
-        <button id="removeManualCollectionBtn" type="button">Ungroup selected videos</button>
-        <button id="clearManualCollectionBtn" type="button">Clear selection</button>
+          <div class="wide">
+            <div class="field-label">Catalogue file</div>
+            <input id="privateCatalogueFile" type="file" accept=".csv,.json,text/csv,application/json">
+            <div class="small-text">
+              Supported: CSV or JSON. JSON may be an array or an object containing an
+              <strong>items</strong>, <strong>content</strong>, <strong>catalogue</strong> or
+              <strong>videos</strong> array.
+            </div>
+          </div>
+
+          <div class="wide">
+            <div class="field-label">Or paste CSV / JSON</div>
+            <textarea id="privateCatalogueText" rows="7" placeholder="title,video_url,poster_url,category&#10;Example Title,https://example.com/video.mp4,https://example.com/poster.jpg,Private"></textarea>
+          </div>
+
+          <label class="private-check-card">
+            <input id="privateCatalogueEnabled" type="checkbox" checked>
+            <span><strong>Enable imported titles</strong><div class="small-text">Turn off if you want to review the imported catalogue first.</div></span>
+          </label>
+
+          <label class="private-check-card">
+            <input id="privateCatalogueSkipDuplicates" type="checkbox" checked>
+            <span><strong>Skip duplicate titles</strong><div class="small-text">Existing Private Library titles with the same name will not be added again.</div></span>
+          </label>
+        </div>
+
+        <div class="cache-actions" style="margin-top:12px">
+          <button id="loadPrivateCatalogueFeedBtn">Load feed</button>
+          <button id="previewPrivateCatalogueBtn">Preview catalogue</button>
+          <button id="importPrivateCatalogueBtn" class="primary">Import catalogue</button>
+          <button id="clearPrivateCatalogueBtn">Clear</button>
+        </div>
+
+        <div id="privateCatalogueStatus" class="status"></div>
+        <div id="privateCatalogueSummary" class="private-bulk-summary">Choose a CSV/JSON file or paste a catalogue to preview it.</div>
+        <div id="privateCatalogueQueue" class="private-bulk-queue"></div>
+
+        <div class="small-text" style="margin-top:10px">
+          Recognised fields: title, video_url, stream_url, playback_url, poster_url, category,
+          description, creator, licence, attribution, source_url, enabled and sort_order.
+          A normal web-page URL or embed URL is not treated as a playable video URL.
+        </div>
       </div>
-      <div class="status" id="manualCollectionStatus"></div>
-    </div>
-  </div>
-</details>
-<details id="privateTitlesListPanel" class="add-service-panel" style="margin-bottom:0">
-  <summary>Show / hide library titles <span class="pill" style="margin-left:auto;margin-right:12px">Tap to expand</span></summary>
-  <div class="add-service-body">
-    <div class="private-content-list" id="privateContentList"></div>
-  </div>
-</details>
-</div>
-</div>
-<div style="height:16px"></div>
-<div class="card-flat">
-<div class="section-heading">
-<div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
-<button class="small" id="reloadPrivateAccountsBtn">Reload accounts</button>
-</div>
-<div style="margin:12px 0 10px">
-  <label class="field-label" for="privateAccountUsernameSearch">Search account username</label>
-  <input id="privateAccountUsernameSearch" type="search" placeholder="Type a username to find an account..." autocomplete="off" spellcheck="false" aria-controls="privateAccountsList">
-  <div id="privateAccountSearchCount" class="small-text" style="margin-top:7px" aria-live="polite"></div>
-</div>
-<div class="status" id="privateAccountStatus"></div>
-<div id="privateAccountNoMatches" class="empty-note hidden" style="margin-bottom:10px">No accounts match that username.</div>
-<div class="private-account-list" id="privateAccountsList"></div>
-</div>
-<div class="private-title-access hidden" id="privateTitleAccessPanel">
-<div class="section-heading">
-<div class="section-heading-left"><div class="section-title-text"><h2>Individual title access</h2><div id="privateTitleAccessAccount">Select an account.</div></div></div>
-<button class="small" id="closePrivateTitleAccessBtn">Close</button>
-</div>
-<div class="update-help">These selections are used when <strong>Allow all titles</strong> is turned off for the account.</div>
-<div class="private-title-access-list" id="privateTitleAccessList"></div>
-<div class="cache-actions" style="margin-top:12px">
-<button class="primary" id="savePrivateTitleAccessBtn">Save title access</button>
-</div>
-<div class="status" id="privateTitleAccessStatus"></div>
-</div>
-</div>
-</details>
 
+      <div style="height:14px"></div>
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left">
+            <div class="section-title-text">
+              <h2>Bulk upload</h2>
+              <div>Select multiple videos at once. Matching posters are paired automatically by filename.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="private-bulk-grid">
+          <div class="wide">
+            <div class="field-label">Import a whole folder</div>
+            <input id="privateBulkFolder" type="file" webkitdirectory directory multiple>
+            <div class="small-text">Choose one folder containing videos and optional matching posters. Subfolders can automatically become categories.</div>
+          </div>
+
+          <label class="private-check-card wide">
+            <input id="privateBulkUseSubfolderCategory" type="checkbox" checked>
+            <span><strong>Use subfolder names as categories</strong><div class="small-text">Example: My Library/Category Name/Video.mp4 will import into “Category Name”. Files in the main folder use the default category below.</div></span>
+          </label>
+
+          <div class="wide">
+            <div class="field-label">Or choose videos</div>
+            <input id="privateBulkVideos" type="file" multiple accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
+            <div class="small-text">Example: My Movie.mp4</div>
+          </div>
+
+          <div class="wide">
+            <div class="field-label">Optional posters</div>
+            <input id="privateBulkPosters" type="file" multiple accept="image/*,.jpg,.jpeg,.png,.webp">
+            <div class="small-text">Use the same base filename, for example My Movie.jpg, and Panther will match it to My Movie.mp4.</div>
+          </div>
+
+          <div>
+            <div class="field-label">Category</div>
+            <input id="privateBulkCategory" maxlength="100" value="Private" placeholder="Private">
+          </div>
+
+          <div>
+            <div class="field-label">Creator / studio</div>
+            <input id="privateBulkCreator" maxlength="180" placeholder="Optional default for the whole batch">
+          </div>
+
+          <div>
+            <div class="field-label">Licence</div>
+            <input id="privateBulkLicence" maxlength="180" placeholder="Optional default for the whole batch">
+          </div>
+
+          <div>
+            <div class="field-label">Starting sort order</div>
+            <input id="privateBulkSortOrder" type="number" value="100">
+          </div>
+
+          <label class="private-check-card">
+            <input id="privateBulkEnabled" type="checkbox" checked>
+            <span><strong>Enable imported titles</strong><div class="small-text">Turn off if you want to review everything before it appears in Panther.</div></span>
+          </label>
+
+          <label class="private-check-card">
+            <input id="privateBulkSkipDuplicates" type="checkbox" checked>
+            <span><strong>Skip duplicate titles</strong><div class="small-text">Prevents a filename from creating another title when that title already exists.</div></span>
+          </label>
+        </div>
+
+        <div class="cache-actions" style="margin-top:12px">
+          <button id="startPrivateBulkUploadBtn" class="primary">Upload batch</button>
+          <button id="clearPrivateBulkUploadBtn">Clear</button>
+        </div>
+
+        <div id="privateBulkStatus" class="status"></div>
+        <div id="privateBulkSummary" class="private-bulk-summary">Choose one or more videos to build the upload queue.</div>
+        <div id="privateBulkQueue" class="private-bulk-queue"></div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="private-library-grid">
+        <div class="card-flat">
+          <div class="section-heading">
+            <div class="section-heading-left">
+              <div class="section-title-text"><h2 id="privateContentFormTitle">Add content</h2><div>Upload your own video/poster or paste an existing direct URL.</div></div>
+            </div>
+          </div>
+
+          <div class="private-library-form">
+            <div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"></div>
+            <div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"></div>
+            <div class="wide">
+              <div class="field-label">Video</div>
+              <div class="private-upload-row">
+                <input id="privateContentVideoFile" type="file" accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
+                <button id="uploadPrivateVideoBtn" type="button">Upload video</button>
+              </div>
+              <div id="privateVideoUploadStatus" class="small-text"></div>
+              <input id="privateContentVideoUrl" style="margin-top:8px" placeholder="Or paste a direct video URL">
+            </div>
+
+            <div class="wide">
+              <div class="field-label">Poster</div>
+              <div class="private-upload-row">
+                <input id="privateContentPosterFile" type="file" accept="image/*,.jpg,.jpeg,.png,.webp">
+                <button id="uploadPrivatePosterBtn" type="button">Upload poster</button>
+              </div>
+              <div id="privatePosterUploadStatus" class="small-text"></div>
+              <input id="privateContentPosterUrl" style="margin-top:8px" placeholder="Optional poster URL">
+            </div>
+            <div><div class="field-label">Description</div><textarea id="privateContentDescription" maxlength="3000" placeholder="Optional description"></textarea></div>
+            <div><div class="field-label">Creator / studio</div><input id="privateContentCreator" maxlength="180" placeholder="Optional"></div>
+            <div><div class="field-label">Licence</div><input id="privateContentLicence" maxlength="180" placeholder="e.g. CC0 / CC BY-SA 4.0"></div>
+            <div><div class="field-label">Attribution</div><input id="privateContentAttribution" maxlength="500" placeholder="Required attribution text if applicable"></div>
+            <div><div class="field-label">Source / licence page</div><input id="privateContentSourceUrl" placeholder="Optional https://..."></div>
+            <div><div class="field-label">Sort order</div><input id="privateContentSortOrder" type="number" value="100"></div>
+            <label class="private-check-card"><input id="privateContentEnabled" type="checkbox" checked><span><strong>Enabled</strong><div class="small-text">Disabled titles stay in the panel but are never returned to Panther.</div></span></label>
+            <div class="cache-actions">
+              <button id="savePrivateContentBtn" class="primary">Add title</button>
+              <button id="cancelPrivateContentEditBtn" class="hidden">Cancel edit</button>
+              <button id="reloadPrivateLibraryBtn">Reload</button>
+            </div>
+          </div>
+          <div id="privateContentStatus" class="status"></div>
+        </div>
+
+        <div class="card-flat">
+          <div class="section-heading">
+            <div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
+            <span id="privateContentCount" class="pill">0</span>
+          </div>
+          <div id="privateContentList" class="private-content-list"></div>
+        </div>
+      </div>
+
+      <div style="height:16px"></div>
+
+      <div class="card-flat">
+        <div class="section-heading">
+          <div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
+          <button id="reloadPrivateAccountsBtn" class="small">Reload accounts</button>
+        </div>
+        <div id="privateAccountStatus" class="status"></div>
+        <div id="privateAccountsList" class="private-account-list"></div>
+      </div>
+
+      <div id="privateTitleAccessPanel" class="private-title-access hidden">
+        <div class="section-heading">
+          <div class="section-heading-left"><div class="section-title-text"><h2>Individual title access</h2><div id="privateTitleAccessAccount">Select an account.</div></div></div>
+          <button id="closePrivateTitleAccessBtn" class="small">Close</button>
+        </div>
+        <div class="update-help">These selections are used when <strong>Allow all titles</strong> is turned off for the account.</div>
+        <div id="privateTitleAccessList" class="private-title-access-list"></div>
+        <div class="cache-actions" style="margin-top:12px">
+          <button id="savePrivateTitleAccessBtn" class="primary">Save title access</button>
+        </div>
+        <div id="privateTitleAccessStatus" class="status"></div>
+      </div>
+    </div>
+  </details>
+
+
+
+  <!-- Private two-way messaging. Admin JWT is required by Edge Function. -->
+  <details id="supportSection" class="section-anchor collapse-card">
+    <summary>
+      <div class="section-heading-left">
+        <div class="section-icon">✉</div>
+        <div class="section-title-text">
+          <h2>Customer Support Inbox <span id="supportUnreadCount" style="color:#55d98b"></span></h2>
+          <div>Private messages from Panther Streams. Customers never see a phone number.</div>
+        </div>
+      </div><span class="collapse-arrow">▼</span>
+    </summary>
+    <div class="collapse-content">
+      <div class="row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <button id="supportReloadBtn">↻ Refresh messages</button>
+        <label class="muted"><input type="checkbox" id="supportOpenOnly" checked> Open conversations only</label>
+        <input type="search" id="supportSearch" placeholder="Search service, account, device or profile" style="flex:1;min-width:230px">
+      </div>
+      <div id="supportAdminStatus" class="status"></div>
+      <div class="support-shell">
+        <div id="supportThreadList" class="support-threads">
+          <div class="muted">Open this section to load conversations.</div>
+        </div>
+        <div class="support-conversation">
+          <div id="supportConversationHeader" class="support-conversation-header">Select a conversation</div>
+          <div id="supportConversationMessages" class="support-messages"></div>
+          <textarea id="supportReply" rows="3" maxlength="4000" placeholder="Write your private reply…" disabled></textarea>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+            <button id="supportSendBtn" class="primary" disabled>Send Reply</button>
+            <button id="supportToggleStatusBtn" disabled>Close conversation</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
 
   <details id="devicesSection" class="section-anchor collapse-card">
     <summary>
@@ -2345,25 +2398,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         <div class="wide"><div class="field-label">Message</div><textarea id="announcementMessage" maxlength="2000" placeholder="Enter the announcement shown to Panther users..."></textarea></div>
         <div><div class="field-label">Type</div><select id="announcementType"><option value="info">Info</option><option value="warning">Warning</option><option value="critical">Critical</option></select></div>
         <div><div class="field-label">Display</div><select id="announcementDisplayType"><option value="popup">Popup</option><option value="banner">Banner</option></select></div>
-        <div class="wide"><div class="field-label">Send announcement to</div>
-          <select id="announcementTargetGroup">
-            <option value="all">All IPTV accounts</option>
-            <option value="selected">Selected IPTV accounts only</option>
-          </select>
-          <div class="update-help">Choose one or several IPTV accounts. All their registered devices receive this announcement.</div>
-        </div>
-        <div class="wide" id="announcementAccountsContainer" style="display:none">
-          <div class="field-label">Select IPTV accounts</div>
-          <input id="announcementAccountSearch" type="search" autocomplete="off" placeholder="Search service or username">
-          <div class="cache-actions" style="margin:10px 0">
-            <button type="button" id="announcementSelectAllAccountsBtn" class="small">Select all registered</button>
-            <button type="button" id="announcementClearAccountsBtn" class="small">Clear selection</button>
-            <button type="button" id="announcementReloadAccountsBtn" class="small">Reload accounts</button>
-          </div>
-          <div id="announcementSelectedCount" class="small-text" style="margin-bottom:10px">0 accounts selected</div>
-          <div id="announcementAccountsList" style="display:grid;gap:8px;max-height:320px;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:12px"></div>
-          <div class="update-help">Only accounts with a registered Panther device appear here. This targets IPTV accounts, not individual viewing profiles.</div>
-        </div>
+        <div><div class="field-label">Target group</div><select id="announcementTargetGroup"><option value="all">All users</option></select></div>
         <div><div class="field-label">Status</div><select id="announcementEnabled"><option value="true">Enabled</option><option value="false">Disabled</option></select></div>
         <div><div class="field-label">Starts</div><input id="announcementStartAt" type="datetime-local"></div>
         <div><div class="field-label">Ends</div><input id="announcementEndAt" type="datetime-local"></div>
@@ -3429,245 +3464,47 @@ async function toggleCategoryHidden(id) {
 }
 
 
-// ============================================================
-// ANNOUNCEMENTS: GLOBAL OR TARGETED IPTV ACCOUNTS
-// ============================================================
-let announcementRegisteredAccounts = [];
-let announcementSelectedAccounts = [];
-
-function announcementUpdateTargets(){
-  const selected = $("announcementTargetGroup").value === "selected";
-  $("announcementAccountsContainer").style.display = selected ? "block" : "none";
-  const n = announcementSelectedAccounts.length;
-  $("announcementSelectedCount").textContent = `${n} account${n === 1 ? "" : "s"} selected`;
-  if (selected && !announcementRegisteredAccounts.length) {
-    loadAnnouncementAccounts().catch(e => setStatus($("announcementStatus"), e?.message || String(e), false));
-  }
-}
-
-function renderAnnouncementAccounts(){
-  const host = $("announcementAccountsList");
-  if (!host) return;
-  const search = ($("announcementAccountSearch").value || "").toLowerCase().trim();
-  const rows = announcementRegisteredAccounts.filter(a =>
-    `${a.service_name} ${a.username} ${a.account_scope_id}`.toLowerCase().includes(search)
-  );
-  if (!rows.length) {
-    host.innerHTML = '<div class="small-text" style="padding:10px">No matching registered accounts.</div>';
-  } else {
-    host.innerHTML = rows.map(a => {
-      const id = a.account_scope_id;
-      const checked = announcementSelectedAccounts.includes(id) ? "checked" : "";
-      return `<label class="cache-switch-card" style="margin:0;cursor:pointer">
-        <input type="checkbox" data-announcement-account="${esc(id)}" ${checked}>
-        <span><span class="cache-switch-title">${esc(a.service_name || "IPTV Service")} · ${esc(a.username || "Unknown user")}</span>
-        <span class="small-text">${a.device_count} registered device(s)</span></span>
-      </label>`;
-    }).join("");
-    host.querySelectorAll("[data-announcement-account]").forEach(input => {
-      input.addEventListener("change", () => {
-        const id = input.getAttribute("data-announcement-account");
-        const set = new Set(announcementSelectedAccounts);
-        if (input.checked) set.add(id); else set.delete(id);
-        announcementSelectedAccounts = [...set];
-        $("announcementSelectedCount").textContent = `${announcementSelectedAccounts.length} account(s) selected`;
-      });
-    });
-  }
-  $("announcementSelectedCount").textContent = `${announcementSelectedAccounts.length} account(s) selected`;
-}
-
-async function loadAnnouncementAccounts(){
-  const list = await rpc("panther_admin_list_devices", {});
-  const grouped = new Map();
-  for(const d of (Array.isArray(list) ? list : [])) {
-    const id = String(d.account_scope_id || "").trim();
-    if (!id) continue;
-    if (!grouped.has(id)) grouped.set(id, {
-      account_scope_id:id,
-      service_name:String(d.service_name || ""),
-      username:String(d.username || ""),
-      device_count:0
-    });
-    grouped.get(id).device_count++;
-  }
-  announcementRegisteredAccounts = [...grouped.values()].sort((a,b) =>
-    `${a.service_name} ${a.username}`.localeCompare(`${b.service_name} ${b.username}`)
-  );
-  renderAnnouncementAccounts();
-}
-
-$("announcementTargetGroup")?.addEventListener("change", announcementUpdateTargets);
-$("announcementAccountSearch")?.addEventListener("input", renderAnnouncementAccounts);
-$("announcementSelectAllAccountsBtn")?.addEventListener("click", () => {
-  announcementSelectedAccounts = [...new Set(announcementRegisteredAccounts.map(a => a.account_scope_id))];
-  renderAnnouncementAccounts();
-});
-$("announcementClearAccountsBtn")?.addEventListener("click", () => {
-  announcementSelectedAccounts = [];
-  renderAnnouncementAccounts();
-});
-$("announcementReloadAccountsBtn")?.addEventListener("click", async () => {
-  try {
-    await loadAnnouncementAccounts();
-    setStatus($("announcementStatus"), "Account list refreshed.", true);
-  } catch(e) {setStatus($("announcementStatus"), e?.message || String(e), false)}
-});
-
-function formatAnnouncementDate(value){
-  if (!value) return "No limit";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
-}
-function toLocalDateTimeValue(value){
-  if (!value) return "";
-  const d = new Date(value);
-  if(Number.isNaN(d.getTime())) return "";
-  return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
-}
-
+function formatAnnouncementDate(value){if(!value)return"No limit";const d=new Date(value);return Number.isNaN(d.getTime())?value:d.toLocaleString()}
+function toLocalDateTimeValue(value){if(!value)return"";const d=new Date(value);if(Number.isNaN(d.getTime()))return"";const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return local.toISOString().slice(0,16)}
 function announcementPayload(){
-  const title = $("announcementTitle").value.trim();
-  const message = $("announcementMessage").value.trim();
-  if (!title) throw new Error("Enter an announcement title.");
-  if (!message) throw new Error("Enter an announcement message.");
-  const targetGroup = $("announcementTargetGroup").value === "selected" ? "selected" : "all";
-  const targets = targetGroup === "selected" ? [...new Set(announcementSelectedAccounts)] : [];
-  if (targetGroup === "selected" && !targets.length) throw new Error("Select at least one IPTV account.");
-  const start = $("announcementStartAt").value;
-  const end = $("announcementEndAt").value;
-  if (start && end && new Date(end) <= new Date(start)) throw new Error("End date must be after the start date.");
-  return {
-    title, message, type:$("announcementType").value,
-    display_type:$("announcementDisplayType").value,
-    target_group:targetGroup,
-    target_account_scopes:targets,
-    start_at:start ? new Date(start).toISOString() : new Date().toISOString(),
-    end_at:end ? new Date(end).toISOString() : null,
-    show_once:$("announcementShowOnce").checked,
-    require_acknowledgement:$("announcementRequireAck").checked,
-    enabled:$("announcementEnabled").value === "true"
-  };
+  const title=$("announcementTitle").value.trim(),message=$("announcementMessage").value.trim();
+  if(!title)throw new Error("Enter an announcement title.");
+  if(!message)throw new Error("Enter an announcement message.");
+  const start=$("announcementStartAt").value,end=$("announcementEndAt").value;
+  return{title,message,type:$("announcementType").value,display_type:$("announcementDisplayType").value,target_group:$("announcementTargetGroup").value||"all",start_at:start?new Date(start).toISOString():new Date().toISOString(),end_at:end?new Date(end).toISOString():null,show_once:$("announcementShowOnce").checked,require_acknowledgement:$("announcementRequireAck").checked,enabled:$("announcementEnabled").value==="true"};
 }
-
 function resetAnnouncementForm(){
-  editingAnnouncementId = null;
-  announcementSelectedAccounts = [];
-  $("announcementTitle").value = "";
-  $("announcementMessage").value = "";
-  $("announcementType").value = "info";
-  $("announcementDisplayType").value = "popup";
-  $("announcementTargetGroup").value = "all";
-  $("announcementEnabled").value = "true";
-  $("announcementStartAt").value = "";
-  $("announcementEndAt").value = "";
-  $("announcementShowOnce").checked = false;
-  $("announcementRequireAck").checked = false;
-  $("saveAnnouncementBtn").textContent = "Create announcement";
-  $("cancelAnnouncementEditBtn").classList.add("hidden");
-  $("announcementAccountSearch").value = "";
-  announcementUpdateTargets();
-  renderAnnouncementAccounts();
+  editingAnnouncementId=null;$("announcementTitle").value="";$("announcementMessage").value="";$("announcementType").value="info";$("announcementDisplayType").value="popup";$("announcementTargetGroup").value="all";$("announcementEnabled").value="true";$("announcementStartAt").value="";$("announcementEndAt").value="";$("announcementShowOnce").checked=false;$("announcementRequireAck").checked=false;$("saveAnnouncementBtn").textContent="Create announcement";$("cancelAnnouncementEditBtn").classList.add("hidden");
 }
-
 async function loadAnnouncements(){
-  if (!$("announcementsList")) return;
-  setStatus($("announcementStatus"), "Loading announcements...");
-  try {
-    announcements = await select("announcements",
-      "select=id,title,message,type,display_type,target_group,target_account_scopes,start_at,end_at,show_once,require_acknowledgement,enabled,created_at&order=created_at.desc");
-    renderAnnouncements();
-    setStatus($("announcementStatus"), "");
-  } catch(e) {
-    announcements = [];
-    renderAnnouncements();
-    setStatus($("announcementStatus"), e?.message || String(e), false);
-  }
+  if(!$("announcementsList"))return;
+  setStatus($("announcementStatus"),"Loading announcements...");
+  try{announcements=await select("announcements","select=id,title,message,type,display_type,target_group,start_at,end_at,show_once,require_acknowledgement,enabled,created_at&order=created_at.desc");renderAnnouncements();setStatus($("announcementStatus"),"")}
+  catch(e){announcements=[];renderAnnouncements();setStatus($("announcementStatus"),e?.message||String(e),false)}
 }
-
 function renderAnnouncements(){
-  const host = $("announcementsList");
-  if (!host) return;
-  if (!announcements.length) {host.innerHTML='<div class="empty-note">No announcements yet.</div>';return}
-  host.innerHTML = announcements.map(a => {
-    const targeting = a.target_group === "selected"
-      ? `${(a.target_account_scopes || []).length} ACCOUNT(S)` : "ALL ACCOUNTS";
-    return `<div class="announcement-card announcement-type-${esc(a.type||"info")}">
-      <div class="announcement-head"><div><h3>${esc(a.title)}</h3>
-      <div class="announcement-meta"><span class="pill">${esc((a.type||"info").toUpperCase())}</span>
-      <span class="pill">${esc((a.display_type||"popup").toUpperCase())}</span>
-      <span class="pill">${esc(targeting)}</span>
-      <span class="pill ${a.enabled ? "enabled" : "disabled"}">${a.enabled ? "Enabled" : "Disabled"}</span>
-      ${a.show_once ? '<span class="pill">Show once</span>' : ""}
-      ${a.require_acknowledgement ? '<span class="pill">Acknowledgement</span>' : ""}</div></div></div>
-      <div class="announcement-message">${esc(a.message)}</div>
-      <div class="small-text">Starts: ${esc(formatAnnouncementDate(a.start_at))}<br>Ends: ${esc(formatAnnouncementDate(a.end_at))}</div>
-      <div style="height:10px"></div>
-      <div class="announcement-actions"><button class="small edit-announcement" data-id="${esc(a.id)}">Edit</button>
-      <button class="small toggle-announcement" data-id="${esc(a.id)}">${a.enabled ? "Disable" : "Enable"}</button>
-      <button class="small danger delete-announcement" data-id="${esc(a.id)}">Delete</button></div></div>`;
-  }).join("");
+  const host=$("announcementsList");if(!host)return;
+  if(!announcements.length){host.innerHTML='<div class="empty-note">No announcements yet.</div>';return}
+  host.innerHTML=announcements.map(a=>`<div class="announcement-card announcement-type-${esc(a.type||"info")}"><div class="announcement-head"><div><h3>${esc(a.title)}</h3><div class="announcement-meta"><span class="pill">${esc((a.type||"info").toUpperCase())}</span><span class="pill">${esc((a.display_type||"popup").toUpperCase())}</span><span class="pill">${esc(a.target_group==="all"?"ALL USERS":a.target_group)}</span><span class="pill ${a.enabled?"enabled":"disabled"}">${a.enabled?"Enabled":"Disabled"}</span>${a.show_once?'<span class="pill">Show once</span>':""}${a.require_acknowledgement?'<span class="pill">Acknowledgement</span>':""}</div></div></div><div class="announcement-message">${esc(a.message)}</div><div class="small-text">Starts: ${esc(formatAnnouncementDate(a.start_at))}<br>Ends: ${esc(formatAnnouncementDate(a.end_at))}</div><div style="height:10px"></div><div class="announcement-actions"><button class="small edit-announcement" data-id="${esc(a.id)}">Edit</button><button class="small toggle-announcement" data-id="${esc(a.id)}">${a.enabled?"Disable":"Enable"}</button><button class="small danger delete-announcement" data-id="${esc(a.id)}">Delete</button></div></div>`).join("");
   document.querySelectorAll(".edit-announcement").forEach(b=>b.onclick=()=>editAnnouncement(b.dataset.id));
   document.querySelectorAll(".toggle-announcement").forEach(b=>b.onclick=()=>toggleAnnouncement(b.dataset.id));
   document.querySelectorAll(".delete-announcement").forEach(b=>b.onclick=()=>deleteAnnouncement(b.dataset.id));
 }
-
 function editAnnouncement(id){
-  const a = announcements.find(x=>x.id===id);
-  if(!a) return;
-  editingAnnouncementId = id;
-  $("announcementTitle").value = a.title || "";
-  $("announcementMessage").value = a.message || "";
-  $("announcementType").value = a.type || "info";
-  $("announcementDisplayType").value = a.display_type || "popup";
-  $("announcementTargetGroup").value = a.target_group === "selected" ? "selected" : "all";
-  announcementSelectedAccounts = Array.isArray(a.target_account_scopes) ? [...a.target_account_scopes] : [];
-  $("announcementEnabled").value = String(a.enabled !== false);
-  $("announcementStartAt").value = toLocalDateTimeValue(a.start_at);
-  $("announcementEndAt").value = toLocalDateTimeValue(a.end_at);
-  $("announcementShowOnce").checked = !!a.show_once;
-  $("announcementRequireAck").checked = !!a.require_acknowledgement;
-  $("saveAnnouncementBtn").textContent = "Save changes";
-  $("cancelAnnouncementEditBtn").classList.remove("hidden");
-  $("announcementAccountSearch").value = "";
-  announcementUpdateTargets();
-  renderAnnouncementAccounts();
-  openSection("announcementsSection");
-  setTimeout(() => $("announcementTitle")?.focus(), 150);
+  const a=announcements.find(x=>x.id===id);if(!a)return;editingAnnouncementId=id;
+  $("announcementTitle").value=a.title||"";$("announcementMessage").value=a.message||"";$("announcementType").value=a.type||"info";$("announcementDisplayType").value=a.display_type||"popup";$("announcementTargetGroup").value=a.target_group||"all";$("announcementEnabled").value=String(a.enabled!==false);$("announcementStartAt").value=toLocalDateTimeValue(a.start_at);$("announcementEndAt").value=toLocalDateTimeValue(a.end_at);$("announcementShowOnce").checked=!!a.show_once;$("announcementRequireAck").checked=!!a.require_acknowledgement;$("saveAnnouncementBtn").textContent="Save changes";$("cancelAnnouncementEditBtn").classList.remove("hidden");openSection("announcementsSection");setTimeout(()=>$("announcementTitle")?.focus(),150);
 }
-
-$("saveAnnouncementBtn")?.addEventListener("click", async () => {
-  const button = $("saveAnnouncementBtn");
-  const wasEditing = Boolean(editingAnnouncementId);
-  button.disabled = true;
-  setStatus($("announcementStatus"), wasEditing ? "Saving changes..." : "Creating announcement...");
-  try {
-    const payload = announcementPayload();
-    if (wasEditing) await restMutation("announcements", "PATCH", payload, `id=eq.${encodeURIComponent(editingAnnouncementId)}`);
-    else await restMutation("announcements", "POST", payload);
-    resetAnnouncementForm();
-    await loadAnnouncements();
-    setStatus($("announcementStatus"), wasEditing ? "Announcement updated." : "Announcement created.", true);
-  } catch (e) {
-    setStatus($("announcementStatus"), e?.message || String(e), false);
-  } finally {button.disabled = false}
+$("saveAnnouncementBtn")?.addEventListener("click",async()=>{
+  const b=$("saveAnnouncementBtn");b.disabled=true;setStatus($("announcementStatus"),editingAnnouncementId?"Saving changes...":"Creating announcement...");
+  try{const payload=announcementPayload();if(editingAnnouncementId){await restMutation("announcements","PATCH",payload,`id=eq.${encodeURIComponent(editingAnnouncementId)}`)}else{await restMutation("announcements","POST",payload)}resetAnnouncementForm();await loadAnnouncements();setStatus($("announcementStatus"),editingAnnouncementId?"Announcement updated.":"Announcement saved.",true)}
+  catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}finally{b.disabled=false}
 });
-$("cancelAnnouncementEditBtn")?.addEventListener("click",()=>{
-  resetAnnouncementForm();setStatus($("announcementStatus"), "");
-});
+$("cancelAnnouncementEditBtn")?.addEventListener("click",()=>{resetAnnouncementForm();setStatus($("announcementStatus"),"")});
 $("reloadAnnouncementsBtn")?.addEventListener("click",loadAnnouncements);
-async function toggleAnnouncement(id){
-  const a=announcements.find(x=>x.id===id);if(!a)return;
-  try{await restMutation("announcements","PATCH",{enabled:!a.enabled},`id=eq.${encodeURIComponent(id)}`);await loadAnnouncements()}
-  catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}
-}
-async function deleteAnnouncement(id){
-  const a=announcements.find(x=>x.id===id);if(!a||!confirm(`Delete "${a.title}"?`))return;
-  try{await restMutation("announcements","DELETE",null,`id=eq.${encodeURIComponent(id)}`);
-    if(editingAnnouncementId===id)resetAnnouncementForm();await loadAnnouncements();
-    setStatus($("announcementStatus"),"Announcement deleted.",true)}
-  catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}
-}
+async function toggleAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a)return;try{await restMutation("announcements","PATCH",{enabled:!a.enabled},`id=eq.${encodeURIComponent(id)}`);await loadAnnouncements()}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
+async function deleteAnnouncement(id){const a=announcements.find(x=>x.id===id);if(!a||!confirm(`Delete "${a.title}"?`))return;try{await restMutation("announcements","DELETE",null,`id=eq.${encodeURIComponent(id)}`);if(editingAnnouncementId===id)resetAnnouncementForm();await loadAnnouncements();setStatus($("announcementStatus"),"Announcement deleted.",true)}catch(e){setStatus($("announcementStatus"),e?.message||String(e),false)}}
+
+
 
 
 // ============================================================
@@ -6184,848 +6021,6 @@ $("clearPrivateBulkUploadBtn")?.addEventListener("click", clearPrivateBulkUpload
 
 
 // ============================================================
-// ADULT MAGNET / TORBOX
-// ============================================================
-
-let adultMagnetTorrentId = null;
-let adultMagnetTorrentReady = false;
-let adultMagnetFiles = [];
-let adultMagnetSelectedFileId = null;
-let adultMagnetLastStatus = null;
-let adultMagnetPollTimer = null;
-
-
-function adultMagnetFormatBytes(value){
-  const bytes = Number(value || 0);
-
-  if(!Number.isFinite(bytes) || bytes <= 0){
-    return "Unknown size";
-  }
-
-  const units = ["B","KB","MB","GB","TB"];
-  let amount = bytes;
-  let index = 0;
-
-  while(amount >= 1024 && index < units.length - 1){
-    amount /= 1024;
-    index += 1;
-  }
-
-  return `${amount >= 100 || index === 0 ? amount.toFixed(0) : amount.toFixed(1)} ${units[index]}`;
-}
-
-
-function adultMagnetCleanTitle(value){
-  return String(value || "")
-    .split("/")
-    .pop()
-    .replace(/\.[^.]+$/, "")
-    .replace(/[._]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-
-function setAdultMagnetPill(text, mode = ""){
-  const pill = $("adultMagnetStatePill");
-  if(!pill) return;
-
-  pill.textContent = text || "NOT ADDED";
-  pill.classList.remove("enabled","disabled");
-
-  if(mode === "ready"){
-    pill.classList.add("enabled");
-  }else if(mode === "error"){
-    pill.classList.add("disabled");
-  }
-}
-
-
-function stopAdultMagnetPolling(){
-  if(adultMagnetPollTimer){
-    clearTimeout(adultMagnetPollTimer);
-    adultMagnetPollTimer = null;
-  }
-}
-
-
-function resetAdultMagnetForm(){
-  stopAdultMagnetPolling();
-
-  adultMagnetTorrentId = null;
-  adultMagnetTorrentReady = false;
-  adultMagnetFiles = [];
-  adultMagnetSelectedFileId = null;
-  adultMagnetLastStatus = null;
-
-  if($("adultMagnetLink")) $("adultMagnetLink").value = "";
-  if($("adultMagnetTitle")) $("adultMagnetTitle").value = "";
-  if($("adultMagnetCategory")) $("adultMagnetCategory").value = $("adultMagnetFolder")?.value || "Adult";
-  if($("adultMagnetPosterUrl")) $("adultMagnetPosterUrl").value = "";
-  if($("adultMagnetDescription")) $("adultMagnetDescription").value = "";
-  if($("adultMagnetSortOrder")) $("adultMagnetSortOrder").value = "100";
-  if($("adultMagnetEnabled")) $("adultMagnetEnabled").checked = true;
-  if($("adultMagnetCachedOnly")) $("adultMagnetCachedOnly").checked = false;
-
-  if($("adultMagnetFiles")) $("adultMagnetFiles").innerHTML = "";
-  if($("adultMagnetSummary")){
-    $("adultMagnetSummary").textContent =
-      "Paste a magnet and press Inspect magnet or Add to TorBox.";
-  }
-
-  if($("refreshAdultMagnetBtn")) $("refreshAdultMagnetBtn").disabled = true;
-  if($("publishAdultMagnetBtn")) $("publishAdultMagnetBtn").disabled = true;
-
-  setAdultMagnetPill("NOT ADDED");
-  setStatus($("adultMagnetStatus"), "");
-}
-
-
-async function callAdultMagnetAdmin(action, extra = {}){
-  const controller =
-    new AbortController();
-
-  const timeoutMs =
-    action === "inspect"
-      ? 18000
-      : 45000;
-
-  const timer =
-    setTimeout(
-      () => controller.abort(),
-      timeoutMs
-    );
-
-  try{
-    const response =
-      await apiFetch(
-        "/functions/v1/panther-adult-magnet-admin",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            action,
-            ...extra
-          }),
-          signal: controller.signal
-        }
-      );
-
-    const data =
-      await readJson(response);
-
-    if(
-      !response.ok ||
-      data?.success === false
-    ){
-      throw new Error(
-        data?.error ||
-        data?.message ||
-        `Adult Magnet request failed (HTTP ${response.status})`
-      );
-    }
-
-    return data;
-
-  }catch(e){
-    if(e?.name === "AbortError"){
-      throw new Error(
-        action === "inspect"
-          ? "TorBox metadata lookup took too long. Press Add to TorBox instead — Panther can resolve the files after TorBox adds it."
-          : "TorBox took too long to respond. Try the action again."
-      );
-    }
-
-    throw e;
-
-  }finally{
-    clearTimeout(timer);
-  }
-}
-
-
-function adultMagnetValue(){
-  const magnet =
-    String(
-      $("adultMagnetLink")?.value || ""
-    ).trim();
-
-  if(!magnet.toLowerCase().startsWith("magnet:?")){
-    throw new Error("Paste a valid magnet link first.");
-  }
-
-  return magnet;
-}
-
-
-function renderAdultMagnetPreview(data){
-  const host = $("adultMagnetFiles");
-  if(!host) return;
-
-  const files =
-    Array.isArray(data?.files)
-      ? data.files
-      : [];
-
-  const name =
-    String(data?.name || "Torrent");
-
-  const titleInput =
-    $("adultMagnetTitle");
-
-  if(
-    titleInput &&
-    !String(titleInput.value || "").trim()
-  ){
-    titleInput.value =
-      adultMagnetCleanTitle(name) || name;
-  }
-
-  $("adultMagnetSummary").innerHTML = `
-    <strong>${esc(name)}</strong><br>
-    ${adultMagnetFormatBytes(data?.size)} · ${Number(data?.seeds || 0)} seed${Number(data?.seeds || 0) === 1 ? "" : "s"} ·
-    ${Number(data?.peers || 0)} peer${Number(data?.peers || 0) === 1 ? "" : "s"}<br>
-    ${files.length} video file${files.length === 1 ? "" : "s"} detected.
-    <div class="small-text" style="margin-top:5px">${data?.metadata_pending === true ? "Metadata lookup timed out — this does not stop you adding it to TorBox." : "Preview only — add the magnet to TorBox before choosing the final playable file."}</div>
-  `;
-
-  if(!files.length){
-    host.innerHTML =
-      data?.metadata_pending === true
-        ? '<div class="empty-note">TorBox did not return metadata quickly enough. Press <strong>Add to TorBox</strong>; Panther will load the video files from TorBox when the torrent is ready.</div>'
-        : '<div class="empty-note">No video files were detected in the magnet metadata yet.</div>';
-    return;
-  }
-
-  host.innerHTML =
-    files.map(file => `
-      <div class="private-content-card">
-        <div class="private-content-title">${esc(file.name || "Video")}</div>
-        <div class="private-content-meta">${esc(adultMagnetFormatBytes(file.size))}${file.mimetype ? ` · ${esc(file.mimetype)}` : ""}</div>
-      </div>
-    `).join("");
-}
-
-
-function renderAdultMagnetStatus(status){
-  adultMagnetLastStatus = status || null;
-  adultMagnetTorrentReady = status?.ready === true;
-  adultMagnetFiles =
-    Array.isArray(status?.files)
-      ? status.files
-      : [];
-
-  if(
-    adultMagnetFiles.length &&
-    (
-      adultMagnetSelectedFileId === null ||
-      !adultMagnetFiles.some(file => Number(file.id) === Number(adultMagnetSelectedFileId))
-    )
-  ){
-    const largest =
-      [...adultMagnetFiles]
-        .sort(
-          (a,b) =>
-            Number(b.size || 0) -
-            Number(a.size || 0)
-        )[0];
-
-    adultMagnetSelectedFileId =
-      largest
-        ? Number(largest.id)
-        : null;
-  }
-
-  const state =
-    String(status?.state || (adultMagnetTorrentReady ? "ready" : "processing"));
-
-  const progressRaw =
-    Number(status?.progress || 0);
-
-  const progress =
-    progressRaw <= 1 && progressRaw > 0
-      ? Math.round(progressRaw * 100)
-      : Math.round(progressRaw);
-
-  const name =
-    String(status?.name || "TorBox torrent");
-
-  const titleInput =
-    $("adultMagnetTitle");
-
-  if(
-    titleInput &&
-    !String(titleInput.value || "").trim()
-  ){
-    titleInput.value =
-      adultMagnetCleanTitle(name) || name;
-  }
-
-  $("adultMagnetSummary").innerHTML = `
-    <strong>${esc(name)}</strong><br>
-    State: ${esc(state || "Unknown")} · Progress ${Number.isFinite(progress) ? Math.max(0,Math.min(100,progress)) : 0}% ·
-    ${status?.cached === true ? "Cached" : "Not marked cached"}<br>
-    ${Number(status?.seeds || 0)} seed${Number(status?.seeds || 0) === 1 ? "" : "s"} ·
-    ${Number(status?.peers || 0)} peer${Number(status?.peers || 0) === 1 ? "" : "s"} ·
-    ${adultMagnetFormatBytes(status?.size)}
-  `;
-
-  setAdultMagnetPill(
-    adultMagnetTorrentReady
-      ? "READY"
-      : (state || "PROCESSING").toUpperCase(),
-    adultMagnetTorrentReady
-      ? "ready"
-      : ""
-  );
-
-  if($("refreshAdultMagnetBtn")){
-    $("refreshAdultMagnetBtn").disabled =
-      !adultMagnetTorrentId;
-  }
-
-  if($("publishAdultMagnetBtn")){
-    $("publishAdultMagnetBtn").disabled =
-      !(
-        adultMagnetTorrentReady &&
-        adultMagnetSelectedFileId !== null
-      );
-  }
-
-  const host =
-    $("adultMagnetFiles");
-
-  if(!host) return;
-
-  if(!adultMagnetFiles.length){
-    host.innerHTML =
-      '<div class="empty-note">No playable video files are available yet. If TorBox is still downloading metadata/content, refresh again shortly.</div>';
-    return;
-  }
-
-  host.innerHTML =
-    adultMagnetFiles.map(file => {
-      const id =
-        Number(file.id);
-
-      const selected =
-        Number(adultMagnetSelectedFileId) ===
-        id;
-
-      return `
-        <label class="private-check-card" style="display:flex;align-items:flex-start;gap:10px">
-          <input
-            type="radio"
-            name="adultMagnetVideoFile"
-            class="adult-magnet-file"
-            data-id="${id}"
-            ${selected ? "checked" : ""}>
-          <span>
-            <strong>${esc(file.name || "Video")}</strong>
-            <div class="small-text">${esc(adultMagnetFormatBytes(file.size))}${file.mimetype ? ` · ${esc(file.mimetype)}` : ""}</div>
-          </span>
-        </label>
-      `;
-    }).join("");
-
-  document
-    .querySelectorAll(".adult-magnet-file")
-    .forEach(input => {
-      input.addEventListener("change", () => {
-        adultMagnetSelectedFileId =
-          Number(input.dataset.id);
-
-        const selected =
-          adultMagnetFiles.find(
-            file =>
-              Number(file.id) ===
-              Number(adultMagnetSelectedFileId)
-          );
-
-        if(
-          selected &&
-          $("adultMagnetTitle") &&
-          !String($("adultMagnetTitle").value || "").trim()
-        ){
-          $("adultMagnetTitle").value =
-            adultMagnetCleanTitle(selected.name);
-        }
-
-        if($("publishAdultMagnetBtn")){
-          $("publishAdultMagnetBtn").disabled =
-            !(
-              adultMagnetTorrentReady &&
-              adultMagnetSelectedFileId !== null
-            );
-        }
-      });
-    });
-}
-
-
-function scheduleAdultMagnetPoll(){
-  stopAdultMagnetPolling();
-
-  if(
-    !adultMagnetTorrentId ||
-    adultMagnetTorrentReady
-  ){
-    return;
-  }
-
-  adultMagnetPollTimer =
-    setTimeout(
-      async () => {
-        try{
-          await refreshAdultMagnetStatus(true);
-        }catch(_){
-          // Keep the manual Refresh status button available if a background poll fails.
-        }
-
-        if(
-          adultMagnetTorrentId &&
-          !adultMagnetTorrentReady
-        ){
-          scheduleAdultMagnetPoll();
-        }
-      },
-      8000
-    );
-}
-
-
-async function inspectAdultMagnet(){
-  const button =
-    $("inspectAdultMagnetBtn");
-
-  try{
-    const magnet =
-      adultMagnetValue();
-
-    button.disabled = true;
-
-    setStatus(
-      $("adultMagnetStatus"),
-      "Reading magnet metadata from TorBox..."
-    );
-
-    const result =
-      await callAdultMagnetAdmin(
-        "inspect",
-        {
-          magnet
-        }
-      );
-
-    renderAdultMagnetPreview(
-      result?.data || {}
-    );
-
-    if(result?.data?.metadata_pending === true){
-      setAdultMagnetPill("READY TO ADD");
-
-      setStatus(
-        $("adultMagnetStatus"),
-        result?.data?.warning ||
-          "Metadata lookup took too long. Press Add to TorBox to continue.",
-        true
-      );
-    }else{
-      setStatus(
-        $("adultMagnetStatus"),
-        "Magnet metadata loaded. Press Add to TorBox when you are ready.",
-        true
-      );
-    }
-
-  }catch(e){
-    setAdultMagnetPill("ERROR","error");
-
-    setStatus(
-      $("adultMagnetStatus"),
-      e?.message || String(e),
-      false
-    );
-
-  }finally{
-    button.disabled = false;
-  }
-}
-
-
-async function addAdultMagnet(){
-  const button =
-    $("addAdultMagnetBtn");
-
-  try{
-    const magnet =
-      adultMagnetValue();
-
-    button.disabled = true;
-
-    setStatus(
-      $("adultMagnetStatus"),
-      "Adding magnet to TorBox..."
-    );
-
-    const result =
-      await callAdultMagnetAdmin(
-        "create",
-        {
-          magnet,
-          name:
-            String(
-              $("adultMagnetTitle")?.value || ""
-            ).trim(),
-          cached_only:
-            !!$("adultMagnetCachedOnly")?.checked
-        }
-      );
-
-    adultMagnetTorrentId =
-      Number(result?.torrent_id || 0) || null;
-
-    adultMagnetSelectedFileId =
-      null;
-
-    if(!adultMagnetTorrentId){
-      throw new Error("TorBox did not return a torrent ID.");
-    }
-
-    if(result?.status){
-      renderAdultMagnetStatus(
-        result.status
-      );
-    }else{
-      adultMagnetTorrentReady = false;
-      adultMagnetFiles = [];
-
-      setAdultMagnetPill("PROCESSING");
-
-      $("adultMagnetSummary").textContent =
-        `Added to TorBox as torrent #${adultMagnetTorrentId}. Waiting for metadata...`;
-
-      $("refreshAdultMagnetBtn").disabled = false;
-      $("publishAdultMagnetBtn").disabled = true;
-    }
-
-    setStatus(
-      $("adultMagnetStatus"),
-      adultMagnetTorrentReady
-        ? "TorBox is ready. Choose the video file and publish it."
-        : "Added to TorBox. Panther will keep checking until the video is ready.",
-      true
-    );
-
-    scheduleAdultMagnetPoll();
-
-  }catch(e){
-    setAdultMagnetPill("ERROR","error");
-
-    setStatus(
-      $("adultMagnetStatus"),
-      e?.message || String(e),
-      false
-    );
-
-  }finally{
-    button.disabled = false;
-  }
-}
-
-
-async function refreshAdultMagnetStatus(background = false){
-  if(!adultMagnetTorrentId){
-    if(!background){
-      setStatus(
-        $("adultMagnetStatus"),
-        "Add a magnet to TorBox first.",
-        false
-      );
-    }
-    return;
-  }
-
-  const button =
-    $("refreshAdultMagnetBtn");
-
-  if(button && !background){
-    button.disabled = true;
-  }
-
-  if(!background){
-    setStatus(
-      $("adultMagnetStatus"),
-      "Refreshing TorBox status..."
-    );
-  }
-
-  try{
-    const result =
-      await callAdultMagnetAdmin(
-        "status",
-        {
-          torrent_id:
-            adultMagnetTorrentId
-        }
-      );
-
-    renderAdultMagnetStatus(
-      result?.status || {}
-    );
-
-    if(!background){
-      setStatus(
-        $("adultMagnetStatus"),
-        adultMagnetTorrentReady
-          ? "Ready to publish."
-          : "TorBox is still preparing this torrent.",
-        adultMagnetTorrentReady
-      );
-    }
-
-  }catch(e){
-    if(!background){
-      setStatus(
-        $("adultMagnetStatus"),
-        e?.message || String(e),
-        false
-      );
-    }
-    throw e;
-
-  }finally{
-    if(button){
-      button.disabled =
-        !adultMagnetTorrentId;
-    }
-  }
-}
-
-
-let adultMagnetBulkPublishing = false;
-async function publishAllAdultMagnet(){
-  if(adultMagnetBulkPublishing) return;
-  adultMagnetBulkPublishing = true;
-  const button = $("publishAllAdultMagnetBtn");
-  if(!adultMagnetTorrentId || !adultMagnetTorrentReady || !adultMagnetFiles.length){
-    setStatus($("adultMagnetStatus"), "Wait until TorBox lists ready video files.", false);
-    return;
-  }
-  const files = [...adultMagnetFiles];
-  const baseTitle = String($("adultMagnetTitle")?.value || "").trim();
-  const folder = String($("adultMagnetFolder")?.value || "Adult").trim() || "Adult";
-  const common = {
-    torrent_id: adultMagnetTorrentId,
-    category: folder,
-    poster_url: String($("adultMagnetPosterUrl")?.value || "").trim(),
-    description: String($("adultMagnetDescription")?.value || "").trim(),
-    creator: "TorBox",
-    enabled: !!$("adultMagnetEnabled")?.checked,
-    sort_order: Number.parseInt($("adultMagnetSortOrder")?.value || "100", 10) || 100
-  };
-  button.disabled = true;
-  $("publishAdultMagnetBtn").disabled = true;
-  let succeeded = 0;
-  const failures = [];
-  try{
-    for(let i=0; i<files.length; i++){
-      const file = files[i];
-      const fileTitle = adultMagnetCleanTitle(file.name || `Scene ${i+1}`);
-      const title = baseTitle && files.length > 1
-        ? `${baseTitle} - ${fileTitle}`
-        : (baseTitle || fileTitle);
-      setStatus($("adultMagnetStatus"), `Publishing ${i+1} of ${files.length}: ${title}`);
-      try{
-        await callAdultMagnetAdmin("publish", {...common, file_id: Number(file.id), title});
-        succeeded++;
-      }catch(error){
-        failures.push(`${file.name || file.id}: ${error?.message || String(error)}`);
-      }
-    }
-    await loadPrivateContent();
-    const summary = `Published ${succeeded} of ${files.length} videos to folder "${folder}".`;
-    setStatus($("adultMagnetStatus"), failures.length
-      ? summary + " Failed: " + failures.join(" | ")
-      : summary,
-      failures.length === 0);
-    // Keep the torrent and file list available so failed files can be retried.
-  } finally {
-    adultMagnetBulkPublishing = false;
-    button.disabled = !(adultMagnetTorrentReady && adultMagnetFiles.length > 0);
-    $("publishAdultMagnetBtn").disabled = !(adultMagnetTorrentReady && adultMagnetSelectedFileId !== null);
-  }
-}
-
-async function publishAdultMagnet(){
-  if(
-    !adultMagnetTorrentId ||
-    adultMagnetSelectedFileId === null
-  ){
-    setStatus(
-      $("adultMagnetStatus"),
-      "Choose a ready TorBox video file first.",
-      false
-    );
-    return;
-  }
-
-  const button =
-    $("publishAdultMagnetBtn");
-
-  button.disabled = true;
-
-  setStatus(
-    $("adultMagnetStatus"),
-    "Publishing to Panther Adult / Private Library..."
-  );
-
-  try{
-    const selected =
-      adultMagnetFiles.find(
-        file =>
-          Number(file.id) ===
-          Number(adultMagnetSelectedFileId)
-      );
-
-    const title =
-      String(
-        $("adultMagnetTitle")?.value || ""
-      ).trim() ||
-      adultMagnetCleanTitle(
-        selected?.name || adultMagnetLastStatus?.name || "Adult video"
-      );
-
-    const result =
-      await callAdultMagnetAdmin(
-        "publish",
-        {
-          torrent_id:
-            adultMagnetTorrentId,
-
-          file_id:
-            adultMagnetSelectedFileId,
-
-          title,
-
-          category:
-            String(
-              $("adultMagnetFolder")?.value || "Adult"
-            ).trim() || "Adult",
-
-          poster_url:
-            String(
-              $("adultMagnetPosterUrl")?.value || ""
-            ).trim(),
-
-          description:
-            String(
-              $("adultMagnetDescription")?.value || ""
-            ).trim(),
-
-          creator:
-            "TorBox",
-
-          enabled:
-            !!$("adultMagnetEnabled")?.checked,
-
-          sort_order:
-            Number.parseInt(
-              $("adultMagnetSortOrder")?.value || "100",
-              10
-            ) || 100
-        }
-      );
-
-    await loadPrivateContent();
-
-    const savedTitle =
-      result?.item?.title ||
-      title;
-
-    resetAdultMagnetForm();
-
-    setStatus(
-      $("adultMagnetStatus"),
-      `"${savedTitle}" has been published to the Adult / Private Library.`,
-      true
-    );
-
-  }catch(e){
-    setStatus(
-      $("adultMagnetStatus"),
-      e?.message || String(e),
-      false
-    );
-
-    if(
-      adultMagnetTorrentId &&
-      !adultMagnetTorrentReady
-    ){
-      scheduleAdultMagnetPoll();
-    }
-
-  }finally{
-    button.disabled =
-      !(
-        adultMagnetTorrentReady &&
-        adultMagnetSelectedFileId !== null
-      );
-  }
-}
-
-
-$("inspectAdultMagnetBtn")?.addEventListener(
-  "click",
-  inspectAdultMagnet
-);
-
-
-$("addAdultMagnetBtn")?.addEventListener(
-  "click",
-  addAdultMagnet
-);
-
-
-$("refreshAdultMagnetBtn")?.addEventListener(
-  "click",
-  () =>
-    refreshAdultMagnetStatus(
-      false
-    )
-);
-
-
-$("publishAdultMagnetBtn")?.addEventListener(
-  "click",
-  publishAdultMagnet
-);
-
-$("publishAllAdultMagnetBtn")?.addEventListener("click", publishAllAdultMagnet);
-
-// Keep the bulk action in sync with the latest TorBox status, even after resetting.
-const publishAllButton = $("publishAllAdultMagnetBtn");
-if(publishAllButton){
-  const syncPublishAllState = () => {
-    publishAllButton.disabled = adultMagnetBulkPublishing || !(adultMagnetTorrentReady && adultMagnetFiles.length > 0);
-  };
-  const singleButton = $("publishAdultMagnetBtn");
-  if(singleButton){
-    new MutationObserver(syncPublishAllState).observe(singleButton, {attributes:true, attributeFilter:["disabled"]});
-  }
-  syncPublishAllState();
-}
-
-
-$("resetAdultMagnetBtn")?.addEventListener(
-  "click",
-  resetAdultMagnetForm
-);
-
-
-// ============================================================
 // PRIVATE LIBRARY
 // ============================================================
 
@@ -7038,8 +6033,7 @@ let privateTitleAccessAllowed = new Set();
 
 function resetPrivateContentForm(){
   privateEditingContentId = null;
-  $("privateContentEditorCard")?.classList.add("hidden");
-  $("privateContentFormTitle").textContent = "Edit existing title";
+  $("privateContentFormTitle").textContent = "Add content";
   $("savePrivateContentBtn").textContent = "Add title";
   $("cancelPrivateContentEditBtn").classList.add("hidden");
   $("privateContentTitle").value = "";
@@ -7060,359 +6054,6 @@ function resetPrivateContentForm(){
 }
 
 
-// Folders use the existing category field; no change to TorBox playback.
-// Empty folders are remembered by this browser until content is published in them.
-const adultFolderStorageKey = "panther_adult_folder_names_v1";
-const adultFolderImagesKey = "panther_adult_folder_images_v1";
-let adultFolderSharedImages = {};
-let adultFolderImagesLoaded = false;
-function getAdultFolderImages(){ return adultFolderSharedImages; }
-async function loadAdultFolderImages(){
-  const rows = await rpc("panther_admin_list_private_folder_artwork", {});
-  adultFolderSharedImages = {};
-  for(const row of (Array.isArray(rows) ? rows : [])) {
-    adultFolderSharedImages[String(row.folder_name || "").trim()] = String(row.image_url || "");
-  }
-  adultFolderImagesLoaded = true;
-  updateAdultFolderImagePreview();
-}
-async function saveAdultFolderImage(folder, url){
-  await rpc("panther_admin_set_private_folder_artwork", {p_folder_name:folder,p_image_url:url});
-  if(url) adultFolderSharedImages[folder] = url;
-  else delete adultFolderSharedImages[folder];
-  updateAdultFolderImagePreview();
-}
-function updateAdultFolderImagePreview(){
-  const folder = $("adultMagnetFolder")?.value || "Adult";
-  const url = getAdultFolderImages()[folder] || "";
-  const preview = $("adultFolderImagePreview");
-  const label = $("adultFolderImageLabel");
-  if(preview){
-    preview.style.display = url ? "block" : "none";
-    if(url) preview.src = url; else preview.removeAttribute("src");
-  }
-  if(label) label.textContent = url ? `Image set for ${folder}` : `No image for ${folder}`;
-  const urlInput = $("adultFolderImageUrl");
-  if(urlInput) urlInput.value = url;
-}
-$("adultSaveFolderImageUrlBtn")?.addEventListener("click", async () => {
-  const folder = $("adultMagnetFolder")?.value || "Adult";
-  const url = String($("adultFolderImageUrl")?.value || "").trim();
-  const status = $("adultFolderImageStatus");
-  if(!/^https:\/\/[^\s]+$/i.test(url)) {
-    setStatus(status, "Enter a valid HTTPS image URL.", false); return;
-  }
-  try {
-    await saveAdultFolderImage(folder,url);
-    setStatus(status, `Image URL saved for ${folder} to Supabase.`, true);
-  } catch(error) { setStatus(status, error?.message || "Unable to save folder image", false); }
-});
-$("adultUploadMagnetPosterBtn")?.addEventListener("click", async () => {
-  const file = $("adultMagnetPosterFile")?.files?.[0];
-  const button = $("adultUploadMagnetPosterBtn");
-  const status = $("adultMagnetPosterUploadStatus");
-  if(!file) { setStatus(status, "Choose a poster image first.", false); return; }
-  if(!/\.(jpe?g|png|webp|gif)$/i.test(file.name) || (file.type && !["image/jpeg","image/png","image/webp","image/gif"].includes(file.type))){
-    setStatus(status, "Choose a JPG, PNG, WebP or GIF image.", false); return;
-  }
-  if(file.size > 8 * 1024 * 1024){ setStatus(status, "Poster must be smaller than 8 MB.", false); return; }
-  button.disabled = true;
-  setStatus(status, "Uploading poster…");
-  try {
-    const result = await uploadPrivateMedia(file, "poster");
-    $("adultMagnetPosterUrl").value = result.url;
-    $("adultMagnetPosterFile").value = "";
-    setStatus(status, "Poster uploaded. Its URL will be used when publishing.", true);
-  } catch(error){ setStatus(status, error?.message || "Poster upload failed.", false); }
-  finally { button.disabled = false; }
-});
-$("adultUploadFolderImageBtn")?.addEventListener("click", async () => {
-  const file = $("adultFolderImageFile")?.files?.[0];
-  const status = $("adultFolderImageStatus");
-  const button = $("adultUploadFolderImageBtn");
-  const folder = $("adultMagnetFolder")?.value || "Adult";
-  if(!file){ setStatus(status, "Choose an image attachment first.", false); return; }
-  if(!/\.(jpe?g|png|webp|gif)$/i.test(file.name) || (file.type && !["image/jpeg","image/png","image/webp","image/gif"].includes(file.type))){
-    setStatus(status, "Use a JPG, PNG, WebP or GIF image.", false); return;
-  }
-  if(file.size > 8 * 1024 * 1024){ setStatus(status, "Folder image must be smaller than 8 MB.", false); return; }
-  button.disabled = true;
-  setStatus(status, `Uploading image for ${folder}…`);
-  try {
-    const result = await uploadPrivateMedia(file, "poster");
-    await saveAdultFolderImage(folder,result.url);
-    $("adultFolderImageFile").value = "";
-    setStatus(status, `Image uploaded and saved for ${folder} in Supabase.`, true);
-  } catch(error) { setStatus(status, error?.message || "Image upload failed.", false); }
-  finally { button.disabled = false; }
-});
-$("adultRemoveFolderImageBtn")?.addEventListener("click", async () => {
-  const folder = $("adultMagnetFolder")?.value || "Adult";
-  try {
-    await saveAdultFolderImage(folder,"");
-    setStatus($("adultFolderImageStatus"), `Folder image removed for ${folder}.`, true);
-  } catch(error) { setStatus($("adultFolderImageStatus"), error?.message || "Unable to remove image", false); }
-});
-function getAdultFolders(){
-  let saved = [];
-  try { saved = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]"); } catch(_) {}
-  const inProgressRename = readAdultPendingRename();
-  const recoveryNames = inProgressRename ? [inProgressRename.from,inProgressRename.to] : [];
-  const names = ["Adult", ...saved, ...privateLibraryContent.map(x => x.category || "Adult"), ...recoveryNames];
-  return [...new Set(names.map(x => String(x || "").trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
-}
-function renderAdultFolderChoices(){
-  if(!adultFolderImagesLoaded && accessToken){
-    adultFolderImagesLoaded = true;
-    loadAdultFolderImages().catch(e => { adultFolderImagesLoaded = false; setStatus($("adultFolderImageStatus"), e?.message || "Unable to load shared folder images", false); });
-  }
-  const folderSelect = $("adultMagnetFolder");
-  const filter = $("adultLibraryFolderFilter");
-  const folders = getAdultFolders();
-  if(folderSelect){
-    const current = folderSelect.value || "Adult";
-    folderSelect.innerHTML = folders.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
-    folderSelect.value = folders.includes(current) ? current : "Adult";
-    if($("adultMagnetCategory")) $("adultMagnetCategory").value = folderSelect.value;
-    updateAdultFolderImagePreview();
-  }
-  if(filter){
-    const current = filter.value;
-    filter.innerHTML = '<option value="">All folders</option>' + folders.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
-    filter.value = folders.includes(current) ? current : "";
-  }
-}
-$("adultCreateFolderBtn")?.addEventListener("click", () => {
-  const name = String($("adultNewFolderName")?.value || "").trim();
-  if(!name){ alert("Enter a folder name."); return; }
-  const folders = getAdultFolders();
-  if(!folders.includes(name)){
-    try { localStorage.setItem(adultFolderStorageKey, JSON.stringify([...folders,name])); }
-    catch(_) { alert("Could not remember empty folder in this browser."); }
-  }
-  renderAdultFolderChoices();
-  $("adultMagnetFolder").value = name;
-  $("adultMagnetCategory").value = name;
-  updateAdultFolderImagePreview();
-  $("adultNewFolderName").value = "";
-  setStatus($("adultMagnetStatus"), `Folder "${name}" selected. Publish a video into it to store the folder in Supabase.`, true);
-});
-// Rename a folder without deleting videos or changing their IDs, TorBox links,
-// existing title-access assignments, collection membership, or watched progress.
-// Uses the same authenticated Admin RPC already used by folder deletion; no new
-// database function, SQL change, or storage upload is required.
-const adultFolderPendingRenameKey = "panther_adult_folder_pending_rename_v1";
-let adultFolderRenameBusy = false;
-
-function readAdultPendingRename(){
-  try {
-    const value = JSON.parse(localStorage.getItem(adultFolderPendingRenameKey) || "null");
-    return value && typeof value.from === "string" && typeof value.to === "string" ? value : null;
-  } catch(_) { return null; }
-}
-
-function readAdultSavedFolders(){
-  try {
-    const value = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]");
-    return Array.isArray(value) ? value.filter(v => typeof v === "string") : [];
-  } catch(_) { return []; }
-}
-
-async function renameAdultLibraryFolder(){
-  if(adultFolderRenameBusy || adultFolderDeletionBusy) return;
-  const folderSelect = $("adultMagnetFolder");
-  const field = $("adultRenameFolderName");
-  const button = $("adultRenameFolderBtn");
-  const status = $("adultRenameFolderStatus");
-  const original = String(folderSelect?.value || "").trim();
-  const next = String(field?.value || "").trim();
-  if(!original){ setStatus(status,"Select the folder you want to rename.",false); return; }
-  if(original === "Adult"){
-    setStatus(status,"Adult is Panther's default folder and cannot be renamed. Create a new folder and move individual videos instead.",false);
-    return;
-  }
-  if(!next || next.length > 100 || /[\r\n\u0000-\u001f\u007f]/.test(next)){
-    setStatus(status,"Enter a valid folder name (1–100 characters, no line breaks).",false);
-    return;
-  }
-  if(next === original){ setStatus(status,"Enter a different folder name.",false); return; }
-  if(next.toLocaleLowerCase() === "adult"){
-    setStatus(status,"Adult is reserved for the default folder.",false);
-    return;
-  }
-  const pending = readAdultPendingRename();
-  if(pending && (pending.from !== original || pending.to !== next)){
-    setStatus(status,`A previous rename from "${pending.from}" to "${pending.to}" is incomplete. Select that original folder and enter the same new name to finish it.`,false);
-    return;
-  }
-  const resuming = !!pending;
-  const locallyKnown = getAdultFolders();
-  if(!resuming && locallyKnown.some(name => name.toLocaleLowerCase() === next.toLocaleLowerCase() && name !== original)){
-    setStatus(status,`A folder called "${next}" already exists. Choose another name to avoid merging folders.`,false);
-    return;
-  }
-  adultFolderRenameBusy = true;
-  if(button) button.disabled = true;
-  try {
-    // Refresh before changing records so we don't skip videos added in another
-    // admin browser after this panel was last loaded.
-    setStatus(status,"Checking existing folders and published videos…");
-    const currentRows = await rpc("panther_admin_list_private_content",{});
-    if(!Array.isArray(currentRows)) throw new Error("Could not confirm the current Private Library catalogue.");
-    // Also load the shared artwork map, not just browser-local image data.
-    await loadAdultFolderImages();
-    const oldEntries = currentRows.filter(item => String(item.category || "Adult").trim() === original);
-    const targetEntries = currentRows.filter(item => String(item.category || "Adult").trim().toLocaleLowerCase() === next.toLocaleLowerCase());
-    if(!resuming && targetEntries.length){
-      throw new Error(`A folder called "${next}" already contains videos. Choose a different name.`);
-    }
-    if(!resuming && Object.keys(getAdultFolderImages()).some(name => name.toLocaleLowerCase() === next.toLocaleLowerCase() && name !== original)){
-      throw new Error(`The name "${next}" already has folder artwork assigned. Choose a different name.`);
-    }
-    const saved = readAdultSavedFolders();
-    const originalExists = oldEntries.length || saved.includes(original) || Object.prototype.hasOwnProperty.call(getAdultFolderImages(),original);
-    if(!originalExists && !resuming) throw new Error("That folder no longer exists. Reload the library and select a folder.");
-    if(!confirm(`Rename Private Library folder?\n\n${original}  →  ${next}\n\n${oldEntries.length} published video(s) will be moved without changing their playback links, IDs, watched progress or access permissions. Folder artwork will also move.\n\nContinue?`)){
-      setStatus(status,"");
-      return;
-    }
-    // Keep a recovery hint so an interrupted multi-video rename can be
-    // resumed even after reloading the panel.
-    localStorage.setItem(adultFolderPendingRenameKey,JSON.stringify({from:original,to:next}));
-    let moved=0;
-    for(const item of oldEntries){
-      setStatus(status,`Renaming folder: updating video ${moved+1} of ${oldEntries.length}…`);
-      await rpc("panther_admin_save_private_content",{
-        p_id:item.id,
-        p_title:item.title || "Private video",
-        p_description:item.description || "",
-        p_video_url:item.video_url || "",
-        p_poster_url:item.poster_url || "",
-        p_category:next,
-        p_creator:item.creator || "",
-        p_licence:item.licence || "",
-        p_attribution:item.attribution || "",
-        p_source_url:item.source_url || "",
-        p_enabled:item.enabled !== false,
-        p_sort_order:Number(item.sort_order ?? 100)
-      });
-      moved++;
-    }
-    // Copy the shared artwork to the renamed folder BEFORE removing the old
-    // mapping; this prevents losing its image if the network fails midway.
-    const oldArtwork = getAdultFolderImages()[original] || "";
-    if(oldArtwork) await saveAdultFolderImage(next,oldArtwork);
-    if(Object.prototype.hasOwnProperty.call(getAdultFolderImages(),original)) {
-      await saveAdultFolderImage(original,"");
-    }
-    // Empty folders are browser-local until a video is published, matching
-    // Panther Admin's existing Create Folder behaviour.
-    const updatedSaved = [...new Set([
-      ...saved.filter(name => name !== original && name !== next),
-      next
-    ])];
-    localStorage.setItem(adultFolderStorageKey,JSON.stringify(updatedSaved));
-    localStorage.removeItem(adultFolderPendingRenameKey);
-    await loadPrivateContent();
-    renderAdultFolderChoices();
-    if($("adultMagnetFolder")) $("adultMagnetFolder").value = next;
-    if($("adultMagnetCategory")) $("adultMagnetCategory").value = next;
-    if($("adultLibraryFolderFilter")) $("adultLibraryFolderFilter").value = next;
-    if(field) field.value = "";
-    updateAdultFolderImagePreview();
-    renderPrivateContent();
-    setStatus(status,`Folder renamed from "${original}" to "${next}". ${moved} video(s) updated${resuming ? " in this attempt" : ""}. Reopen Private Library in Panther to see the new name.`,true);
-  } catch(error){
-    try { await loadPrivateContent(); } catch(_) {}
-    setStatus(status,`Folder rename not completed: ${error?.message || String(error)}. If some videos moved, select the original folder and retry using the SAME new name to finish.`,false);
-  } finally {
-    adultFolderRenameBusy = false;
-    if(button) button.disabled = false;
-  }
-}
-$("adultRenameFolderBtn")?.addEventListener("click",renameAdultLibraryFolder);
-$("adultRenameFolderName")?.addEventListener("keydown",event=>{
-  if(event.key === "Enter"){
-    event.preventDefault();
-    renameAdultLibraryFolder();
-  }
-});
-
-// Remove a folder safely without deleting TorBox downloads or Storage objects.
-let adultFolderDeletionBusy = false;
-async function deleteAdultLibraryFolder(deleteVideos) {
-  if(adultFolderDeletionBusy || adultFolderRenameBusy) return;
-  const folder = String($("adultMagnetFolder")?.value || "").trim();
-  const status = $("adultDeleteFolderStatus");
-  if(!folder) { setStatus(status,"Choose a folder first.",false); return; }
-  if(folder === "Adult") { setStatus(status,"Adult is the default folder and cannot be deleted. You can move its videos into another folder using Edit.",false); return; }
-  const matches = privateLibraryContent.filter(item => String(item.category || "Adult").trim() === folder);
-  const target = "Uncategorised";
-  if(!deleteVideos && folder === target) {
-    setStatus(status,"Uncategorised is the destination for retained videos and cannot be moved into itself.",false);
-    return;
-  }
-  const message = deleteVideos
-    ? `DELETE FOLDER AND VIDEOS?\n\nFolder: ${folder}\nPublished titles: ${matches.length}\n\nThis permanently deletes the library records, including title access assignments. It does NOT delete files from TorBox or Supabase Storage.\n\nContinue?`
-    : `DELETE FOLDER BUT KEEP VIDEOS?\n\nFolder: ${folder}\nPublished titles: ${matches.length}\n\nAll videos will move to ${target}. Their IDs and playback links will remain unchanged.\n\nContinue?`;
-  if(!confirm(message)) return;
-  if(deleteVideos && matches.length > 0 && !confirm(`FINAL CONFIRMATION: Delete ${matches.length} published title(s) in ${folder}?`)) return;
-  adultFolderDeletionBusy = true;
-  const buttons = [$("adultDeleteFolderOnlyBtn"),$("adultDeleteFolderAndVideosBtn")];
-  buttons.forEach(b=>{if(b)b.disabled=true;});
-  let done = 0;
-  try {
-    for(const item of matches) {
-      setStatus(status,`${deleteVideos ? "Deleting" : "Moving"} ${done+1} of ${matches.length}: ${item.title || "Untitled"}…`);
-      if(deleteVideos) {
-        await rpc("panther_admin_delete_private_content",{p_id:item.id});
-      } else {
-        await rpc("panther_admin_save_private_content",{
-          p_id:item.id,
-          p_title:item.title || "Private video",
-          p_description:item.description || "",
-          p_video_url:item.video_url || "",
-          p_poster_url:item.poster_url || "",
-          p_category:target,
-          p_creator:item.creator || "",
-          p_licence:item.licence || "",
-          p_attribution:item.attribution || "",
-          p_source_url:item.source_url || "",
-          p_enabled:item.enabled !== false,
-          p_sort_order:Number(item.sort_order ?? 100)
-        });
-      }
-      done++;
-    }
-    // Remove the artwork assignment, but never delete the actual image file.
-    if(getAdultFolderImages()[folder]) await saveAdultFolderImage(folder,"");
-    let saved = [];
-    try { saved = JSON.parse(localStorage.getItem(adultFolderStorageKey) || "[]"); } catch(_) {}
-    localStorage.setItem(adultFolderStorageKey,JSON.stringify(
-      (Array.isArray(saved) ? saved : []).filter(name=>String(name).trim()!==folder)
-    ));
-    // Clear the chosen folder before rebuilding selectors.
-    if($("adultMagnetFolder")) $("adultMagnetFolder").value = "Adult";
-    if($("adultLibraryFolderFilter")) $("adultLibraryFolderFilter").value = "";
-    await loadPrivateContent();
-    setStatus(status,`Folder "${folder}" deleted. ${done} title(s) ${deleteVideos ? "removed from the library" : "moved to Uncategorised"}.`,true);
-  } catch(error) {
-    try { await loadPrivateContent(); } catch(_) {}
-    setStatus(status,`Stopped after ${done} of ${matches.length} title(s). ${error?.message || String(error)}. Resolve this error before retrying.`,false);
-  } finally {
-    adultFolderDeletionBusy = false;
-    buttons.forEach(b=>{if(b)b.disabled=false;});
-  }
-}
-$("adultDeleteFolderOnlyBtn")?.addEventListener("click",()=>deleteAdultLibraryFolder(false));
-$("adultDeleteFolderAndVideosBtn")?.addEventListener("click",()=>deleteAdultLibraryFolder(true));
-
-$("adultMagnetFolder")?.addEventListener("change", () => {
-  $("adultMagnetCategory").value = $("adultMagnetFolder").value;
-  updateAdultFolderImagePreview();
-});
-$("adultLibraryFolderFilter")?.addEventListener("change", renderPrivateContent);
-
 function renderPrivateContent(){
   const host = $("privateContentList");
   if(!host) return;
@@ -7420,33 +6061,21 @@ function renderPrivateContent(){
   $("privateContentCount").textContent = String(privateLibraryContent.length);
 
   if(!privateLibraryContent.length){
-    renderAdultFolderChoices();
-    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Add a magnet link above.</div>';
+    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Upload a video or add a direct streaming URL.</div>';
     renderPrivateTitleAccess();
     return;
   }
 
-  renderAdultFolderChoices();
-  const selectedFolder = $("adultLibraryFolderFilter")?.value || "";
-  const visibleItems = selectedFolder
-    ? privateLibraryContent.filter(item => (item.category || "Adult") === selectedFolder)
-    : privateLibraryContent;
-  host.innerHTML = visibleItems.length ? visibleItems.map(item => `
+  host.innerHTML = privateLibraryContent.map(item => `
     <div class="private-content-card">
       <div class="private-content-head">
         <div>
-          <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><input type="checkbox" class="manual-collection-select" data-id="${esc(item.id)}" ${manualCollectionSelected.includes(String(item.id)) ? "checked" : ""}><span class="small-text">Select for collection ${manualCollectionSelected.includes(String(item.id)) ? `(#${manualCollectionSelected.indexOf(String(item.id))+1})` : ""}</span></label>
           <div class="private-content-title">${esc(item.title || "Untitled")}</div>
-          ${item.manual_group_title ? `<div class="small-text">Collection: ${esc(item.manual_group_title)} · Scene ${Number(item.manual_scene_order || 0)}</div>` : ""}
           <div class="private-content-meta">
             ${esc(item.category || "Private")} · Sort ${Number(item.sort_order ?? 100)}<br>
             ${item.creator ? `Creator: ${esc(item.creator)}<br>` : ""}
             ${item.licence ? `Licence: ${esc(item.licence)}<br>` : ""}
-            ${esc(
-              String(item.video_url || "").startsWith("panther-torbox://")
-                ? "TorBox magnet source"
-                : (item.video_url || "")
-            )}
+            ${esc(item.video_url || "")}
           </div>
         </div>
         <span class="pill ${item.enabled === false ? "disabled" : "enabled"}">${item.enabled === false ? "DISABLED" : "ENABLED"}</span>
@@ -7456,7 +6085,7 @@ function renderPrivateContent(){
         <button class="small danger delete-private-content" data-id="${esc(item.id)}">Delete</button>
       </div>
     </div>
-  `).join("") : '<div class="empty-note">No titles in this folder.</div>';
+  `).join("");
 
   document.querySelectorAll(".edit-private-content").forEach(button => {
     button.onclick = () => editPrivateContent(button.dataset.id);
@@ -7466,48 +6095,9 @@ function renderPrivateContent(){
     button.onclick = () => deletePrivateContent(button.dataset.id);
   });
 
-  document.querySelectorAll(".manual-collection-select").forEach(input => {
-    input.onchange = () => {
-      const id = String(input.dataset.id);
-      manualCollectionSelected = manualCollectionSelected.filter(x => x !== id);
-      if(input.checked) manualCollectionSelected.push(id);
-      renderPrivateContent();
-    };
-  });
-  updateManualSelection();
   renderPrivateTitleAccess();
 }
 
-let manualCollectionSelected = [];
-function updateManualSelection(){
-  const label = $("manualCollectionSelection");
-  if(!label) return;
-  label.textContent = manualCollectionSelected.length
-    ? `${manualCollectionSelected.length} selected · order: ` + manualCollectionSelected.map((id,i) => `${i+1}. ${privateLibraryContent.find(x=>String(x.id)===id)?.title || id}`).join(" → ")
-    : "No videos selected";
-}
-$("clearManualCollectionBtn")?.addEventListener("click", () => { manualCollectionSelected=[]; renderPrivateContent(); });
-async function assignManualCollection(title){
-  const items = manualCollectionSelected.map(id=>privateLibraryContent.find(x=>String(x.id)===id)).filter(Boolean);
-  if(!items.length) return setStatus($("manualCollectionStatus"),"Select at least one video.",false);
-  if(new Set(items.map(x=>(x.category||"Uncategorised").trim())).size!==1)
-    return setStatus($("manualCollectionStatus"),"Choose videos from the same folder.",false);
-  if(title && items.length < 2)
-    return setStatus($("manualCollectionStatus"),"Select at least two videos to form a collection.",false);
-  try {
-    setStatus($("manualCollectionStatus"), "Saving collection...");
-    await rpc("panther_admin_assign_private_collection", {p_content_ids:manualCollectionSelected,p_group_title:title});
-    manualCollectionSelected=[];
-    await loadPrivateContent();
-    setStatus($("manualCollectionStatus"), title ? "Collection saved. Restart/reopen the Private Library to refresh." : "Selected videos ungrouped.", true);
-  } catch(e){ setStatus($("manualCollectionStatus"),e?.message||String(e),false); }
-}
-$("saveManualCollectionBtn")?.addEventListener("click",()=>{
-  const title=$("manualCollectionTitle")?.value.trim()||"";
-  if(!title) return setStatus($("manualCollectionStatus"),"Enter a collection name.",false);
-  assignManualCollection(title);
-});
-$("removeManualCollectionBtn")?.addEventListener("click",()=>assignManualCollection(""));
 
 async function loadPrivateContent(){
   if(!$("privateLibrarySection")) return;
@@ -7537,8 +6127,6 @@ function editPrivateContent(id){
   if(!item) return;
 
   privateEditingContentId = id;
-  $("privateContentEditorCard")?.classList.remove("hidden");
-  $("privateContentEditorCard")?.scrollIntoView({behavior:"smooth",block:"start"});
   $("privateContentFormTitle").textContent = "Edit content";
   $("savePrivateContentBtn").textContent = "Save changes";
   $("cancelPrivateContentEditBtn").classList.remove("hidden");
@@ -7692,33 +6280,12 @@ function privateAccountLabel(account){
 }
 
 
-// Filter visible account cards without rebuilding forms, so unsaved edits stay intact.
-function filterPrivateAccountsByUsername(){
-  const input = $("privateAccountUsernameSearch");
-  const query = (input?.value || "").trim().toLocaleLowerCase();
-  const cards = document.querySelectorAll("#privateAccountsList .private-account-card");
-  let visible = 0;
-  cards.forEach(card => {
-    const username = (card.dataset.username || "").toLocaleLowerCase();
-    const match = !query || username.includes(query);
-    card.style.display = match ? "" : "none";
-    if(match) visible++;
-  });
-  const count = $("privateAccountSearchCount");
-  if(count) count.textContent = query
-    ? `${visible} of ${cards.length} accounts found`
-    : `${cards.length} registered account${cards.length === 1 ? "" : "s"}`;
-  const noMatches = $("privateAccountNoMatches");
-  if(noMatches) noMatches.classList.toggle("hidden", !query || visible !== 0 || cards.length === 0);
-}
-
 function renderPrivateAccounts(){
   const host = $("privateAccountsList");
   if(!host) return;
 
   if(!privateLibraryAccounts.length){
     host.innerHTML = '<div class="empty-note">No registered Panther accounts yet. Open Panther on a logged-in device first.</div>';
-    filterPrivateAccountsByUsername();
     return;
   }
 
@@ -7727,7 +6294,7 @@ function renderPrivateAccounts(){
     const expiry = toLocalDateTimeValue(account.expires_at);
 
     return `
-      <div class="private-account-card" data-username="${esc(account.username || "")}">
+      <div class="private-account-card">
         <div class="private-account-head">
           <div>
             <div class="private-account-title">${esc(privateAccountLabel(account))}</div>
@@ -7781,7 +6348,6 @@ function renderPrivateAccounts(){
   document.querySelectorAll(".manage-private-titles").forEach(button => {
     button.onclick = () => openPrivateTitleAccess(button.dataset.scope);
   });
-  filterPrivateAccountsByUsername();
 }
 
 
@@ -7927,7 +6493,6 @@ async function loadPrivateLibrary(){
 
 $("reloadPrivateLibraryBtn")?.addEventListener("click", loadPrivateLibrary);
 $("reloadPrivateAccountsBtn")?.addEventListener("click", loadPrivateAccounts);
-$("privateAccountUsernameSearch")?.addEventListener("input", filterPrivateAccountsByUsername);
 
 
 let pantherDevices = [];
@@ -9419,10 +7984,173 @@ $("quickDevices")?.addEventListener("click", () => {
 $("quickAnnouncements")?.addEventListener("click", () => openSection("announcementsSection"));
 $("quickUpdates")?.addEventListener("click", () => openSection("updatesSection"));
 
+
+// -----------------------------------------------------------------------------
+// SUPPORT INBOX: requires the existing Supabase Auth + panther_admin_require_admin.
+// Edge Function authorizes EACH operation; the frontend never gets service keys.
+// -----------------------------------------------------------------------------
+let supportThreads = [];
+let supportThreadId = null;
+let supportActiveThread = null;
+let supportLoading = false;
+let supportPolling = null;
+
+async function supportApi(body) {
+  const response = await apiFetch('/functions/v1/panther-support', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  const data = await readJson(response);
+  if (!response.ok || data?.error) throw new Error(data?.error || `Support request failed (HTTP ${response.status})`);
+  return data || {};
+}
+
+function supportDate(value) {
+  if (!value) return '';
+  try {return new Date(value).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'});}
+  catch (_) {return String(value);}
+}
+
+function supportRenderThreads() {
+  const host = $('supportThreadList');
+  host.replaceChildren();
+  const search = $('supportSearch').value.trim().toLowerCase();
+  const openOnly = $('supportOpenOnly').checked;
+  let unreadTotal = 0;
+  for (const t of supportThreads) if(t.unread) unreadTotal++;
+  $('supportUnreadCount').textContent = unreadTotal ? `(${unreadTotal} new)` : '';
+  const filtered = supportThreads.filter(t =>
+    (!openOnly || t.status==='open') &&
+    (!search || [t.device_id,t.profile_id,t.account_label,t.status]
+      .some(v=>String(v||'').toLowerCase().includes(search)))
+  );
+  if (!filtered.length) {
+    const empty = document.createElement('div');
+    empty.className='muted';
+    empty.textContent='No conversations match this filter.';
+    host.append(empty);
+    return;
+  }
+  for (const thread of filtered) {
+    const row = document.createElement('button');
+    row.className = 'support-thread' + (thread.id===supportThreadId?' active':'');
+    const heading = document.createElement('strong');
+    heading.textContent = thread.account_label || 'Panther customer';
+    row.append(heading);
+    if(thread.unread) {
+      const badge=document.createElement('span');
+      badge.className='support-unread';badge.textContent='● NEW';row.append(badge);
+    }
+    const desc=document.createElement('small');
+    desc.textContent = `${thread.status==='closed'?'Closed':'Open'} • ${supportDate(thread.updated_at)} • ${thread.device_id || 'Device unknown'}`;
+    row.append(desc);
+    row.onclick=()=>supportOpenThread(thread.id);
+    host.append(row);
+  }
+}
+
+async function supportLoadThreads(silent=false) {
+  if (!accessToken || supportLoading) return;
+  supportLoading=true;
+  if (!silent) setStatus($('supportAdminStatus'),'Loading support conversations…');
+  try {
+    const result=await supportApi({action:'admin_list'});
+    supportThreads=result.threads||[];
+    supportRenderThreads();
+    if (!silent) setStatus($('supportAdminStatus'),`${supportThreads.length} conversations loaded.`,true);
+  } catch(e) {
+    setStatus($('supportAdminStatus'),e.message||String(e),false);
+  } finally {supportLoading=false;}
+}
+
+function supportRenderMessages(messages) {
+  const host=$('supportConversationMessages');
+  host.replaceChildren();
+  for (const msg of messages||[]) {
+    const bubble=document.createElement('div');
+    bubble.className='support-message '+(msg.sender==='admin'?'admin':'customer');
+    const who=document.createElement('small');
+    who.textContent=`${msg.sender==='admin'?'YOU':'CUSTOMER'} • ${supportDate(msg.created_at)}`;
+    const body=document.createElement('div');
+    body.textContent=msg.body||'';  // never inject customer HTML
+    bubble.append(who,body);
+    host.append(bubble);
+  }
+  host.scrollTop=host.scrollHeight;
+}
+
+async function supportOpenThread(id, silent=false) {
+  supportThreadId=id;
+  try {
+    const result=await supportApi({action:'admin_thread',thread_id:id});
+    if (id!==supportThreadId) return;
+    supportActiveThread=result.thread;
+    const thread=result.thread||{};
+    $('supportConversationHeader').textContent =
+      `${thread.account_label||'Panther customer'} • ${thread.status||'open'} • Device: ${thread.device_id||'—'} • Profile: ${thread.profile_id||'—'}`;
+    supportRenderMessages(result.messages||[]);
+    $('supportReply').disabled=false;
+    $('supportSendBtn').disabled=false;
+    $('supportToggleStatusBtn').disabled=false;
+    $('supportToggleStatusBtn').textContent=thread.status==='closed'?'Reopen conversation':'Close conversation';
+    const existing=supportThreads.find(t=>t.id===id);
+    if(existing) existing.unread=false;
+    supportRenderThreads();
+    if(!silent) setStatus($('supportAdminStatus'),'Conversation loaded.',true);
+  } catch(e) {setStatus($('supportAdminStatus'),e.message||String(e),false);}
+}
+
+$('supportSendBtn').addEventListener('click',async()=>{
+  if(!supportThreadId) return;
+  const text=$('supportReply').value.trim();
+  if(!text) return setStatus($('supportAdminStatus'),'Write a reply first.',false);
+  const button=$('supportSendBtn');button.disabled=true;
+  try {
+    const result=await supportApi({action:'admin_reply',thread_id:supportThreadId,body:text});
+    $('supportReply').value='';
+    supportActiveThread=result.thread;
+    supportRenderMessages(result.messages);
+    setStatus($('supportAdminStatus'),'Reply sent.',true);
+    await supportLoadThreads(true);
+  } catch(e){setStatus($('supportAdminStatus'),e.message||String(e),false);}
+  finally {button.disabled=false;}
+});
+
+$('supportToggleStatusBtn').addEventListener('click',async()=>{
+  if(!supportThreadId) return;
+  const next=supportActiveThread?.status==='closed'?'open':'closed';
+  try {
+    await supportApi({action:'admin_set_status',thread_id:supportThreadId,status:next});
+    await supportOpenThread(supportThreadId,true);
+    await supportLoadThreads(true);
+    setStatus($('supportAdminStatus'),next==='closed'?'Conversation closed.':'Conversation reopened.',true);
+  } catch(e){setStatus($('supportAdminStatus'),e.message||String(e),false);}
+});
+
+$('supportReloadBtn').addEventListener('click',()=>supportLoadThreads());
+$('supportOpenOnly').addEventListener('change',supportRenderThreads);
+$('supportSearch').addEventListener('input',supportRenderThreads);
+$('quickSupport').addEventListener('click',()=>{openSection('supportSection');supportLoadThreads();});
+$('supportSection').addEventListener('toggle',()=>{
+  if ($('supportSection').open && accessToken) {
+    supportLoadThreads();
+    if (supportPolling===null) {
+      supportPolling=setInterval(async()=>{
+        if(!accessToken || !$('supportSection').open || $('appView').classList.contains('hidden')) return;
+        await supportLoadThreads(true);
+        if(supportThreadId && !$('supportReply').value.trim()) await supportOpenThread(supportThreadId,true);
+      },15000);
+    }
+  } else if (supportPolling!==null) {
+    clearInterval(supportPolling);supportPolling=null;
+  }
+});
+
 initCollapsibleSections();
 
 boot();
 </script>
 
 </body>
-            </html>
+          </html>
