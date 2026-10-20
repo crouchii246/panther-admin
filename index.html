@@ -550,6 +550,21 @@ input[type=checkbox]{
 }
 
 
+
+/* Devices: service > account > registered device */
+.device-service{border:1px solid #304451;border-radius:16px;background:#10171d;overflow:hidden}
+.device-service>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px;background:#10212b}
+.device-service>summary::-webkit-details-marker{display:none}
+.device-service[open]>summary{border-bottom:1px solid #304451}
+.device-service-title{font-weight:850;font-size:17px;overflow-wrap:anywhere}
+.device-service-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.device-service-right{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.device-service-arrow{color:var(--accent);font-size:15px;transition:transform .15s}
+.device-service:not([open]) .device-service-arrow{transform:rotate(-90deg)}
+.device-service-accounts{display:grid;gap:9px;padding:12px}
+.device-service .device-account{border-color:#30404d}
+@media(max-width:620px){.device-service>summary{padding:12px;align-items:flex-start}.device-service-right{max-width:50%}.device-service-title{font-size:15px}.device-service-accounts{padding:8px}}
+
 /* ===== Announcements ===== */
 .announcement-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:16px}
 .announcement-form .wide{grid-column:1/-1}
@@ -6777,12 +6792,17 @@ function renderDeviceCard(device){
 }
 
 
+// Remember expanded service/account headings when the list refreshes or is searched.
+const expandedDeviceServices = new Set();
+const collapsedDeviceServices = new Set();
+const expandedDeviceAccounts = new Set();
+const collapsedDeviceAccounts = new Set();
+
 function renderDevices(){
   const host = $("devicesList");
   if(!host) return;
 
   const devices = filteredDevices();
-
   const total = pantherDevices.length;
   const enabled = pantherDevices.filter(x => x.enabled !== false).length;
   const disabled = total - enabled;
@@ -6793,62 +6813,109 @@ function renderDevices(){
   $("deviceDisabledCount").textContent = String(disabled);
   $("deviceRecentCount").textContent = String(recent);
 
-  if(!devices.length){
-    host.innerHTML = '<div class="empty-note">No matching Panther devices yet. Open the new app build on a logged-in device and it will appear here.</div>';
+  const queryActive = Boolean(($('deviceSearch')?.value || '').trim());
+  // Include configured services even when there are no registered devices.
+  // A registered device may contain a friendly service name instead of provider_key.
+  const allServices = new Map();
+  const normalize = value => String(value || '').trim().toLocaleLowerCase();
+  const keyFor = value => normalize(value) || 'unknown service';
+  const configuredNames = new Map();
+  (Array.isArray(providers) ? providers : []).forEach(p => {
+    const displayName = String(p.display_name || p.provider_key || 'Unknown service').trim();
+    const key = keyFor(p.provider_key || displayName);
+    if(!allServices.has(key)) allServices.set(key, {key, name:displayName, devices:[]});
+    configuredNames.set(keyFor(displayName), key);
+    configuredNames.set(keyFor(p.provider_key), key);
+  });
+
+  devices.forEach(device => {
+    const reported = String(device.service_name || '').trim() || 'Unknown service';
+    const reportedKey = keyFor(reported);
+    const key = configuredNames.get(reportedKey) || reportedKey;
+    if(!allServices.has(key)) allServices.set(key, {key, name:reported, devices:[]});
+    allServices.get(key).devices.push(device);
+  });
+
+  let services = [...allServices.values()];
+  if(queryActive){
+    // Hide empty services while searching, unless the service name itself matches.
+    const query = normalize($('deviceSearch')?.value);
+    services = services.filter(service => service.devices.length ||
+      normalize(service.name).includes(query) || normalize(service.key).includes(query));
+  }
+  services.sort((a,b) => a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
+
+  if(!services.length){
+    host.innerHTML = '<div class="empty-note">No matching services or registered devices.</div>';
     return;
   }
 
-  const groups = groupDevicesByAccount(devices);
-  const searchActive = Boolean(($("deviceSearch")?.value || "").trim());
+  host.innerHTML = services.map(service => {
+    const serviceDevices = service.devices;
+    const serviceRecent = serviceDevices.filter(d => deviceSeenRecently(d.last_seen_at)).length;
+    const serviceDisabled = serviceDevices.filter(d => d.enabled === false).length;
+    const accounts = groupDevicesByAccount(serviceDevices);
+    const openService = queryActive || expandedDeviceServices.has(service.key) ||
+      (!collapsedDeviceServices.has(service.key) && serviceRecent > 0);
+    const label = esc(service.name);
+    const word = serviceDevices.length === 1 ? 'device' : 'devices';
 
-  host.innerHTML = groups.map(group => {
-    const groupDevices = group.devices;
-    const groupEnabled = groupDevices.filter(device => device.enabled !== false).length;
-    const groupDisabled = groupDevices.length - groupEnabled;
-    const groupRecent = groupDevices.filter(device => deviceSeenRecently(device.last_seen_at)).length;
-
-    const serviceName = esc(group.serviceName || "Unknown service");
-    const username = esc(group.username || "Unknown username");
-    const deviceWord = groupDevices.length === 1 ? "device" : "devices";
-
-    const statusPills = [
-      `<span class="pill">${groupDevices.length} ${deviceWord}</span>`,
-      groupRecent > 0 ? `<span class="pill enabled">${groupRecent} recent</span>` : "",
-      groupDisabled > 0 ? `<span class="pill disabled">${groupDisabled} disabled</span>` : ""
-    ].filter(Boolean).join("");
-
-    return `
-      <details class="device-account" ${searchActive || groupRecent > 0 ? "open" : ""}>
-        <summary>
-          <div>
-            <div class="device-account-title">${serviceName} · ${username}</div>
-            <div class="device-account-sub">
-              ${groupDevices.length} ${deviceWord} registered to this IPTV account
-            </div>
-          </div>
-
-          <div class="device-account-right">
-            ${statusPills}
-            <span class="device-account-chevron">▼</span>
-          </div>
+    const accountsHtml = accounts.length ? accounts.map(group => {
+      const groupDevices = group.devices;
+      const groupRecent = groupDevices.filter(d => deviceSeenRecently(d.last_seen_at)).length;
+      const groupDisabled = groupDevices.filter(d => d.enabled === false).length;
+      const username = esc(group.username || 'Unknown username');
+      const accountId = `${service.key}|${group.key}`;
+      const accountOpen = queryActive || expandedDeviceAccounts.has(accountId) ||
+        (!collapsedDeviceAccounts.has(accountId) && groupRecent > 0);
+      const pills = [
+        `<span class="pill">${groupDevices.length} ${groupDevices.length === 1 ? 'device' : 'devices'}</span>`,
+        groupRecent ? `<span class="pill enabled">${groupRecent} recent</span>` : '',
+        groupDisabled ? `<span class="pill disabled">${groupDisabled} disabled</span>` : ''
+      ].filter(Boolean).join('');
+      return `<details class="device-account" data-device-account="${esc(accountId)}" ${accountOpen ? 'open' : ''}>
+        <summary><div><div class="device-account-title">${username}</div>
+          <div class="device-account-sub">IPTV account · ${groupDevices.length} registered ${groupDevices.length === 1 ? 'device' : 'devices'}</div></div>
+          <div class="device-account-right">${pills}<span class="device-account-chevron">▼</span></div>
         </summary>
+        <div class="device-account-cards">${groupDevices.map(renderDeviceCard).join('')}</div>
+      </details>`;
+    }).join('') : '<div class="empty-note">No registered devices for this service.</div>';
 
-        <div class="device-account-cards">
-          ${groupDevices.map(renderDeviceCard).join("")}
-        </div>
-      </details>
-    `;
-  }).join("");
+    return `<details class="device-service" data-device-service="${esc(service.key)}" ${openService ? 'open' : ''}>
+      <summary><div><div class="device-service-title">${label}</div>
+        <div class="device-service-sub">${serviceDevices.length} registered ${word} · ${accounts.length} ${accounts.length === 1 ? 'account' : 'accounts'}</div></div>
+        <div class="device-service-right">
+          <span class="pill">${serviceDevices.length} ${word}</span>
+          ${serviceRecent ? `<span class="pill enabled">${serviceRecent} recent</span>` : ''}
+          ${serviceDisabled ? `<span class="pill disabled">${serviceDisabled} disabled</span>` : ''}
+          <span class="device-service-arrow">▼</span>
+        </div></summary>
+      <div class="device-service-accounts">${accountsHtml}</div>
+    </details>`;
+  }).join('');
 
-  document.querySelectorAll(".rename-device").forEach(button => {
+  host.querySelectorAll('[data-device-service]').forEach(el => {
+    el.addEventListener('toggle', () => {
+      const key = el.dataset.deviceService;
+      if(el.open){expandedDeviceServices.add(key);collapsedDeviceServices.delete(key);}
+      else{collapsedDeviceServices.add(key);expandedDeviceServices.delete(key);}
+    });
+  });
+  host.querySelectorAll('[data-device-account]').forEach(el => {
+    el.addEventListener('toggle', () => {
+      const key = el.dataset.deviceAccount;
+      if(el.open){expandedDeviceAccounts.add(key);collapsedDeviceAccounts.delete(key);}
+      else{collapsedDeviceAccounts.add(key);expandedDeviceAccounts.delete(key);}
+    });
+  });
+  host.querySelectorAll('.rename-device').forEach(button => {
     button.onclick = () => renamePantherDevice(button.dataset.id);
   });
-
-  document.querySelectorAll(".toggle-device").forEach(button => {
+  host.querySelectorAll('.toggle-device').forEach(button => {
     button.onclick = () => togglePantherDevice(button.dataset.id);
   });
-
-  document.querySelectorAll(".force-logout-device").forEach(button => {
+  host.querySelectorAll('.force-logout-device').forEach(button => {
     button.onclick = () => forceLogoutPantherDevice(button.dataset.id);
   });
 }
@@ -8352,4 +8419,4 @@ boot();
 </script>
 
 </body>
-            </html>
+              </html>
