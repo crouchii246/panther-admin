@@ -2154,7 +2154,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <div style="height:14px"></div>
 
 
-      <div class="card-flat">
+      <div class="card-flat hidden" aria-hidden="true">
         <div class="section-heading">
           <div class="section-heading-left">
             <div class="section-title-text">
@@ -2224,7 +2224,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       </div>
 
       <div style="height:14px"></div>
-      <div class="card-flat">
+      <div class="card-flat hidden" aria-hidden="true">
         <div class="section-heading">
           <div class="section-heading-left">
             <div class="section-title-text">
@@ -2305,7 +2305,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
         <div class="card-flat">
           <div class="section-heading">
             <div class="section-heading-left">
-              <div class="section-title-text"><h2 id="privateContentFormTitle">Add content</h2><div>Upload your own video/poster or paste an existing direct URL.</div></div>
+              <div class="section-title-text"><h2 id="privateContentFormTitle">Add content</h2><div>Add content using a magnet link. No video upload or direct-stream URL options.</div></div>
             </div>
           </div>
 
@@ -2313,13 +2313,14 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
             <div><div class="field-label">Title</div><input id="privateContentTitle" maxlength="180" placeholder="Title"></div>
             <div><div class="field-label">Category</div><input id="privateContentCategory" maxlength="100" placeholder="e.g. Private" value="Private"></div>
             <div class="wide">
-              <div class="field-label">Video</div>
-              <div class="private-upload-row">
+              <div class="field-label">Magnet link (only video source)</div>
+              <div class="private-upload-row hidden" aria-hidden="true">
                 <input id="privateContentVideoFile" type="file" accept="video/*,.mp4,.webm,.m4v,.mov,.mkv">
                 <button id="uploadPrivateVideoBtn" type="button">Upload video</button>
               </div>
               <div id="privateVideoUploadStatus" class="small-text"></div>
-              <input id="privateContentVideoUrl" style="margin-top:8px" placeholder="Or paste a direct video URL">
+              <input id="privateContentVideoUrl" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:8px" placeholder="magnet:?xt=urn:btih:..." required>
+              <div class="small-text" style="margin-top:6px">Paste a complete magnet URI for content you are authorised to use. Playback depends on the existing magnet/TorBox integration.</div>
             </div>
 
             <div class="wide">
@@ -6180,7 +6181,7 @@ function renderPrivateContent(){
   $("privateContentCount").textContent = String(privateLibraryContent.length);
 
   if(!privateLibraryContent.length){
-    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Upload a video or add a direct streaming URL.</div>';
+    host.innerHTML = '<div class="empty-note">No Private Library titles yet. Add one using a magnet link.</div>';
     renderPrivateTitleAccess();
     return;
   }
@@ -6315,7 +6316,7 @@ $("savePrivateContentBtn")?.addEventListener("click", async () => {
   const oldPosterUrl = editingItem?.poster_url || "";
 
   try{
-    const selectedVideo = $("privateContentVideoFile")?.files?.[0] || null;
+    const selectedVideo = null; // Magnet links are the only video source.
     const selectedPoster = $("privateContentPosterFile")?.files?.[0] || null;
 
     if(selectedVideo){
@@ -6337,8 +6338,9 @@ $("savePrivateContentBtn")?.addEventListener("click", async () => {
     const videoUrl = $("privateContentVideoUrl").value.trim();
     const posterUrl = $("privateContentPosterUrl").value.trim();
 
-    if(!videoUrl){
-      throw new Error("Upload a video or enter a direct video URL.");
+    if(!/^magnet:\?xt=urn:btih:[A-Za-z0-9]{32,40}(?:&|$)/i.test(videoUrl) &&
+       !/^magnet:\?xt=urn:btmh:[A-Za-z0-9]+(?:&|$)/i.test(videoUrl)){
+      throw new Error("Enter a valid magnet link (magnet:?xt=urn:btih:... or btmh:...).");
     }
 
     setStatus(
@@ -8419,4 +8421,4 @@ boot();
 </script>
 
 </body>
-              </html>
+      </html>
