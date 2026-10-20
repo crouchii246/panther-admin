@@ -963,6 +963,13 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 .support-quick-manager textarea{min-height:65px}
 @media(max-width:780px){.support-conversation-head-controls select{min-width:105px}.support-quick-grid{grid-template-columns:1fr}.support-toolbar select{width:100%}}
 
+
+/* Mobile-safe seasonal scheduling controls; no native datetime picker dependency. */
+.seasonal-datetime-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0}
+.seasonal-datetime-picker select{min-width:0;width:100%;font-size:15px;min-height:46px;padding:8px 5px;background:#101923;color:#fff;border:1px solid #43566d}
+.seasonal-datetime-picker select:nth-child(4),.seasonal-datetime-picker select:nth-child(5){grid-column:span 1}
+@media(max-width:380px){.seasonal-datetime-picker{gap:5px}.seasonal-datetime-picker select{font-size:13px}}
+
 </style>
 
 </head>
@@ -1482,12 +1489,28 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 
         <div>
           <div class="field-label">Start date & time</div>
-          <input id="seasonalStartAt" type="datetime-local">
+          <input id="seasonalStartAt" type="hidden">
+          <div class="seasonal-datetime-picker" id="seasonalStartPicker" aria-label="Start date and time">
+            <select id="seasonalStartDay" aria-label="Start day"></select>
+            <select id="seasonalStartMonth" aria-label="Start month"></select>
+            <select id="seasonalStartYear" aria-label="Start year"></select>
+            <select id="seasonalStartHour" aria-label="Start hour"></select>
+            <select id="seasonalStartMinute" aria-label="Start minute"></select>
+          </div>
+          <button type="button" class="small" id="seasonalStartClear">Clear start date</button>
         </div>
 
         <div>
           <div class="field-label">End date & time</div>
-          <input id="seasonalEndAt" type="datetime-local">
+          <input id="seasonalEndAt" type="hidden">
+          <div class="seasonal-datetime-picker" id="seasonalEndPicker" aria-label="End date and time">
+            <select id="seasonalEndDay" aria-label="End day"></select>
+            <select id="seasonalEndMonth" aria-label="End month"></select>
+            <select id="seasonalEndYear" aria-label="End year"></select>
+            <select id="seasonalEndHour" aria-label="End hour"></select>
+            <select id="seasonalEndMinute" aria-label="End minute"></select>
+          </div>
+          <button type="button" class="small" id="seasonalEndClear">Clear end date</button>
         </div>
 
         <div>
@@ -4795,6 +4818,8 @@ function applySeasonalConfigToForm(config){
   $("seasonalUseBuiltinArtwork").checked = value.use_builtin_artwork !== false;
   $("seasonalStartAt").value = seasonalIsoToLocalInput(value.start_at);
   $("seasonalEndAt").value = seasonalIsoToLocalInput(value.end_at);
+  window.seasonalPickerSetStart?.($("seasonalStartAt").value);
+  window.seasonalPickerSetEnd?.($("seasonalEndAt").value);
 
   updateSeasonalPreview();
   updateSeasonalSummary(value);
@@ -5026,6 +5051,12 @@ async function saveSeasonalTheme(){
 
   try{
     button.disabled = true;
+
+    for(const kind of ['Start','End']){
+      const fields=['Day','Month','Year','Hour','Minute'];
+      const selected=fields.filter(x=>document.getElementById('seasonal'+kind+x)?.value).length;
+      if(selected>0 && selected<5) throw new Error('Complete every '+kind.toLowerCase()+' date/time field, or clear it.');
+    }
 
     const config =
       seasonalConfigFromForm();
@@ -8263,6 +8294,49 @@ supportEl('supportSection').addEventListener('toggle',()=>{
     },5000);
   }else if(supportPolling!==null){clearInterval(supportPolling);supportPolling=null;clearTimeout(supportTypingTimer);}
 });
+
+
+// Seasonal schedule picker: five native SELECTs work reliably on mobile Chrome.
+// The hidden original inputs preserve all existing Supabase save/load logic.
+function seasonalPickerInit(kind){
+  const root = document.getElementById('seasonal'+kind+'At');
+  if(!root) return;
+  const el = part => document.getElementById('seasonal'+kind+part);
+  const fill=(part,entries,placeholder)=>{
+    const node=el(part);
+    node.replaceChildren(new Option(placeholder,''));
+    for(const [value,label] of entries) node.add(new Option(label,value));
+  };
+  const pad=n=>String(n).padStart(2,'0');
+  fill('Year',Array.from({length:42},(_,i)=>[String(2020+i),String(2020+i)]),'Year');
+  fill('Month',Array.from({length:12},(_,i)=>[pad(i+1),new Date(2024,i,1).toLocaleString('en-GB',{month:'short'})]),'Month');
+  fill('Day',Array.from({length:31},(_,i)=>[pad(i+1),pad(i+1)]),'Day');
+  fill('Hour',Array.from({length:24},(_,i)=>[pad(i),pad(i)]),'Hour');
+  fill('Minute',Array.from({length:60},(_,i)=>[pad(i),pad(i)]),'Minute');
+  const parts=['Year','Month','Day','Hour','Minute'];
+  const clear=()=>{for(const part of parts)el(part).value='';root.value='';root.dispatchEvent(new Event('change',{bubbles:true}));};
+  const update=()=>{
+    const vals=Object.fromEntries(parts.map(part=>[part,el(part).value]));
+    // Do not save a partial date; missing fields stay empty.
+    if(parts.every(part=>vals[part])){
+      const days=new Date(Number(vals.Year),Number(vals.Month),0).getDate();
+      if(Number(vals.Day)>days){el('Day').value=pad(days);vals.Day=pad(days);}
+      root.value=`${vals.Year}-${vals.Month}-${vals.Day}T${vals.Hour}:${vals.Minute}`;
+    }else root.value='';
+    root.dispatchEvent(new Event('change',{bubbles:true}));
+  };
+  for(const part of parts)el(part).addEventListener('change',update);
+  el('Clear').addEventListener('click',clear);
+  // Used when settings are loaded from Supabase.
+  window['seasonalPickerSet'+kind]=function(value){
+    const match=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    const chunks=match?[match[1],match[2],match[3],match[4],match[5]]:['','','','',''];
+    parts.forEach((part,i)=>{el(part).value=chunks[i];});
+  };
+  window['seasonalPickerSet'+kind](root.value);
+}
+seasonalPickerInit('Start');
+seasonalPickerInit('End');
 
 initCollapsibleSections();
 
