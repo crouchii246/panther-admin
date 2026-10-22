@@ -733,6 +733,18 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 }
 
 
+
+/* Private Library: nested collapsible lists and instant client-side search */
+.private-subsection{border:1px solid var(--border);border-radius:14px;background:var(--panel3);overflow:hidden}
+.private-subsection>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;padding:14px}
+.private-subsection>summary::-webkit-details-marker{display:none}
+.private-subsection>summary::after{content:"▸";color:var(--accent);font-size:21px;flex-shrink:0}
+.private-subsection[open]>summary::after{content:"▾"}
+.private-subsection[open]>summary{border-bottom:1px solid var(--border)}
+.private-subsection-body{padding:13px}
+.private-search{margin-bottom:12px}
+.private-search-count{font-size:12px;color:var(--muted);margin:-5px 0 11px}
+
 /* ===== Private Library ===== */
 .private-library-grid{display:grid;grid-template-columns:minmax(320px,430px) 1fr;gap:14px;align-items:start}
 .private-library-form{display:grid;gap:10px}
@@ -2348,25 +2360,30 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
           <div id="privateContentStatus" class="status"></div>
         </div>
 
-        <div class="card-flat">
-          <div class="section-heading">
-            <div class="section-heading-left"><div class="section-title-text"><h2>Library titles</h2><div>Streaming-only content currently configured.</div></div></div>
-            <span id="privateContentCount" class="pill">0</span>
+        <details class="private-subsection" id="privateTitlesSection">
+          <summary>
+            <div class="section-title-text"><h2>Library titles <span id="privateContentCount" class="pill">0</span></h2><div>Click to view, search and manage your titles.</div></div>
+          </summary>
+          <div class="private-subsection-body">
+            <input id="privateContentSearch" class="private-search" type="search" placeholder="Search titles, categories or creators..." aria-label="Search library titles" autocomplete="off">
+            <div id="privateContentSearchCount" class="private-search-count"></div>
+            <div id="privateContentList" class="private-content-list"></div>
           </div>
-          <div id="privateContentList" class="private-content-list"></div>
-        </div>
+        </details>
       </div>
 
       <div style="height:16px"></div>
 
-      <div class="card-flat">
-        <div class="section-heading">
-          <div class="section-heading-left"><div class="section-title-text"><h2>Account access</h2><div>Accounts appear here automatically after a Panther device has registered.</div></div></div>
-          <button id="reloadPrivateAccountsBtn" class="small">Reload accounts</button>
+      <details class="private-subsection" id="privateAccountsSection">
+        <summary><div class="section-title-text"><h2>Account access</h2><div>Click to view, search and manage registered accounts.</div></div></summary>
+        <div class="private-subsection-body">
+          <div class="cache-actions" style="margin-bottom:10px"><button id="reloadPrivateAccountsBtn" class="small">Reload accounts</button></div>
+          <input id="privateAccountSearch" class="private-search" type="search" placeholder="Search username, service or account ID..." aria-label="Search Private Library accounts" autocomplete="off">
+          <div id="privateAccountSearchCount" class="private-search-count"></div>
+          <div id="privateAccountStatus" class="status"></div>
+          <div id="privateAccountsList" class="private-account-list"></div>
         </div>
-        <div id="privateAccountStatus" class="status"></div>
-        <div id="privateAccountsList" class="private-account-list"></div>
-      </div>
+      </details>
 
       <div id="privateTitleAccessPanel" class="private-title-access hidden">
         <div class="section-heading">
@@ -2374,6 +2391,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
           <button id="closePrivateTitleAccessBtn" class="small">Close</button>
         </div>
         <div class="update-help">These selections are used when <strong>Allow all titles</strong> is turned off for the account.</div>
+        <input id="privateTitleAccessSearch" class="private-search" type="search" placeholder="Search individual titles..." aria-label="Search selectable titles" autocomplete="off" style="margin-top:12px">
         <div id="privateTitleAccessList" class="private-title-access-list"></div>
         <div class="cache-actions" style="margin-top:12px">
           <button id="savePrivateTitleAccessBtn" class="primary">Save title access</button>
@@ -6186,7 +6204,17 @@ function renderPrivateContent(){
     return;
   }
 
-  host.innerHTML = privateLibraryContent.map(item => `
+  const query = ($("privateContentSearch")?.value || "").trim().toLocaleLowerCase();
+  const matching = privateLibraryContent.filter(item =>
+    [item.title, item.category, item.creator, item.description].some(value => String(value || "").toLocaleLowerCase().includes(query))
+  );
+  if($('privateContentSearchCount')) $('privateContentSearchCount').textContent = `${matching.length} of ${privateLibraryContent.length} titles`;
+  if(!matching.length){
+    host.innerHTML = '<div class="empty-note">No titles match your search.</div>';
+    renderPrivateTitleAccess();
+    return;
+  }
+  host.innerHTML = matching.map(item => `
     <div class="private-content-card">
       <div class="private-content-head">
         <div>
@@ -6410,7 +6438,16 @@ function renderPrivateAccounts(){
     return;
   }
 
-  host.innerHTML = privateLibraryAccounts.map(account => {
+  const query = ($("privateAccountSearch")?.value || "").trim().toLocaleLowerCase();
+  const matching = privateLibraryAccounts.filter(account =>
+    [account.username, account.service_name, account.account_scope_id].some(value => String(value || "").toLocaleLowerCase().includes(query))
+  );
+  if($('privateAccountSearchCount')) $('privateAccountSearchCount').textContent = `${matching.length} of ${privateLibraryAccounts.length} accounts`;
+  if(!matching.length){
+    host.innerHTML = '<div class="empty-note">No accounts match your search.</div>';
+    return;
+  }
+  host.innerHTML = matching.map(account => {
     const scope = esc(account.account_scope_id || "");
     const expiry = toLocalDateTimeValue(account.expires_at);
 
@@ -6568,8 +6605,19 @@ function renderPrivateTitleAccess(){
       <span><strong>${esc(item.title || "Untitled")}</strong><div class="small-text">${esc(item.category || "Private")}</div></span>
     </label>
   `).join("");
+  filterPrivateTitleAccess();
 }
 
+function filterPrivateTitleAccess(){
+  const q = ($("privateTitleAccessSearch")?.value || "").trim().toLocaleLowerCase();
+  document.querySelectorAll("#privateTitleAccessList .private-title-access-item").forEach(row => {
+    row.style.display = row.textContent.toLocaleLowerCase().includes(q) ? "" : "none";
+  });
+}
+
+$("privateContentSearch")?.addEventListener("input", renderPrivateContent);
+$("privateAccountSearch")?.addEventListener("input", renderPrivateAccounts);
+$("privateTitleAccessSearch")?.addEventListener("input", filterPrivateTitleAccess);
 
 $("savePrivateTitleAccessBtn")?.addEventListener("click", async () => {
   if(!privateTitleAccessScope) return;
@@ -8421,4 +8469,4 @@ boot();
 </script>
 
 </body>
-      </html>
+             </html>
