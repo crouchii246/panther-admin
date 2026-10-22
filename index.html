@@ -2423,7 +2423,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   <details id="remoteSupportSection" class="section-anchor collapse-card">
     <summary><div class="section-heading-left"><div class="section-icon">🖥</div><div class="section-title-text"><h2>Remote Support</h2><div>Connect with a customer's temporary assistance code.</div></div></div><span class="collapse-arrow">▼</span></summary>
     <div class="collapse-content">
-      <div class="cache-explainer"><strong>Customer approval required.</strong> Enter the six-digit code shown on the customer's Panther Streams app. Navigation commands only work after they approve. Screen streaming is not part of this console yet; use the customer's description while navigating. Never ask for passwords or PINs.</div>
+      <div class="cache-explainer"><strong>Customer approval required.</strong> Enter the six-digit code shown on the customer's Panther Streams app. Navigation commands only work after they approve. Live screen preview appears below once the customer separately approves screen sharing. A preview is available only during an active session. Never ask for passwords or PINs.</div>
       <div class="remote-support-toolbar">
         <input id="remoteSupportCode" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6-digit customer code" aria-label="Temporary customer support code">
         <button id="remoteSupportConnect" class="primary">Request control</button>
@@ -2433,6 +2433,18 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <div class="remote-support-grid">
         <div class="card-flat"><h3>Support sessions</h3><div id="remoteSupportSessions" class="remote-support-sessions"><div class="muted">Open Remote Support to load sessions.</div></div></div>
         <div class="card-flat"><h3>Selected session</h3><div id="remoteSupportCurrent" class="small-text" style="margin:10px 0">No session selected.</div>
+          <div id="remoteSupportPreviewSection" class="hidden" style="margin:14px 0;">
+            <div style="display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px">
+              <strong>Live customer screen</strong>
+              <button type="button" id="remotePreviewRefresh">↻ Refresh preview</button>
+            </div>
+            <div id="remotePreviewStage" style="background:#090b10;border:2px solid #344258;border-radius:12px;min-height:190px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px;">
+              <img id="remotePreviewImage" alt="Live customer screen preview" style="display:none;max-width:100%;max-height:530px;object-fit:contain;" />
+              <p id="remotePreviewPlaceholder" style="color:#bcc8da;text-align:center;margin:16px">Waiting for customer to allow screen viewing…</p>
+            </div>
+            <div id="remotePreviewTimestamp" class="small-text" style="margin-top:6px">Preview updates about every 2–3 seconds when sharing is active.</div>
+            <div class="small-text" style="margin-top:6px">Screen preview is view-only. The navigation buttons below send commands separately. Do not request passwords, PINs or private content.</div>
+          </div>
           <div id="remoteSupportActions" class="hidden">
             <div class="remote-support-nav" role="group" aria-label="Remote navigation controls">
               <button data-remote-command="up">▲ Up</button><button data-remote-command="left">◀ Left</button><button data-remote-command="select" class="primary">● Select</button><button data-remote-command="right">Right ▶</button><button data-remote-command="down">▼ Down</button>
@@ -2444,7 +2456,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
           <button id="remoteSupportEnd" class="danger hidden" style="margin-top:12px">End session</button>
         </div>
       </div>
-      <div class="small-text" style="margin-top:12px">Device control is not ready until a compatible app update is installed and approved. Requests will remain pending until then. No remote screen or keyboard capture is enabled.</div>
+      <div class="small-text" style="margin-top:12px">Navigation commands require compatible app-side support. Screen viewing requires a separate customer consent and a supported device. A queued command is not proof that the app has executed it.</div>
     </div>
   </details>
 
@@ -8519,6 +8531,9 @@ const remoteUrl = `${SUPABASE_URL}/functions/v1/panther-remote-support`;
 let remoteSessions = [];
 let remoteSelectedId = null;
 let remoteBusy = false;
+let remotePreviewBusy = false;
+let remotePreviewSessionId = null;
+let remotePreviewCapturedAt = null;
 const remoteEl = id => document.getElementById(id);
 function remoteMessage(msg, ok=null){setStatus(remoteEl('remoteSupportStatus'),msg,ok);}
 async function remoteCall(action, args={}){
@@ -8532,6 +8547,36 @@ async function remoteCall(action, args={}){
   return result;
 }
 function remoteDate(value){if(!value)return '';const d=new Date(value);return isNaN(d.getTime())?'':d.toLocaleString();}
+function remotePreviewReset(message='Waiting for customer to allow screen viewing…'){
+  remotePreviewCapturedAt=null;
+  const img=remoteEl('remotePreviewImage');img.removeAttribute('src');img.style.display='none';
+  const msg=remoteEl('remotePreviewPlaceholder');msg.textContent=message;msg.style.display='block';
+  remoteEl('remotePreviewTimestamp').textContent='Preview updates about every 2–3 seconds when sharing is active.';
+}
+async function remotePreviewLoad(){
+  const selected=remoteSessions.find(s=>s.id===remoteSelectedId);
+  if(remotePreviewBusy||!accessToken||!remoteEl('remoteSupportSection').open||document.hidden||!selected||selected.state!=='active')return;
+  if(remotePreviewSessionId!==selected.id){remotePreviewSessionId=selected.id;remotePreviewReset();}
+  remotePreviewBusy=true;
+  const sessionId=selected.id;
+  try{
+    const result=await remoteCall('admin_preview',{session_id:sessionId});
+    if(remoteSelectedId!==sessionId)return;
+    const preview=result.preview;
+    const img=remoteEl('remotePreviewImage'),placeholder=remoteEl('remotePreviewPlaceholder');
+    if(!preview||!preview.jpeg_base64){remotePreviewReset('No recent image received. Ask customer to start screen sharing.');return;}
+    const encoded=preview.jpeg_base64;
+    if(typeof encoded!=='string'||encoded.length>1500000||!/^[A-Za-z0-9+/=]+$/.test(encoded))throw new Error('Invalid preview data');
+    if(preview.captured_at!==remotePreviewCapturedAt){
+      img.src='data:image/jpeg;base64,'+encoded;
+      remotePreviewCapturedAt=preview.captured_at;
+    }
+    img.style.display='block';placeholder.style.display='none';
+    remoteEl('remotePreviewTimestamp').textContent='Captured '+remoteDate(preview.captured_at)+' · '+(preview.width||'?')+' × '+(preview.height||'?')+' · refreshed automatically';
+  }catch(e){
+    if(remoteSelectedId===sessionId)remotePreviewReset(e.message==='Customer has not enabled screen viewing'?'Waiting for customer to approve screen sharing…':'Preview unavailable: '+e.message);
+  }finally{remotePreviewBusy=false;}
+}
 function remoteRender(){
   const list=remoteEl('remoteSupportSessions'),selected=remoteSessions.find(s=>s.id===remoteSelectedId);
   list.replaceChildren();
@@ -8545,6 +8590,9 @@ function remoteRender(){
   remoteEl('remoteSupportCurrent').textContent=selected?`${selected.device_label||'Customer device'} | ${selected.state} | ${selected.iptv_username||'Not logged in'} | ${remoteDate(selected.requested_at)}`:'No session selected.';
   const active=selected?.state==='active'&&(!selected.session_expires_at||Date.parse(selected.session_expires_at)>Date.now());
   remoteEl('remoteSupportActions').classList.toggle('hidden',!active);
+  remoteEl('remoteSupportPreviewSection').classList.toggle('hidden',!active);
+  if(!active||remotePreviewSessionId!==remoteSelectedId){remotePreviewSessionId=active?remoteSelectedId:null;remotePreviewReset();}
+  if(active)remotePreviewLoad();
   remoteEl('remoteSupportEnd').classList.toggle('hidden',!selected||!['waiting','pending_approval','active'].includes(selected.state));
   if(selected?.state==='pending_approval')remoteMessage('Control requested. Customer must approve on their device.');
 }
@@ -8557,6 +8605,9 @@ async function remoteLoad(){
 remoteEl('quickRemoteSupport').addEventListener('click',()=>{openSection('remoteSupportSection');remoteLoad();});
 remoteEl('remoteSupportSection').addEventListener('toggle',()=>{if(remoteEl('remoteSupportSection').open)remoteLoad();});
 remoteEl('remoteSupportRefresh').addEventListener('click',remoteLoad);
+remoteEl('remotePreviewRefresh').addEventListener('click',remotePreviewLoad);
+window.setInterval(()=>{if(remoteEl('remoteSupportSection').open&&remoteSelectedId){remotePreviewLoad();}},2500);
+window.setInterval(()=>{if(remoteEl('remoteSupportSection').open&&!document.hidden&&accessToken)remoteLoad();},12000);
 remoteEl('remoteSupportConnect').addEventListener('click',async()=>{
   const code=remoteEl('remoteSupportCode').value.replace(/\s/g,'');
   if(!/^\d{6}$/.test(code)){remoteMessage('Enter the six-digit code from the customer app.',false);return;}
