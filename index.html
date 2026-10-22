@@ -2442,7 +2442,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
               <img id="remotePreviewImage" alt="Live customer screen preview" style="display:none;max-width:100%;max-height:530px;object-fit:contain;" />
               <p id="remotePreviewPlaceholder" style="color:#bcc8da;text-align:center;margin:16px">Waiting for customer to allow screen viewing…</p>
             </div>
-            <div id="remotePreviewTimestamp" class="small-text" style="margin-top:6px">Preview updates about every 2–3 seconds when sharing is active.</div>
+            <div id="remotePreviewTimestamp" class="small-text" style="margin-top:6px">Preview checks for a new image every second while sharing is active.</div>
             <div class="small-text" style="margin-top:6px">Screen preview is view-only. The navigation buttons below send commands separately. Do not request passwords, PINs or private content.</div>
           </div>
           <div id="remoteSupportActions" class="hidden">
@@ -8551,7 +8551,7 @@ function remotePreviewReset(message='Waiting for customer to allow screen viewin
   remotePreviewCapturedAt=null;
   const img=remoteEl('remotePreviewImage');img.removeAttribute('src');img.style.display='none';
   const msg=remoteEl('remotePreviewPlaceholder');msg.textContent=message;msg.style.display='block';
-  remoteEl('remotePreviewTimestamp').textContent='Preview updates about every 2–3 seconds when sharing is active.';
+  remoteEl('remotePreviewTimestamp').textContent='Preview checks for a new image every second while sharing is active.';
 }
 async function remotePreviewLoad(){
   const selected=remoteSessions.find(s=>s.id===remoteSelectedId);
@@ -8606,7 +8606,7 @@ remoteEl('quickRemoteSupport').addEventListener('click',()=>{openSection('remote
 remoteEl('remoteSupportSection').addEventListener('toggle',()=>{if(remoteEl('remoteSupportSection').open)remoteLoad();});
 remoteEl('remoteSupportRefresh').addEventListener('click',remoteLoad);
 remoteEl('remotePreviewRefresh').addEventListener('click',remotePreviewLoad);
-window.setInterval(()=>{if(remoteEl('remoteSupportSection').open&&remoteSelectedId){remotePreviewLoad();}},2500);
+window.setInterval(()=>{if(remoteEl('remoteSupportSection').open&&remoteSelectedId){remotePreviewLoad();}},1000);
 window.setInterval(()=>{if(remoteEl('remoteSupportSection').open&&!document.hidden&&accessToken)remoteLoad();},12000);
 remoteEl('remoteSupportConnect').addEventListener('click',async()=>{
   const code=remoteEl('remoteSupportCode').value.replace(/\s/g,'');
@@ -8642,4 +8642,4 @@ boot();
 </script>
 
 </body>
-  </html>
+                                                                                                                                                                                        </html>
