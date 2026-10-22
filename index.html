@@ -997,6 +997,19 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
 .seasonal-datetime-picker select:nth-child(4),.seasonal-datetime-picker select:nth-child(5){grid-column:span 1}
 @media(max-width:380px){.seasonal-datetime-picker{gap:5px}.seasonal-datetime-picker select{font-size:13px}}
 
+
+/* Remote Support console */
+.remote-support-toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.remote-support-toolbar input{max-width:260px}.remote-support-toolbar select{min-width:170px;flex:1}
+.remote-support-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.remote-support-sessions{display:grid;gap:8px;max-height:460px;overflow:auto;margin-top:12px}
+.remote-support-session{display:block;text-align:left;width:100%;background:#111d26;border:1px solid var(--border);border-radius:10px;padding:10px}
+.remote-support-session.active{border-color:var(--accent)}
+.remote-support-session small{display:block;margin-top:5px;color:var(--muted);overflow-wrap:anywhere}
+.remote-support-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.remote-support-nav button{min-height:46px;padding:9px 5px}
+@media(max-width:800px){.remote-support-grid{grid-template-columns:1fr}.remote-support-toolbar input{max-width:none;flex:1 1 100%}}
+
 </style>
 
 </head>
@@ -1025,6 +1038,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
       <a href="#seasonalThemesSection">Seasonal Themes</a>
       <a href="#privateLibrarySection">Private Library</a>
       <a href="#supportSection">Support Inbox</a>
+      <a href="#remoteSupportSection">Remote Support</a>
       <a href="#devicesSection">Devices</a>
       <a href="#announcementsSection">Announcements</a>
       <a href="#updatesSection">Updates</a>
@@ -1093,6 +1107,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <button id="quickRemoteAppSettings" class="quick-action">🎛️ Remote Settings</button>
     <button id="quickSeasonalThemes" class="quick-action">🎄 Seasonal Themes</button>
     <button id="quickPrivateLibrary" class="quick-action">🔒 Private Library</button>
+    <button id="quickRemoteSupport" class="quick-action">🖥 Remote Support</button>
     <button id="quickSupport" class="quick-action">✉ Customer Support <span id="supportQuickUnreadBadge" class="support-quick-unread" hidden aria-label="Unread support conversations"></span></button>
     <button id="quickDevices" class="quick-action">📱 Devices</button>
     <button id="quickAnnouncements" class="quick-action">📢 Announcements</button>
@@ -2402,6 +2417,36 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
   </details>
 
 
+
+
+  <!-- Remote Support console: requires customer-approved device integration. -->
+  <details id="remoteSupportSection" class="section-anchor collapse-card">
+    <summary><div class="section-heading-left"><div class="section-icon">🖥</div><div class="section-title-text"><h2>Remote Support</h2><div>Connect with a customer's temporary assistance code.</div></div></div><span class="collapse-arrow">▼</span></summary>
+    <div class="collapse-content">
+      <div class="cache-explainer"><strong>Customer approval required.</strong> Enter the six-digit code shown on the customer's Panther Streams app. Navigation commands only work after they approve. Screen streaming is not part of this console yet; use the customer's description while navigating. Never ask for passwords or PINs.</div>
+      <div class="remote-support-toolbar">
+        <input id="remoteSupportCode" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6-digit customer code" aria-label="Temporary customer support code">
+        <button id="remoteSupportConnect" class="primary">Request control</button>
+        <button id="remoteSupportRefresh">↻ Refresh sessions</button>
+      </div>
+      <div id="remoteSupportStatus" class="status" role="status" aria-live="polite"></div>
+      <div class="remote-support-grid">
+        <div class="card-flat"><h3>Support sessions</h3><div id="remoteSupportSessions" class="remote-support-sessions"><div class="muted">Open Remote Support to load sessions.</div></div></div>
+        <div class="card-flat"><h3>Selected session</h3><div id="remoteSupportCurrent" class="small-text" style="margin:10px 0">No session selected.</div>
+          <div id="remoteSupportActions" class="hidden">
+            <div class="remote-support-nav" role="group" aria-label="Remote navigation controls">
+              <button data-remote-command="up">▲ Up</button><button data-remote-command="left">◀ Left</button><button data-remote-command="select" class="primary">● Select</button><button data-remote-command="right">Right ▶</button><button data-remote-command="down">▼ Down</button>
+              <button data-remote-command="back">↩ Back</button><button data-remote-command="scroll_up">Scroll ↑</button><button data-remote-command="scroll_down">Scroll ↓</button>
+            </div>
+            <div class="field-label" style="margin-top:15px">Open screen</div>
+            <div class="remote-support-toolbar"><select id="remoteSupportScreen"><option value="home">Home</option><option value="extras">Extras</option><option value="settings">Settings</option><option value="media_servers">Media Servers</option><option value="login">Login</option></select><button id="remoteSupportOpenScreen">Navigate</button></div>
+          </div>
+          <button id="remoteSupportEnd" class="danger hidden" style="margin-top:12px">End session</button>
+        </div>
+      </div>
+      <div class="small-text" style="margin-top:12px">Device control is not ready until a compatible app update is installed and approved. Requests will remain pending until then. No remote screen or keyboard capture is enabled.</div>
+    </div>
+  </details>
 
   <!-- Private two-way messaging. Admin JWT is required by Edge Function. -->
   <details id="supportSection" class="section-anchor collapse-card">
@@ -8467,6 +8512,70 @@ function seasonalPickerInit(kind){
 }
 seasonalPickerInit('Start');
 seasonalPickerInit('End');
+
+
+// === Panther Remote Support (admin-only; customer approval required) ===
+const remoteUrl = `${SUPABASE_URL}/functions/v1/panther-remote-support`;
+let remoteSessions = [];
+let remoteSelectedId = null;
+let remoteBusy = false;
+const remoteEl = id => document.getElementById(id);
+function remoteMessage(msg, ok=null){setStatus(remoteEl('remoteSupportStatus'),msg,ok);}
+async function remoteCall(action, args={}){
+  if(!accessToken)throw new Error('Please sign in to Panther Admin.');
+  const response=await fetch(remoteUrl,{
+    method:'POST',headers:{'content-type':'application/json','authorization':`Bearer ${accessToken}`,'apikey':SUPABASE_KEY},
+    body:JSON.stringify({action,...args})
+  });
+  let result={};try{result=await response.json()}catch{}
+  if(!response.ok||result.error)throw new Error(result.error||`Request failed (${response.status})`);
+  return result;
+}
+function remoteDate(value){if(!value)return '';const d=new Date(value);return isNaN(d.getTime())?'':d.toLocaleString();}
+function remoteRender(){
+  const list=remoteEl('remoteSupportSessions'),selected=remoteSessions.find(s=>s.id===remoteSelectedId);
+  list.replaceChildren();
+  if(!remoteSessions.length){list.textContent='No remote assistance sessions yet.';}
+  for(const session of remoteSessions){
+    const button=document.createElement('button');button.type='button';button.className='remote-support-session'+(session.id===remoteSelectedId?' active':'');
+    const label=document.createElement('strong');label.textContent=`${session.iptv_username||session.device_label||'Unregistered device'} — ${session.state}`;
+    const details=document.createElement('small');details.textContent=`${session.iptv_service_key||'No IPTV account'} · ${session.platform||'Unknown platform'} · ${remoteDate(session.requested_at)}`;
+    button.append(label,details);button.addEventListener('click',()=>{remoteSelectedId=session.id;remoteRender();});list.append(button);
+  }
+  remoteEl('remoteSupportCurrent').textContent=selected?`${selected.device_label||'Customer device'} | ${selected.state} | ${selected.iptv_username||'Not logged in'} | ${remoteDate(selected.requested_at)}`:'No session selected.';
+  const active=selected?.state==='active'&&(!selected.session_expires_at||Date.parse(selected.session_expires_at)>Date.now());
+  remoteEl('remoteSupportActions').classList.toggle('hidden',!active);
+  remoteEl('remoteSupportEnd').classList.toggle('hidden',!selected||!['waiting','pending_approval','active'].includes(selected.state));
+  if(selected?.state==='pending_approval')remoteMessage('Control requested. Customer must approve on their device.');
+}
+async function remoteLoad(){
+ if(remoteBusy||!accessToken)return;
+ remoteBusy=true;
+ try{const result=await remoteCall('admin_list');remoteSessions=result.sessions||[];remoteRender();}
+ catch(e){remoteMessage(e.message,false);}finally{remoteBusy=false;}
+}
+remoteEl('quickRemoteSupport').addEventListener('click',()=>{openSection('remoteSupportSection');remoteLoad();});
+remoteEl('remoteSupportSection').addEventListener('toggle',()=>{if(remoteEl('remoteSupportSection').open)remoteLoad();});
+remoteEl('remoteSupportRefresh').addEventListener('click',remoteLoad);
+remoteEl('remoteSupportConnect').addEventListener('click',async()=>{
+  const code=remoteEl('remoteSupportCode').value.replace(/\s/g,'');
+  if(!/^\d{6}$/.test(code)){remoteMessage('Enter the six-digit code from the customer app.',false);return;}
+  try{const result=await remoteCall('admin_claim',{code});remoteSelectedId=result.session.id;remoteMessage('Control requested. The customer must approve the request.',true);await remoteLoad();}
+  catch(e){remoteMessage(e.message,false);}
+});
+async function remoteSend(command_type,command_payload={}){
+ const session=remoteSessions.find(s=>s.id===remoteSelectedId);
+ if(!session||session.state!=='active'){remoteMessage('Wait until the customer approves control.',false);return;}
+ try{await remoteCall('admin_command',{session_id:remoteSelectedId,command_type,command_payload});remoteMessage(`${command_type.replaceAll('_',' ')} queued.`,true);}
+ catch(e){remoteMessage(e.message,false);await remoteLoad();}
+}
+remoteEl('remoteSupportActions').querySelectorAll('[data-remote-command]').forEach(button=>button.addEventListener('click',()=>remoteSend(button.dataset.remoteCommand)));
+remoteEl('remoteSupportOpenScreen').addEventListener('click',()=>remoteSend('open_screen',{screen:remoteEl('remoteSupportScreen').value}));
+remoteEl('remoteSupportEnd').addEventListener('click',async()=>{
+ if(!remoteSelectedId||!confirm('End this customer remote assistance session?'))return;
+ try{await remoteCall('admin_end',{session_id:remoteSelectedId});remoteMessage('Support session ended.',true);await remoteLoad();}
+ catch(e){remoteMessage(e.message,false);}
+});
 
 initCollapsibleSections();
 
