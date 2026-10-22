@@ -2417,7 +2417,7 @@ textarea{width:100%;min-height:110px;resize:vertical;background:#090d11;color:va
     <div class="collapse-content">
       <div class="support-toolbar">
         <button id="supportReloadBtn">↻ Refresh</button>
-        <label><input type="checkbox" id="supportOpenOnly" checked> Open only</label>
+        <label><input type="checkbox" id="supportOpenOnly" checked> Open only</label><button id="supportArchiveViewBtn" class="small">📁 View archive</button>
         <select id="supportTicketFilter" aria-label="Ticket status"><option value="all">All tickets</option><option value="open">Open</option><option value="pending">Pending</option><option value="resolved">Resolved</option></select>
         <select id="supportPriorityFilter" aria-label="Priority"><option value="all">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select>
         <input type="search" id="supportSearch" placeholder="Search customer, service, device or profile">
@@ -8215,6 +8215,7 @@ let supportLoading=false, supportPolling=null, supportQuickBadgeLoading=false;
 let supportMessages=[], supportQuickReplies=[], supportReplyTo=null, supportAttachment=null;
 let supportThreadBusy=false, supportTypingTimer=null, supportLastTyping=0;
 let supportPollCount=0, supportQuickEditId=null;
+let supportArchiveMode=false;
 const supportEl=id=>$(id);
 async function supportApi(body){
   const response=await apiFetch('/functions/v1/panther-support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -8238,16 +8239,16 @@ async function supportRefreshQuickUnread(){
 }
 function supportRenderThreads(){
   const host=supportEl('supportThreadList');host.replaceChildren();
-  const search=supportEl('supportSearch').value.trim().toLowerCase(),openOnly=supportEl('supportOpenOnly').checked;
+  const search=supportEl('supportSearch').value.trim().toLowerCase(),openOnly=supportArchiveMode?false:supportEl('supportOpenOnly').checked;
   const status=supportEl('supportTicketFilter').value,priority=supportEl('supportPriorityFilter').value;
   const unread=supportThreads.filter(t=>t.unread).length;
   supportEl('supportUnreadCount').textContent=unread?`(${unread} new)`:'';supportSetQuickUnread(unread);
   const filtered=supportThreads.filter(t=>{
     const state=t.ticket_state||(t.status==='closed'?'resolved':'open');
-    return (!openOnly||t.status==='open')&&(status==='all'||state===status)&&(priority==='all'||(t.priority||'normal')===priority)
+    return (supportArchiveMode?t.status==='closed':t.status!=='closed')&&(!openOnly||t.status==='open')&&(status==='all'||state===status)&&(priority==='all'||(t.priority||'normal')===priority)
       &&(!search||[t.device_id,t.profile_id,t.account_label,t.status,state,t.priority].some(v=>String(v||'').toLowerCase().includes(search)));
   });
-  if(!filtered.length){const x=document.createElement('div');x.className='empty-note';x.textContent='No conversations match your filters.';host.append(x);return;}
+  if(!filtered.length){const x=document.createElement('div');x.className='empty-note';x.textContent=supportArchiveMode?'No archived tickets match your filters.':'No open tickets match your filters.';host.append(x);return;}
   for(const t of filtered){
     const row=document.createElement('button');row.className='support-thread'+(t.id===supportThreadId?' active':'');
     const h=document.createElement('strong');h.textContent=t.account_label||'Panther customer';row.append(h);
@@ -8319,7 +8320,10 @@ async function supportOpenThread(id,silent=false){
     supportEl('supportTicketState').value=t.ticket_state||(t.status==='closed'?'resolved':'open');
     supportEl('supportTicketPriority').value=t.priority||'normal';
     for(const control of ['supportReply','supportSendBtn','supportToggleStatusBtn','supportTicketState','supportTicketPriority','supportSaveTicket','supportQuickSelect','supportAttachButton'])supportEl(control).disabled=false;
-    supportEl('supportToggleStatusBtn').textContent=t.status==='closed'?'Reopen conversation':'Close conversation';
+    supportEl('supportToggleStatusBtn').textContent=t.status==='closed'?'📁 Archived (read-only)':'Close ticket & archive';
+    if(t.status==='closed'){
+      for(const name of ['supportReply','supportSendBtn','supportToggleStatusBtn','supportTicketState','supportTicketPriority','supportSaveTicket','supportQuickSelect','supportAttachButton'])supportEl(name).disabled=true;
+    }
     supportRenderMessages(supportMessages,silent);
     const existing=supportThreads.find(x=>x.id===id);if(existing)existing.unread=false;
     supportRenderThreads();if(!silent)setStatus(supportEl('supportAdminStatus'),'Conversation loaded.',true);
@@ -8392,9 +8396,18 @@ supportEl('supportSaveTicket').addEventListener('click',async()=>{
   catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}
 });
 supportEl('supportToggleStatusBtn').addEventListener('click',async()=>{
-  if(!supportThreadId)return;const id=supportThreadId,next=supportActiveThread?.status==='closed'?'open':'closed';
-  try{await supportApi({action:'admin_set_status',thread_id:id,status:next});await supportOpenThread(id,true);await supportLoadThreads(true);setStatus(supportEl('supportAdminStatus'),next==='closed'?'Conversation closed.':'Conversation reopened.',true);}
+  if(!supportThreadId||supportActiveThread?.status==='closed')return;
+  if(!confirm('Close and archive this ticket? The next customer message will start a new chat. The old conversation stays readable for both sides.'))return;
+  const id=supportThreadId;
+  try{await supportApi({action:'admin_set_status',thread_id:id,status:'closed'});await supportOpenThread(id,true);await supportLoadThreads(true);setStatus(supportEl('supportAdminStatus'),'Ticket archived. The customer’s next message will create a new chat.',true);}
   catch(e){setStatus(supportEl('supportAdminStatus'),e.message||String(e),false);}
+});
+supportEl('supportArchiveViewBtn').addEventListener('click',()=>{
+  supportArchiveMode=!supportArchiveMode;
+  supportEl('supportArchiveViewBtn').textContent=supportArchiveMode?'← Back to open tickets':'📁 View archive';
+  supportEl('supportOpenOnly').disabled=supportArchiveMode;
+  supportEl('supportTicketFilter').value='all';
+  supportRenderThreads();
 });
 supportEl('supportReloadBtn').addEventListener('click',async()=>{await supportLoadThreads();if(supportThreadId)await supportOpenThread(supportThreadId,true);});
 for(const id of ['supportOpenOnly','supportTicketFilter','supportPriorityFilter'])supportEl(id).addEventListener('change',supportRenderThreads);
@@ -8469,4 +8482,4 @@ boot();
 </script>
 
 </body>
-             </html>
+  </html>
