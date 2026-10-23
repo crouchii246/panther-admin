@@ -9874,7 +9874,7 @@ remoteEl('remoteSupportEnd').addEventListener('click',async()=>{
 
 // === Optional WebRTC viewer; JPEG screenshot feed is retained as fallback ===
 let pantherRtcPeer=null,pantherRtcSessionId=null,pantherRtcCursor=0,pantherRtcTimer=null;
-let pantherRtcBusy=false,pantherRtcIceQueue=[],pantherRtcHasRemote=false;
+let pantherRtcBusy=false,pantherRtcIceQueue=[],pantherRtcHasRemote=false,pantherRtcStartTime=0;
 const pantherRtcPreview=remoteEl('pantherWebRtcPreview');
 const pantherRtcFullscreen=remoteEl('pantherWebRtcFullscreen');
 const pantherRtcConnect=remoteEl('pantherWebRtcConnect');
@@ -9884,7 +9884,7 @@ const pantherRtcSetStatus=message=>{pantherRtcStatus.textContent=message;};
 function pantherRtcStop(message='WebRTC stopped. JPEG preview remains available.'){
   if(pantherRtcTimer){clearInterval(pantherRtcTimer);pantherRtcTimer=null;}
   const session=pantherRtcSessionId;
-  pantherRtcSessionId=null;pantherRtcBusy=false;pantherRtcHasRemote=false;pantherRtcIceQueue=[];
+  pantherRtcSessionId=null;pantherRtcBusy=false;pantherRtcHasRemote=false;pantherRtcIceQueue=[];pantherRtcStartTime=0;
   const pc=pantherRtcPeer;pantherRtcPeer=null;
   if(pc){try{pc.close();}catch{}}
   for(const video of [pantherRtcPreview,pantherRtcFullscreen]){
@@ -9935,6 +9935,12 @@ async function pantherRtcPoll(){
   const session=pantherRtcSessionId;
   if(!session||pantherRtcBusy||document.hidden)return;
   const selected=remoteSessions.find(s=>s.id===session);
+  // WebRTC uses a separate sender from the JPEG screen-capture mode.
+  // Never leave the panel permanently waiting when no sender is producing an SDP offer.
+  if(!pantherRtcHasRemote && pantherRtcStartTime && Date.now()-pantherRtcStartTime>20000){
+    pantherRtcStop('No WebRTC video offer received. On the Firestick, stop screen sharing, then start a NEW session and choose “Share screen (live WebRTC – experimental)”. Choose standard JPEG to restore the original preview.');
+    return;
+  }
   if(!selected||selected.state!=='active'){
     pantherRtcStop('Support session ended.');return;
   }
@@ -9963,7 +9969,7 @@ pantherRtcConnect.addEventListener('click',async()=>{
     pantherRtcSetStatus('This browser does not support WebRTC. JPEG preview still works.');return;
   }
   pantherRtcStop();
-  pantherRtcSessionId=selected.id;pantherRtcCursor=0;
+  pantherRtcSessionId=selected.id;pantherRtcCursor=0;pantherRtcStartTime=Date.now();
   try{
     const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
     pantherRtcPeer=pc;
@@ -9985,7 +9991,7 @@ pantherRtcConnect.addEventListener('click',async()=>{
       if(['failed','closed'].includes(pc.connectionState))pantherRtcStop('WebRTC disconnected. JPEG fallback is available.');
     };
     pantherRtcConnect.disabled=true;pantherRtcDisconnect.disabled=false;
-    pantherRtcSetStatus('Waiting for Android WebRTC sender to offer video…');
+    pantherRtcSetStatus('Waiting for Firestick WebRTC offer… The Firestick must be sharing in LIVE WebRTC mode, not JPEG mode.');
     await pantherRtcPoll();
     if(pantherRtcSessionId===selected.id)pantherRtcTimer=setInterval(pantherRtcPoll,850);
   }catch(error){pantherRtcStop('WebRTC viewer could not start: '+error.message);}
@@ -10090,4 +10096,4 @@ boot();
 
 
 </body>
-                                                                 </html>
+      </html>
