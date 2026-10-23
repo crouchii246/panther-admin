@@ -2598,7 +2598,7 @@ body.panther-touch-active {overflow:hidden !important;}
           <div id="remoteSupportActions" class="hidden">
             <div class="remote-support-nav" role="group" aria-label="Remote navigation controls">
               <button data-remote-command="up">▲ Up</button><button data-remote-command="left">◀ Left</button><button data-remote-command="select" class="primary">● Select</button><button data-remote-command="right">Right ▶</button><button data-remote-command="down">▼ Down</button>
-              <button data-remote-command="back">↩ Back</button><button data-remote-command="scroll_up">Scroll ↑</button><button data-remote-command="scroll_down">Scroll ↓</button>
+              <button data-remote-command="back">↩ Back</button><button data-remote-command="scroll_up">Scroll ↑</button><button data-remote-command="scroll_down">Scroll ↓</button><div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px"><input id="remoteTextInput" aria-label="Text for customer's selected field" autocomplete="off" placeholder="Type into selected text field" style="flex:1 1 180px;min-width:0" maxlength="500"/><button type="button" id="remoteTextSend">Send text</button><small style="flex:1 1 100%">Only ordinary text fields. Password and PIN fields are blocked.</small></div>
             </div>
             <div class="field-label" style="margin-top:15px">Open screen</div>
             <div class="remote-support-toolbar"><select id="remoteSupportScreen"><option value="home">Home</option><option value="extras">Extras</option><option value="settings">Settings</option><option value="media_servers">Media Servers</option><option value="login">Login</option></select><button id="remoteSupportOpenScreen">Navigate</button></div>
@@ -2761,11 +2761,19 @@ body.panther-touch-active {overflow:hidden !important;}
   <div class="ptr-toolbar">
     <button type="button" id="ptrBack">↩ Back</button>
     <span class="ptr-hint">Swipe = move focus · Tap = Select<br>Touch is D-pad navigation, not coordinate clicking</span>
+    <button type="button" id="ptrTextOpen">⌨ Type</button>
     <button type="button" id="ptrRefresh">↻ Refresh</button>
     <button type="button" id="ptrEnd" class="ptr-danger">End support</button>
   </div>
 </div>
-
+<div id="ptrTextOverlay" style="display:none;position:fixed;z-index:2147483001;inset:0;background:#07101bef;align-items:center;justify-content:center;padding:16px;box-sizing:border-box">
+  <div style="max-width:520px;width:100%;background:#101c2a;border:1px solid #57708a;border-radius:15px;padding:18px;box-sizing:border-box;color:white">
+    <strong style="font-size:18px">Type into selected field</strong>
+    <p style="font-size:13px;color:#bfd1df">Select an ordinary text field on the Firestick, then type here. Passwords and PINs cannot be entered remotely.</p>
+    <input id="ptrTextInput" maxlength="500" autocomplete="off" placeholder="Enter text" style="width:100%;box-sizing:border-box;font-size:16px;padding:12px;border-radius:8px" />
+    <div style="display:flex;gap:8px;margin-top:12px"><button type="button" id="ptrTextSend">Send text</button><button type="button" id="ptrTextCancel">Cancel</button></div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -9805,7 +9813,7 @@ async function remotePreviewLoad(){
     if(remoteSelectedId!==sessionId)return;
     const preview=result.preview;
     const img=remoteEl('remotePreviewImage'),placeholder=remoteEl('remotePreviewPlaceholder');
-    if(!preview||!preview.jpeg_base64){remotePreviewReset('No recent image received. Ask customer to start screen sharing.');return;}
+    if(!preview||!preview.jpeg_base64){if(pantherRtcPeer && pantherRtcPreview.srcObject)return;remotePreviewReset('No recent image received. Ask customer to start screen sharing.');return;}
     const encoded=preview.jpeg_base64;
     if(typeof encoded!=='string'||encoded.length>1500000||!/^[A-Za-z0-9+/=]+$/.test(encoded))throw new Error('Invalid preview data');
     if(preview.captured_at!==remotePreviewCapturedAt){
@@ -9815,7 +9823,7 @@ async function remotePreviewLoad(){
     if(!(pantherRtcPeer && pantherRtcPeer.connectionState==='connected')){img.style.display='block';placeholder.style.display='none';}
     remoteEl('remotePreviewTimestamp').textContent='Captured '+remoteDate(preview.captured_at)+' · '+(preview.width||'?')+' × '+(preview.height||'?')+' · refreshed automatically';
   }catch(e){
-    if(remoteSelectedId===sessionId)remotePreviewReset(e.message==='Customer has not enabled screen viewing'?'Waiting for customer to approve screen sharing…':'Preview unavailable: '+e.message);
+    if(remoteSelectedId===sessionId && !(pantherRtcPeer && pantherRtcPreview.srcObject))remotePreviewReset(e.message==='Customer has not enabled screen viewing'?'Waiting for customer to approve screen sharing…':'Preview unavailable: '+e.message);
   }finally{remotePreviewBusy=false;}
 }
 function remoteRender(){
@@ -9864,6 +9872,16 @@ async function remoteSend(command_type,command_payload={}){
 }
 remoteEl('remoteSupportActions').querySelectorAll('[data-remote-command]').forEach(button=>button.addEventListener('click',()=>remoteSend(button.dataset.remoteCommand)));
 remoteEl('remoteSupportOpenScreen').addEventListener('click',()=>remoteSend('open_screen',{screen:remoteEl('remoteSupportScreen').value}));
+function pantherSendTyped(input,after){
+ const value=input.value;
+ if(!value.trim())return;
+ if(value.length>500){remoteMessage('Maximum 500 characters.',false);return;}
+ remoteSend('type_text',{text:value}).then(()=>{input.value='';if(after)after();});
+}
+document.getElementById('remoteTextSend').addEventListener('click',()=>pantherSendTyped(document.getElementById('remoteTextInput')));
+document.getElementById('ptrTextOpen').addEventListener('click',()=>{document.getElementById('ptrTextOverlay').style.display='flex';document.getElementById('ptrTextInput').focus();});
+document.getElementById('ptrTextCancel').addEventListener('click',()=>{document.getElementById('ptrTextOverlay').style.display='none';});
+document.getElementById('ptrTextSend').addEventListener('click',()=>pantherSendTyped(document.getElementById('ptrTextInput'),()=>{document.getElementById('ptrTextOverlay').style.display='none';ptrNotice('Text sent');}));
 remoteEl('remoteSupportEnd').addEventListener('click',async()=>{
  if(!remoteSelectedId||!confirm('End this customer remote assistance session?'))return;
  try{await remoteCall('admin_end',{session_id:remoteSelectedId});remoteMessage('Support session ended.',true);await remoteLoad();}
@@ -9896,7 +9914,7 @@ function pantherRtcStop(message='WebRTC stopped. JPEG preview remains available.
   if(session){remotePreviewLoad();}
 }
 function pantherRtcUpdateVideo(){
-  const playing=!!(pantherRtcPeer && pantherRtcPreview.srcObject && pantherRtcPeer.connectionState==='connected');
+  const playing=!!(pantherRtcPeer && pantherRtcPreview.srcObject && pantherRtcPreview.srcObject.getVideoTracks().some(track=>track.readyState==='live'));
   pantherRtcPreview.style.display=playing?'block':'none';
   pantherRtcFullscreen.style.display=playing?'block':'none';
   if(playing){
@@ -10019,7 +10037,7 @@ function ptrSync(){
     ptrEmpty.textContent='Select an active customer session in Panther Admin.';return;
   }
   ptrStatus.textContent=(session.device_label||'Customer device')+' · connected';
-  if(pantherRtcPeer && pantherRtcPeer.connectionState==='connected' && pantherRtcFullscreen.srcObject){
+  if(pantherRtcPeer && pantherRtcFullscreen.srcObject && pantherRtcFullscreen.srcObject.getVideoTracks().some(track=>track.readyState==='live')){
     ptrImg.style.display='none';ptrEmpty.style.display='none';pantherRtcFullscreen.style.display='block';return;
   }
   pantherRtcFullscreen.style.display='none';
@@ -10059,7 +10077,7 @@ document.getElementById('ptrEnd').addEventListener('click',async()=>{
  catch(e){ptrNotice(e.message);}
 });
 ptrStage.addEventListener('pointerdown',e=>{
- if(!ptrOpen || e.button>0)return;
+ if(!ptrOpen || e.button>0 || document.getElementById('ptrTextOverlay').style.display==='flex')return;
  ptrTouch={id:e.pointerId,x:e.clientX,y:e.clientY,when:Date.now()};
  try{ptrStage.setPointerCapture(e.pointerId);}catch(err){}
 });
@@ -10096,4 +10114,4 @@ boot();
 
 
 </body>
-      </html>
+                </html>
