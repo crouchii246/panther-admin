@@ -2598,7 +2598,7 @@ body.panther-touch-active {overflow:hidden !important;}
           <div id="remoteSupportActions" class="hidden">
             <div class="remote-support-nav" role="group" aria-label="Remote navigation controls">
               <button data-remote-command="up">▲ Up</button><button data-remote-command="left">◀ Left</button><button data-remote-command="select" class="primary">● Select</button><button data-remote-command="right">Right ▶</button><button data-remote-command="down">▼ Down</button>
-              <button data-remote-command="back">↩ Back</button><button data-remote-command="scroll_up">Scroll ↑</button><button data-remote-command="scroll_down">Scroll ↓</button><div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px"><input id="remoteTextInput" aria-label="Text for customer's selected field" autocomplete="off" placeholder="Type into selected text field" style="flex:1 1 180px;min-width:0" maxlength="500"/><button type="button" id="remoteTextSend">Send text</button><button type="button" class="ptr-edit-command" data-edit-command="backspace">⌫ Backspace</button><button type="button" class="ptr-edit-command" data-edit-command="delete_forward">Delete →</button><button type="button" class="ptr-edit-command" data-edit-command="select_all">Select all</button><button type="button" class="ptr-edit-command" data-edit-command="clear_field">Clear field</button><small style="flex:1 1 100%">Usernames and normal text fields can be entered. Password/PIN typing must be done on the customer device; Backspace and Clear field are available to correct mistakes.</small></div>
+              <button data-remote-command="back">↩ Back</button><button data-remote-command="scroll_up">Scroll ↑</button><button data-remote-command="scroll_down">Scroll ↓</button><div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px"><input id="remoteTextInput" aria-label="Text for customer's selected field" autocomplete="off" placeholder="Type into selected text field" style="flex:1 1 180px;min-width:0" maxlength="500"/><button type="button" id="remoteTextSend">Send text</button><button type="button" class="ptr-edit-command" data-edit-command="backspace">⌫ Backspace</button><button type="button" class="ptr-edit-command" data-edit-command="delete_forward">Delete →</button><button type="button" class="ptr-edit-command" data-edit-command="select_all">Select all</button><button type="button" class="ptr-edit-command" data-edit-command="clear_field">Clear field</button><small style="flex:1 1 100%">Select the target text field on Firestick first. Commands are queued, not confirmed as typed. Password/PIN entry stays on the customer device.</small></div>
             </div>
             <div class="field-label" style="margin-top:15px">Open screen</div>
             <div class="remote-support-toolbar"><select id="remoteSupportScreen"><option value="home">Home</option><option value="extras">Extras</option><option value="settings">Settings</option><option value="media_servers">Media Servers</option><option value="login">Login</option></select><button id="remoteSupportOpenScreen">Navigate</button></div>
@@ -9866,17 +9866,24 @@ remoteEl('remoteSupportConnect').addEventListener('click',async()=>{
 });
 async function remoteSend(command_type,command_payload={}){
  const session=remoteSessions.find(s=>s.id===remoteSelectedId);
- if(!session||session.state!=='active'){remoteMessage('Wait until the customer approves control.',false);return;}
- try{await remoteCall('admin_command',{session_id:remoteSelectedId,command_type,command_payload});remoteMessage(`${command_type.replaceAll('_',' ')} queued.`,true);}
- catch(e){remoteMessage(e.message,false);await remoteLoad();}
+ if(!session||session.state!=='active'){remoteMessage('Wait until the customer approves control.',false);return false;}
+ try {
+   const result=await remoteCall('admin_command',{session_id:remoteSelectedId,command_type,command_payload});
+   if(!result?.ok){remoteMessage('Command was not accepted by the server.',false);return false;}
+   remoteMessage(`${command_type.replaceAll('_',' ')} sent to Firestick. Ensure the text field itself is selected.`,true);
+   return true;
+ } catch(e) {remoteMessage(e.message,false);return false;}
 }
 remoteEl('remoteSupportActions').querySelectorAll('[data-remote-command]').forEach(button=>button.addEventListener('click',()=>remoteSend(button.dataset.remoteCommand)));
 remoteEl('remoteSupportOpenScreen').addEventListener('click',()=>remoteSend('open_screen',{screen:remoteEl('remoteSupportScreen').value}));
-function pantherSendTyped(input,after){
+async function pantherSendTyped(input,after){
  const value=input.value;
- if(!value.trim())return;
+ if(!value.length){remoteMessage('Type something first.',false);return;}
  if(value.length>500){remoteMessage('Maximum 500 characters.',false);return;}
- remoteSend('type_text',{text:value}).then(()=>{input.value='';if(after)after();});
+ const sent=await remoteSend('type_text',{text:value});
+ // Supabase confirms only queued delivery, not insertion into Android.
+ // Keep the text available for retry rather than discarding it.
+ if(sent){if(after)after();}
 }
 document.querySelectorAll('.ptr-edit-command').forEach(button=>button.addEventListener('click',()=>{
   // Editing only the current focused Android field. Never reads its contents.
@@ -10118,4 +10125,4 @@ boot();
 
 
 </body>
-              </html>
+            </html>
