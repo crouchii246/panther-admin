@@ -2598,7 +2598,7 @@ body.panther-touch-active {overflow:hidden !important;}
           <div id="remoteSupportActions" class="hidden">
             <div class="remote-support-nav" role="group" aria-label="Remote navigation controls">
               <button data-remote-command="up">▲ Up</button><button data-remote-command="left">◀ Left</button><button data-remote-command="select" class="primary">● Select</button><button data-remote-command="right">Right ▶</button><button data-remote-command="down">▼ Down</button>
-              <button data-remote-command="back">↩ Back</button><button data-remote-command="scroll_up">Scroll ↑</button><button data-remote-command="scroll_down">Scroll ↓</button><div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px"><input id="remoteTextInput" aria-label="Text for customer's selected field" autocomplete="off" placeholder="Type into selected text field" style="flex:1 1 180px;min-width:0" maxlength="500"/><button type="button" id="remoteTextSend">Send text</button><small style="flex:1 1 100%">Only ordinary text fields. Password and PIN fields are blocked.</small></div>
+              <button data-remote-command="back">↩ Back</button><button data-remote-command="scroll_up">Scroll ↑</button><button data-remote-command="scroll_down">Scroll ↓</button><div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px"><input id="remoteTextInput" aria-label="Text for customer's selected field" autocomplete="off" placeholder="Type into selected text field" style="flex:1 1 180px;min-width:0" maxlength="500"/><button type="button" id="remoteTextSend">Send text</button><button type="button" class="ptr-edit-command" data-edit-command="backspace">⌫ Backspace</button><button type="button" class="ptr-edit-command" data-edit-command="delete_forward">Delete →</button><button type="button" class="ptr-edit-command" data-edit-command="select_all">Select all</button><button type="button" class="ptr-edit-command" data-edit-command="clear_field">Clear field</button><small style="flex:1 1 100%">Usernames and normal text fields can be entered. Password/PIN typing must be done on the customer device; Backspace and Clear field are available to correct mistakes.</small></div>
             </div>
             <div class="field-label" style="margin-top:15px">Open screen</div>
             <div class="remote-support-toolbar"><select id="remoteSupportScreen"><option value="home">Home</option><option value="extras">Extras</option><option value="settings">Settings</option><option value="media_servers">Media Servers</option><option value="login">Login</option></select><button id="remoteSupportOpenScreen">Navigate</button></div>
@@ -2769,9 +2769,9 @@ body.panther-touch-active {overflow:hidden !important;}
 <div id="ptrTextOverlay" style="display:none;position:fixed;z-index:2147483001;inset:0;background:#07101bef;align-items:center;justify-content:center;padding:16px;box-sizing:border-box">
   <div style="max-width:520px;width:100%;background:#101c2a;border:1px solid #57708a;border-radius:15px;padding:18px;box-sizing:border-box;color:white">
     <strong style="font-size:18px">Type into selected field</strong>
-    <p style="font-size:13px;color:#bfd1df">Select an ordinary text field on the Firestick, then type here. Passwords and PINs cannot be entered remotely.</p>
+    <p style="font-size:13px;color:#bfd1df">Select an ordinary text field on the Firestick, then type here. You can edit or clear the selected field. The customer must type passwords and PINs on their device.</p>
     <input id="ptrTextInput" maxlength="500" autocomplete="off" placeholder="Enter text" style="width:100%;box-sizing:border-box;font-size:16px;padding:12px;border-radius:8px" />
-    <div style="display:flex;gap:8px;margin-top:12px"><button type="button" id="ptrTextSend">Send text</button><button type="button" id="ptrTextCancel">Cancel</button></div>
+    <div style="display:flex;gap:8px;margin-top:12px"><button type="button" id="ptrTextSend">Send text</button><button type="button" class="ptr-edit-command" data-edit-command="backspace">⌫ Backspace</button><button type="button" class="ptr-edit-command" data-edit-command="delete_forward">Delete →</button><button type="button" class="ptr-edit-command" data-edit-command="select_all">Select all</button><button type="button" class="ptr-edit-command" data-edit-command="clear_field">Clear field</button><button type="button" id="ptrTextCancel">Close</button></div>
   </div>
 </div>
 
@@ -9878,6 +9878,10 @@ function pantherSendTyped(input,after){
  if(value.length>500){remoteMessage('Maximum 500 characters.',false);return;}
  remoteSend('type_text',{text:value}).then(()=>{input.value='';if(after)after();});
 }
+document.querySelectorAll('.ptr-edit-command').forEach(button=>button.addEventListener('click',()=>{
+  // Editing only the current focused Android field. Never reads its contents.
+  remoteSend(button.dataset.editCommand);
+}));
 document.getElementById('remoteTextSend').addEventListener('click',()=>pantherSendTyped(document.getElementById('remoteTextInput')));
 document.getElementById('ptrTextOpen').addEventListener('click',()=>{document.getElementById('ptrTextOverlay').style.display='flex';document.getElementById('ptrTextInput').focus();});
 document.getElementById('ptrTextCancel').addEventListener('click',()=>{document.getElementById('ptrTextOverlay').style.display='none';});
@@ -10114,4 +10118,4 @@ boot();
 
 
 </body>
-                </html>
+              </html>
