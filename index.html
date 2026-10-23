@@ -2583,9 +2583,11 @@ body.panther-touch-active {overflow:hidden !important;}
               <span><button type="button" id="remoteTouchLaunch" class="primary">⛶ Full-screen touch control</button> <button type="button" id="remotePreviewRefresh">↻ Refresh preview</button></span>
             </div>
             <div id="remotePreviewStage" style="background:#090b10;border:2px solid #344258;border-radius:12px;min-height:190px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px;">
+              <video id="pantherWebRtcPreview" autoplay muted playsinline style="display:none;max-width:100%;max-height:530px;object-fit:contain;"></video>
               <img id="remotePreviewImage" alt="Live customer screen preview" style="display:none;max-width:100%;max-height:530px;object-fit:contain;" />
               <p id="remotePreviewPlaceholder" style="color:#bcc8da;text-align:center;margin:16px">Waiting for customer to allow screen viewing…</p>
             </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px"><button type="button" id="pantherWebRtcConnect">▶ Try live WebRTC video</button><button type="button" id="pantherWebRtcDisconnect" disabled>Stop WebRTC viewer</button><span class="small-text" id="pantherWebRtcStatus">JPEG preview is active; WebRTC is optional.</span></div>
             <div id="remotePreviewTimestamp" class="small-text" style="margin-top:6px">Preview checks for a new image every second while sharing is active.</div>
             <div class="small-text" style="margin-top:6px">Screen preview is view-only. The navigation buttons below send commands separately. Do not request passwords, PINs or private content.</div>
           </div>
@@ -2747,6 +2749,7 @@ body.panther-touch-active {overflow:hidden !important;}
     <button id="ptrClose" type="button">✕ Exit</button>
   </div>
   <div class="ptr-stage" id="ptrStage" aria-label="Touch surface: swipe to navigate and tap to select">
+    <video id="pantherWebRtcFullscreen" autoplay muted playsinline style="display:none;height:100%;width:100%;object-fit:contain;pointer-events:none;"></video>
     <img id="ptrImage" alt="Current approved customer screen" draggable="false" />
     <div id="ptrEmpty" class="ptr-empty">Waiting for a shared customer screen…</div>
     <div class="ptr-gesture" id="ptrGesture"></div>
@@ -9805,13 +9808,14 @@ async function remotePreviewLoad(){
       img.src='data:image/jpeg;base64,'+encoded;
       remotePreviewCapturedAt=preview.captured_at;
     }
-    img.style.display='block';placeholder.style.display='none';
+    if(!(pantherRtcPeer && pantherRtcPeer.connectionState==='connected')){img.style.display='block';placeholder.style.display='none';}
     remoteEl('remotePreviewTimestamp').textContent='Captured '+remoteDate(preview.captured_at)+' · '+(preview.width||'?')+' × '+(preview.height||'?')+' · refreshed automatically';
   }catch(e){
     if(remoteSelectedId===sessionId)remotePreviewReset(e.message==='Customer has not enabled screen viewing'?'Waiting for customer to approve screen sharing…':'Preview unavailable: '+e.message);
   }finally{remotePreviewBusy=false;}
 }
 function remoteRender(){
+  if(pantherRtcSessionId && pantherRtcSessionId!==remoteSelectedId)pantherRtcStop('Session changed; WebRTC disconnected.');
   const list=remoteEl('remoteSupportSessions'),selected=remoteSessions.find(s=>s.id===remoteSelectedId);
   list.replaceChildren();
   if(!remoteSessions.length){list.textContent='No remote assistance sessions yet.';}
@@ -9863,6 +9867,127 @@ remoteEl('remoteSupportEnd').addEventListener('click',async()=>{
 });
 
 
+
+// === Optional WebRTC viewer; JPEG screenshot feed is retained as fallback ===
+let pantherRtcPeer=null,pantherRtcSessionId=null,pantherRtcCursor=0,pantherRtcTimer=null;
+let pantherRtcBusy=false,pantherRtcIceQueue=[],pantherRtcHasRemote=false;
+const pantherRtcPreview=remoteEl('pantherWebRtcPreview');
+const pantherRtcFullscreen=remoteEl('pantherWebRtcFullscreen');
+const pantherRtcConnect=remoteEl('pantherWebRtcConnect');
+const pantherRtcDisconnect=remoteEl('pantherWebRtcDisconnect');
+const pantherRtcStatus=remoteEl('pantherWebRtcStatus');
+const pantherRtcSetStatus=message=>{pantherRtcStatus.textContent=message;};
+function pantherRtcStop(message='WebRTC stopped. JPEG preview remains available.'){
+  if(pantherRtcTimer){clearInterval(pantherRtcTimer);pantherRtcTimer=null;}
+  const session=pantherRtcSessionId;
+  pantherRtcSessionId=null;pantherRtcBusy=false;pantherRtcHasRemote=false;pantherRtcIceQueue=[];
+  const pc=pantherRtcPeer;pantherRtcPeer=null;
+  if(pc){try{pc.close();}catch{}}
+  for(const video of [pantherRtcPreview,pantherRtcFullscreen]){
+    try{video.pause();video.srcObject=null;}catch{}
+    video.style.display='none';
+  }
+  pantherRtcConnect.disabled=false;pantherRtcDisconnect.disabled=true;
+  pantherRtcSetStatus(message);
+  if(session){remotePreviewLoad();}
+}
+function pantherRtcUpdateVideo(){
+  const playing=!!(pantherRtcPeer && pantherRtcPreview.srcObject && pantherRtcPeer.connectionState==='connected');
+  pantherRtcPreview.style.display=playing?'block':'none';
+  pantherRtcFullscreen.style.display=playing?'block':'none';
+  if(playing){
+    remoteEl('remotePreviewImage').style.display='none';
+    remoteEl('remotePreviewPlaceholder').style.display='none';
+    document.getElementById('ptrImage').style.display='none';
+    document.getElementById('ptrEmpty').style.display='none';
+  }
+}
+async function pantherRtcSend(type,payload,session){
+  if(!session || pantherRtcSessionId!==session)return;
+  await remoteCall('webrtc_send',{role:'admin',session_id:session,signal_type:type,payload});
+}
+async function pantherRtcHandleSignal(signal,session){
+  const pc=pantherRtcPeer;
+  if(!pc||pantherRtcSessionId!==session)return;
+  const payload=signal.payload||{};
+  if(signal.signal_type==='offer'){
+    // Sender offers video. Browser only answers, never requests capture.
+    if(pc.signalingState!=='stable')return;
+    await pc.setRemoteDescription({type:'offer',sdp:payload.sdp});
+    pantherRtcHasRemote=true;
+    for(const candidate of pantherRtcIceQueue)await pc.addIceCandidate(candidate);
+    pantherRtcIceQueue=[];
+    const answer=await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    await pantherRtcSend('answer',{sdp:pc.localDescription.sdp},session);
+    pantherRtcSetStatus('Video offer accepted; connecting…');
+  } else if(signal.signal_type==='ice'){
+    const ice={candidate:payload.candidate,sdpMid:payload.sdpMid,sdpMLineIndex:payload.sdpMLineIndex};
+    if(pantherRtcHasRemote)await pc.addIceCandidate(ice);
+    else pantherRtcIceQueue.push(ice);
+  } else if(signal.signal_type==='hangup')pantherRtcStop('Customer stopped WebRTC video. JPEG fallback remains.');
+}
+async function pantherRtcPoll(){
+  const session=pantherRtcSessionId;
+  if(!session||pantherRtcBusy||document.hidden)return;
+  const selected=remoteSessions.find(s=>s.id===session);
+  if(!selected||selected.state!=='active'){
+    pantherRtcStop('Support session ended.');return;
+  }
+  pantherRtcBusy=true;
+  try{
+    const result=await remoteCall('webrtc_poll',{role:'admin',session_id:session,after_id:pantherRtcCursor});
+    for(const signal of result.signals||[]){
+      if(pantherRtcSessionId!==session)break;
+      // Advance only after processing. Invalid messages must not stall the queue.
+      try{await pantherRtcHandleSignal(signal,session);}catch(error){
+        pantherRtcSetStatus('WebRTC signal error: '+error.message);
+      }
+      pantherRtcCursor=Number(signal.id)||pantherRtcCursor;
+    }
+  }catch(error){
+    pantherRtcSetStatus('WebRTC signalling: '+error.message);
+    if(/approved|not active|unavailable|authorisation/i.test(error.message))pantherRtcStop('Session permission no longer available.');
+  }finally{pantherRtcBusy=false;}
+}
+pantherRtcConnect.addEventListener('click',async()=>{
+  const selected=remoteSessions.find(s=>s.id===remoteSelectedId);
+  if(!selected||selected.state!=='active'){
+    pantherRtcSetStatus('Select an approved active customer session.');return;
+  }
+  if(typeof RTCPeerConnection==='undefined'){
+    pantherRtcSetStatus('This browser does not support WebRTC. JPEG preview still works.');return;
+  }
+  pantherRtcStop();
+  pantherRtcSessionId=selected.id;pantherRtcCursor=0;
+  try{
+    const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+    pantherRtcPeer=pc;
+    pc.onicecandidate=e=>{
+      if(e.candidate)pantherRtcSend('ice',{
+        candidate:e.candidate.candidate,sdpMid:e.candidate.sdpMid,
+        sdpMLineIndex:e.candidate.sdpMLineIndex
+      },selected.id).catch(error=>pantherRtcSetStatus('ICE send failed: '+error.message));
+    };
+    pc.ontrack=e=>{
+      const stream=e.streams && e.streams.length?e.streams[0]:new MediaStream([e.track]);
+      pantherRtcPreview.srcObject=stream;pantherRtcFullscreen.srcObject=stream;
+      Promise.allSettled([pantherRtcPreview.play(),pantherRtcFullscreen.play()]);
+      pantherRtcUpdateVideo();
+    };
+    pc.onconnectionstatechange=()=>{
+      pantherRtcSetStatus('WebRTC: '+pc.connectionState);
+      pantherRtcUpdateVideo();
+      if(['failed','closed'].includes(pc.connectionState))pantherRtcStop('WebRTC disconnected. JPEG fallback is available.');
+    };
+    pantherRtcConnect.disabled=true;pantherRtcDisconnect.disabled=false;
+    pantherRtcSetStatus('Waiting for Android WebRTC sender to offer video…');
+    await pantherRtcPoll();
+    if(pantherRtcSessionId===selected.id)pantherRtcTimer=setInterval(pantherRtcPoll,850);
+  }catch(error){pantherRtcStop('WebRTC viewer could not start: '+error.message);}
+});
+pantherRtcDisconnect.addEventListener('click',()=>pantherRtcStop());
+
 // === Full-screen mobile touch remote (no new permissions or server commands) ===
 const ptr = document.getElementById('pantherTouchRemote');
 const ptrStage = document.getElementById('ptrStage');
@@ -9884,6 +10009,10 @@ function ptrSync(){
     ptrEmpty.textContent='Select an active customer session in Panther Admin.';return;
   }
   ptrStatus.textContent=(session.device_label||'Customer device')+' · connected';
+  if(pantherRtcPeer && pantherRtcPeer.connectionState==='connected' && pantherRtcFullscreen.srcObject){
+    ptrImg.style.display='none';ptrEmpty.style.display='none';pantherRtcFullscreen.style.display='block';return;
+  }
+  pantherRtcFullscreen.style.display='none';
   const source=remoteEl('remotePreviewImage');
   if(source.style.display!=='none' && source.src && source.src.startsWith('data:image/jpeg;base64,')){
     if(ptrImg.src!==source.src)ptrImg.src=source.src;
@@ -9957,4 +10086,4 @@ boot();
 
 
 </body>
-                </html>
+                                                                                                                                     </html>
