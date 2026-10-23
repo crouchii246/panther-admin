@@ -2577,6 +2577,11 @@ body.panther-touch-active {overflow:hidden !important;}
       <div class="remote-support-grid">
         <div class="card-flat"><h3>Support sessions</h3><div id="remoteSupportSessions" class="remote-support-sessions"><div class="muted">Open Remote Support to load sessions.</div></div></div>
         <div class="card-flat"><h3>Selected session</h3><div id="remoteSupportCurrent" class="small-text" style="margin:10px 0">No session selected.</div>
+          <div style="margin:14px 0 10px;padding:12px;border:1px solid #344258;border-radius:12px;">
+            <div style="font-weight:700;margin-bottom:5px;">WebRTC live video (testing)</div>
+            <div class="small-text" style="margin-bottom:8px;">You can see these controls before connecting. Live video requires an active, customer-approved support session and an Android video sender.</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px"><button type="button" id="pantherWebRtcConnect">▶ Try live WebRTC video</button><button type="button" id="pantherWebRtcDisconnect" disabled>Stop WebRTC viewer</button><span class="small-text" id="pantherWebRtcStatus">JPEG preview is active; WebRTC is optional.</span></div>
+          </div>
           <div id="remoteSupportPreviewSection" class="hidden" style="margin:14px 0;">
             <div style="display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px">
               <strong>Live customer screen</strong>
@@ -2587,7 +2592,6 @@ body.panther-touch-active {overflow:hidden !important;}
               <img id="remotePreviewImage" alt="Live customer screen preview" style="display:none;max-width:100%;max-height:530px;object-fit:contain;" />
               <p id="remotePreviewPlaceholder" style="color:#bcc8da;text-align:center;margin:16px">Waiting for customer to allow screen viewing…</p>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px"><button type="button" id="pantherWebRtcConnect">▶ Try live WebRTC video</button><button type="button" id="pantherWebRtcDisconnect" disabled>Stop WebRTC viewer</button><span class="small-text" id="pantherWebRtcStatus">JPEG preview is active; WebRTC is optional.</span></div>
             <div id="remotePreviewTimestamp" class="small-text" style="margin-top:6px">Preview checks for a new image every second while sharing is active.</div>
             <div class="small-text" style="margin-top:6px">Screen preview is view-only. The navigation buttons below send commands separately. Do not request passwords, PINs or private content.</div>
           </div>
@@ -10086,4 +10090,4 @@ boot();
 
 
 </body>
-                                                                                                                                     </html>
+              </html>
