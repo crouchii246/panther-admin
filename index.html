@@ -2472,7 +2472,7 @@ body.panther-touch-active {overflow:hidden !important;}
         <div class="card-flat hidden" id="privateLegacyEditCard">
           <div class="section-heading">
             <div class="section-heading-left">
-              <div class="section-title-text"><h2 id="privateContentFormTitle">Edit content</h2><div>Edit an existing title selected from Library titles below. To add new content, use Adult Magnet / TorBox above.</div></div>
+              <div class="section-title-text"><h2 id="privateContentFormTitle">Edit content</h2><div>Edit an existing title and update its poster. Existing TorBox source references are preserved.</div></div>
             </div>
           </div>
 
@@ -7628,9 +7628,17 @@ $("savePrivateContentBtn")?.addEventListener("click", async () => {
     const videoUrl = $("privateContentVideoUrl").value.trim();
     const posterUrl = $("privateContentPosterUrl").value.trim();
 
-    if(!/^magnet:\?xt=urn:btih:[A-Za-z0-9]{32,40}(?:&|$)/i.test(videoUrl) &&
-       !/^magnet:\?xt=urn:btmh:[A-Za-z0-9]+(?:&|$)/i.test(videoUrl)){
-      throw new Error("Enter a valid magnet link (magnet:?xt=urn:btih:... or btmh:...).");
+    // Published TorBox videos use internal panther-torbox:// IDs, not
+    // original magnet links. Allow the exact stored source when EDITING,
+    // but never accept a new/altered internal reference from the form.
+    const originalSourceUnchanged = Boolean(
+      editingItem && videoUrl === oldVideoUrl && videoUrl.length > 0
+    );
+    const validNewMagnet =
+      /^magnet:\?xt=urn:btih:[A-Za-z0-9]{32,40}(?:&|$)/i.test(videoUrl) ||
+      /^magnet:\?xt=urn:btmh:[A-Za-z0-9]+(?:&|$)/i.test(videoUrl);
+    if (!originalSourceUnchanged && !validNewMagnet) {
+      throw new Error("Keep the existing TorBox source when editing, or supply a valid magnet link.");
     }
 
     setStatus(
@@ -9947,4 +9955,4 @@ boot();
 </div>
 
 </body>
-                                                                          </html>
+  </html>
