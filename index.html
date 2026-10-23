@@ -2469,10 +2469,10 @@ body.panther-touch-active {overflow:hidden !important;}
       <div style="height:14px"></div>
 
       <div class="private-library-grid">
-        <div class="card-flat">
+        <div class="card-flat hidden" id="privateLegacyEditCard">
           <div class="section-heading">
             <div class="section-heading-left">
-              <div class="section-title-text"><h2 id="privateContentFormTitle">Add content</h2><div>Add content using a magnet link. No video upload or direct-stream URL options.</div></div>
+              <div class="section-title-text"><h2 id="privateContentFormTitle">Edit content</h2><div>Edit an existing title selected from Library titles below. To add new content, use Adult Magnet / TorBox above.</div></div>
             </div>
           </div>
 
@@ -7215,8 +7215,9 @@ let privateTitleAccessAllowed = new Set();
 
 function resetPrivateContentForm(){
   privateEditingContentId = null;
-  $("privateContentFormTitle").textContent = "Add content";
-  $("savePrivateContentBtn").textContent = "Add title";
+  $("privateLegacyEditCard")?.classList.add("hidden");
+  $("privateContentFormTitle").textContent = "Edit content";
+  $("savePrivateContentBtn").textContent = "Save changes";
   $("cancelPrivateContentEditBtn").classList.add("hidden");
   $("privateContentTitle").value = "";
   $("privateContentCategory").value = "Private";
@@ -7532,6 +7533,7 @@ function editPrivateContent(id){
   if(!item) return;
 
   privateEditingContentId = id;
+  $("privateLegacyEditCard")?.classList.remove("hidden");
   $("privateContentFormTitle").textContent = "Edit content";
   $("savePrivateContentBtn").textContent = "Save changes";
   $("cancelPrivateContentEditBtn").classList.remove("hidden");
@@ -7547,7 +7549,10 @@ function editPrivateContent(id){
   $("privateContentSortOrder").value = String(item.sort_order ?? 100);
   $("privateContentEnabled").checked = item.enabled !== false;
   openSection("privateLibrarySection");
-  setTimeout(() => $("privateContentTitle")?.focus(), 100);
+  setTimeout(() => {
+    $("privateLegacyEditCard")?.scrollIntoView({behavior:"smooth", block:"center"});
+    $("privateContentTitle")?.focus();
+  }, 100);
 }
 
 
@@ -9942,4 +9947,4 @@ boot();
 </div>
 
 </body>
-  </html>
+                                                                          </html>
