@@ -2201,7 +2201,127 @@ body.panther-touch-active {overflow:hidden !important;}
       <div style="height:14px"></div>
 
 
-      <div class="card-flat hidden" aria-hidden="true">
+      <div class="card-flat">
+<div class="section-heading">
+<div class="section-heading-left">
+<div class="section-title-text">
+<h2>Adult Magnet / TorBox</h2>
+<div>Paste a magnet link, add it to TorBox, choose the video file, then publish it into Panther's existing Adult / Private Library.</div>
+</div>
+</div>
+<span class="pill" id="adultMagnetStatePill">NOT ADDED</span>
+</div>
+<div class="cache-explainer">
+<strong>Server-side TorBox import.</strong>
+          The magnet link and TorBox API token are never sent to Panther devices.
+          When a user presses Play, Panther receives a temporary protected playback URL and the Adult stream function redirects to TorBox's temporary CDN link.
+          This keeps TorBox credentials out of the APK and avoids sending the video itself through Supabase.
+        </div>
+<div style="height:12px"></div>
+<div class="private-library-form">
+<div class="wide">
+<div class="field-label">Magnet link</div>
+<textarea id="adultMagnetLink" placeholder="magnet:?xt=urn:btih:..." rows="4" spellcheck="false"></textarea>
+<div class="small-text">
+              Paste a standard magnet URI. Panther does not scrape torrent websites; it only processes the magnet you supply.
+            </div>
+</div>
+<div>
+<div class="field-label">Title</div>
+<input id="adultMagnetTitle" maxlength="180" placeholder="Auto-filled from TorBox"/>
+</div>
+<div>
+<div class="field-label">Folder</div>
+<select id="adultMagnetFolder"><option value="Adult">Adult</option></select>
+<div class="small-text">Choose the folder for this video before publishing.</div>
+</div>
+<div>
+<div class="card-flat" style="margin-top:12px">
+  <div class="field-label">Delete existing folder</div>
+  <div class="small-text">Select the folder above, then choose whether to keep or delete its published videos. This does not delete TorBox downloads.</div>
+  <div class="cache-actions" style="margin-top:10px">
+    <button id="adultDeleteFolderOnlyBtn" type="button">Delete folder — keep videos</button>
+    <button id="adultDeleteFolderAndVideosBtn" type="button" class="danger">Delete folder and videos</button>
+  </div>
+  <div class="status" id="adultDeleteFolderStatus"></div>
+</div>
+<div class="field-label">Create new folder</div>
+<div class="private-upload-row"><input id="adultNewFolderName" maxlength="100" placeholder="New folder name"><button id="adultCreateFolderBtn" type="button">Create folder</button></div>
+<input id="adultMagnetCategory" type="hidden" value="Adult"/>
+<div class="card-flat" style="margin-top:12px">
+  <div class="field-label">Folder image — upload or URL</div>
+  <div class="small-text">Select a folder above. Upload an image from your device OR paste a direct image URL.</div>
+  <input id="adultFolderImageUrl" type="url" inputmode="url" placeholder="https://example.com/folder.jpg" style="margin-top:10px"/>
+  <button id="adultSaveFolderImageUrlBtn" type="button" style="margin-top:8px">Use image URL</button>
+  <div class="private-upload-row" style="margin-top:10px">
+    <input id="adultFolderImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/>
+    <button id="adultUploadFolderImageBtn" type="button">Upload folder image</button>
+    <button id="adultRemoveFolderImageBtn" type="button" class="danger">Remove image</button>
+  </div>
+  <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <img id="adultFolderImagePreview" alt="Selected folder artwork" style="display:none;object-fit:cover;width:140px;height:90px;border-radius:10px;border:1px solid #33404c"/>
+    <span id="adultFolderImageLabel" class="small-text">No folder image assigned</span>
+  </div>
+  <div id="adultFolderImageStatus" class="status"></div>
+  <div class="small-text">Folder images are saved in Supabase and displayed in Panther after the Android update. Existing browser-only images must be saved again once after the SQL setup.</div>
+</div>
+</div>
+<div class="wide">
+<div class="field-label">Video poster — upload or URL</div>
+<input id="adultMagnetPosterUrl" inputmode="url" placeholder="https://example.com/poster.jpg" type="url"/>
+<div class="private-upload-row" style="margin-top:10px">
+  <input id="adultMagnetPosterFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"/>
+  <button id="adultUploadMagnetPosterBtn" type="button">Upload poster</button>
+</div>
+<div id="adultMagnetPosterUploadStatus" class="status"></div>
+<div class="small-text">Choose either a direct image URL or attach an image. Uploaded images automatically fill in the URL field.</div>
+</div>
+<div class="wide">
+<div class="field-label">Description</div>
+<textarea id="adultMagnetDescription" placeholder="Optional description" rows="3"></textarea>
+</div>
+<div>
+<div class="field-label">Sort order</div>
+<input id="adultMagnetSortOrder" type="number" value="100"/>
+</div>
+<label class="private-check-card">
+<input checked="" id="adultMagnetEnabled" type="checkbox"/>
+<span>
+<strong>Enable after publishing</strong>
+<div class="small-text">Turn this off if you want to review the item before it appears in Panther.</div>
+</span>
+</label>
+<label class="private-check-card wide">
+<input id="adultMagnetCachedOnly" type="checkbox"/>
+<span>
+<strong>Cached only</strong>
+<div class="small-text">When enabled, TorBox refuses the import unless it is already cached. Leave off to allow TorBox to download an uncached torrent.</div>
+</span>
+</label>
+<div class="cache-actions wide">
+<button id="inspectAdultMagnetBtn">Inspect magnet</button>
+<button class="primary" id="addAdultMagnetBtn">Add to TorBox</button>
+<button disabled="" id="refreshAdultMagnetBtn">Refresh status</button>
+<button class="primary" disabled="" id="publishAdultMagnetBtn">Publish to Adult</button>
+<button class="primary" disabled="" id="publishAllAdultMagnetBtn">Publish ALL video files</button>
+<button id="resetAdultMagnetBtn">Clear</button>
+</div>
+</div>
+<div class="status" id="adultMagnetStatus"></div>
+<div style="height:12px"></div>
+<div class="private-bulk-summary" id="adultMagnetSummary">
+          Paste a magnet and press Inspect magnet or Add to TorBox.
+        </div>
+<div style="height:10px"></div>
+<div class="private-content-list" id="adultMagnetFiles"></div>
+</div>
+<div style="height:14px"></div>
+
+<div style="height:14px"></div>
+
+<div style="height:14px"></div>
+
+<div class="card-flat hidden" aria-hidden="true">
         <div class="section-heading">
           <div class="section-heading-left">
             <div class="section-title-text">
@@ -6236,6 +6356,849 @@ $("clearPrivateBulkUploadBtn")?.addEventListener("click", clearPrivateBulkUpload
 
 
 // ============================================================
+// ADULT MAGNET / TORBOX
+// ============================================================
+
+let adultMagnetTorrentId = null;
+let adultMagnetTorrentReady = false;
+let adultMagnetFiles = [];
+let adultMagnetSelectedFileId = null;
+let adultMagnetLastStatus = null;
+let adultMagnetPollTimer = null;
+
+
+function adultMagnetFormatBytes(value){
+  const bytes = Number(value || 0);
+
+  if(!Number.isFinite(bytes) || bytes <= 0){
+    return "Unknown size";
+  }
+
+  const units = ["B","KB","MB","GB","TB"];
+  let amount = bytes;
+  let index = 0;
+
+  while(amount >= 1024 && index < units.length - 1){
+    amount /= 1024;
+    index += 1;
+  }
+
+  return `${amount >= 100 || index === 0 ? amount.toFixed(0) : amount.toFixed(1)} ${units[index]}`;
+}
+
+
+function adultMagnetCleanTitle(value){
+  return String(value || "")
+    .split("/")
+    .pop()
+    .replace(/\.[^.]+$/, "")
+    .replace(/[._]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+
+function setAdultMagnetPill(text, mode = ""){
+  const pill = $("adultMagnetStatePill");
+  if(!pill) return;
+
+  pill.textContent = text || "NOT ADDED";
+  pill.classList.remove("enabled","disabled");
+
+  if(mode === "ready"){
+    pill.classList.add("enabled");
+  }else if(mode === "error"){
+    pill.classList.add("disabled");
+  }
+}
+
+
+function stopAdultMagnetPolling(){
+  if(adultMagnetPollTimer){
+    clearTimeout(adultMagnetPollTimer);
+    adultMagnetPollTimer = null;
+  }
+}
+
+
+function resetAdultMagnetForm(){
+  stopAdultMagnetPolling();
+
+  adultMagnetTorrentId = null;
+  adultMagnetTorrentReady = false;
+  adultMagnetFiles = [];
+  adultMagnetSelectedFileId = null;
+  adultMagnetLastStatus = null;
+
+  if($("adultMagnetLink")) $("adultMagnetLink").value = "";
+  if($("adultMagnetTitle")) $("adultMagnetTitle").value = "";
+  if($("adultMagnetCategory")) $("adultMagnetCategory").value = $("adultMagnetFolder")?.value || "Adult";
+  if($("adultMagnetPosterUrl")) $("adultMagnetPosterUrl").value = "";
+  if($("adultMagnetDescription")) $("adultMagnetDescription").value = "";
+  if($("adultMagnetSortOrder")) $("adultMagnetSortOrder").value = "100";
+  if($("adultMagnetEnabled")) $("adultMagnetEnabled").checked = true;
+  if($("adultMagnetCachedOnly")) $("adultMagnetCachedOnly").checked = false;
+
+  if($("adultMagnetFiles")) $("adultMagnetFiles").innerHTML = "";
+  if($("adultMagnetSummary")){
+    $("adultMagnetSummary").textContent =
+      "Paste a magnet and press Inspect magnet or Add to TorBox.";
+  }
+
+  if($("refreshAdultMagnetBtn")) $("refreshAdultMagnetBtn").disabled = true;
+  if($("publishAdultMagnetBtn")) $("publishAdultMagnetBtn").disabled = true;
+
+  setAdultMagnetPill("NOT ADDED");
+  setStatus($("adultMagnetStatus"), "");
+}
+
+
+async function callAdultMagnetAdmin(action, extra = {}){
+  const controller =
+    new AbortController();
+
+  const timeoutMs =
+    action === "inspect"
+      ? 18000
+      : 45000;
+
+  const timer =
+    setTimeout(
+      () => controller.abort(),
+      timeoutMs
+    );
+
+  try{
+    const response =
+      await apiFetch(
+        "/functions/v1/panther-adult-magnet-admin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            action,
+            ...extra
+          }),
+          signal: controller.signal
+        }
+      );
+
+    const data =
+      await readJson(response);
+
+    if(
+      !response.ok ||
+      data?.success === false
+    ){
+      throw new Error(
+        data?.error ||
+        data?.message ||
+        `Adult Magnet request failed (HTTP ${response.status})`
+      );
+    }
+
+    return data;
+
+  }catch(e){
+    if(e?.name === "AbortError"){
+      throw new Error(
+        action === "inspect"
+          ? "TorBox metadata lookup took too long. Press Add to TorBox instead — Panther can resolve the files after TorBox adds it."
+          : "TorBox took too long to respond. Try the action again."
+      );
+    }
+
+    throw e;
+
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+
+function adultMagnetValue(){
+  const magnet =
+    String(
+      $("adultMagnetLink")?.value || ""
+    ).trim();
+
+  if(!magnet.toLowerCase().startsWith("magnet:?")){
+    throw new Error("Paste a valid magnet link first.");
+  }
+
+  return magnet;
+}
+
+
+function renderAdultMagnetPreview(data){
+  const host = $("adultMagnetFiles");
+  if(!host) return;
+
+  const files =
+    Array.isArray(data?.files)
+      ? data.files
+      : [];
+
+  const name =
+    String(data?.name || "Torrent");
+
+  const titleInput =
+    $("adultMagnetTitle");
+
+  if(
+    titleInput &&
+    !String(titleInput.value || "").trim()
+  ){
+    titleInput.value =
+      adultMagnetCleanTitle(name) || name;
+  }
+
+  $("adultMagnetSummary").innerHTML = `
+    <strong>${esc(name)}</strong><br>
+    ${adultMagnetFormatBytes(data?.size)} · ${Number(data?.seeds || 0)} seed${Number(data?.seeds || 0) === 1 ? "" : "s"} ·
+    ${Number(data?.peers || 0)} peer${Number(data?.peers || 0) === 1 ? "" : "s"}<br>
+    ${files.length} video file${files.length === 1 ? "" : "s"} detected.
+    <div class="small-text" style="margin-top:5px">${data?.metadata_pending === true ? "Metadata lookup timed out — this does not stop you adding it to TorBox." : "Preview only — add the magnet to TorBox before choosing the final playable file."}</div>
+  `;
+
+  if(!files.length){
+    host.innerHTML =
+      data?.metadata_pending === true
+        ? '<div class="empty-note">TorBox did not return metadata quickly enough. Press <strong>Add to TorBox</strong>; Panther will load the video files from TorBox when the torrent is ready.</div>'
+        : '<div class="empty-note">No video files were detected in the magnet metadata yet.</div>';
+    return;
+  }
+
+  host.innerHTML =
+    files.map(file => `
+      <div class="private-content-card">
+        <div class="private-content-title">${esc(file.name || "Video")}</div>
+        <div class="private-content-meta">${esc(adultMagnetFormatBytes(file.size))}${file.mimetype ? ` · ${esc(file.mimetype)}` : ""}</div>
+      </div>
+    `).join("");
+}
+
+
+function renderAdultMagnetStatus(status){
+  adultMagnetLastStatus = status || null;
+  adultMagnetTorrentReady = status?.ready === true;
+  adultMagnetFiles =
+    Array.isArray(status?.files)
+      ? status.files
+      : [];
+
+  if(
+    adultMagnetFiles.length &&
+    (
+      adultMagnetSelectedFileId === null ||
+      !adultMagnetFiles.some(file => Number(file.id) === Number(adultMagnetSelectedFileId))
+    )
+  ){
+    const largest =
+      [...adultMagnetFiles]
+        .sort(
+          (a,b) =>
+            Number(b.size || 0) -
+            Number(a.size || 0)
+        )[0];
+
+    adultMagnetSelectedFileId =
+      largest
+        ? Number(largest.id)
+        : null;
+  }
+
+  const state =
+    String(status?.state || (adultMagnetTorrentReady ? "ready" : "processing"));
+
+  const progressRaw =
+    Number(status?.progress || 0);
+
+  const progress =
+    progressRaw <= 1 && progressRaw > 0
+      ? Math.round(progressRaw * 100)
+      : Math.round(progressRaw);
+
+  const name =
+    String(status?.name || "TorBox torrent");
+
+  const titleInput =
+    $("adultMagnetTitle");
+
+  if(
+    titleInput &&
+    !String(titleInput.value || "").trim()
+  ){
+    titleInput.value =
+      adultMagnetCleanTitle(name) || name;
+  }
+
+  $("adultMagnetSummary").innerHTML = `
+    <strong>${esc(name)}</strong><br>
+    State: ${esc(state || "Unknown")} · Progress ${Number.isFinite(progress) ? Math.max(0,Math.min(100,progress)) : 0}% ·
+    ${status?.cached === true ? "Cached" : "Not marked cached"}<br>
+    ${Number(status?.seeds || 0)} seed${Number(status?.seeds || 0) === 1 ? "" : "s"} ·
+    ${Number(status?.peers || 0)} peer${Number(status?.peers || 0) === 1 ? "" : "s"} ·
+    ${adultMagnetFormatBytes(status?.size)}
+  `;
+
+  setAdultMagnetPill(
+    adultMagnetTorrentReady
+      ? "READY"
+      : (state || "PROCESSING").toUpperCase(),
+    adultMagnetTorrentReady
+      ? "ready"
+      : ""
+  );
+
+  if($("refreshAdultMagnetBtn")){
+    $("refreshAdultMagnetBtn").disabled =
+      !adultMagnetTorrentId;
+  }
+
+  if($("publishAdultMagnetBtn")){
+    $("publishAdultMagnetBtn").disabled =
+      !(
+        adultMagnetTorrentReady &&
+        adultMagnetSelectedFileId !== null
+      );
+  }
+
+  const host =
+    $("adultMagnetFiles");
+
+  if(!host) return;
+
+  if(!adultMagnetFiles.length){
+    host.innerHTML =
+      '<div class="empty-note">No playable video files are available yet. If TorBox is still downloading metadata/content, refresh again shortly.</div>';
+    return;
+  }
+
+  host.innerHTML =
+    adultMagnetFiles.map(file => {
+      const id =
+        Number(file.id);
+
+      const selected =
+        Number(adultMagnetSelectedFileId) ===
+        id;
+
+      return `
+        <label class="private-check-card" style="display:flex;align-items:flex-start;gap:10px">
+          <input
+            type="radio"
+            name="adultMagnetVideoFile"
+            class="adult-magnet-file"
+            data-id="${id}"
+            ${selected ? "checked" : ""}>
+          <span>
+            <strong>${esc(file.name || "Video")}</strong>
+            <div class="small-text">${esc(adultMagnetFormatBytes(file.size))}${file.mimetype ? ` · ${esc(file.mimetype)}` : ""}</div>
+          </span>
+        </label>
+      `;
+    }).join("");
+
+  document
+    .querySelectorAll(".adult-magnet-file")
+    .forEach(input => {
+      input.addEventListener("change", () => {
+        adultMagnetSelectedFileId =
+          Number(input.dataset.id);
+
+        const selected =
+          adultMagnetFiles.find(
+            file =>
+              Number(file.id) ===
+              Number(adultMagnetSelectedFileId)
+          );
+
+        if(
+          selected &&
+          $("adultMagnetTitle") &&
+          !String($("adultMagnetTitle").value || "").trim()
+        ){
+          $("adultMagnetTitle").value =
+            adultMagnetCleanTitle(selected.name);
+        }
+
+        if($("publishAdultMagnetBtn")){
+          $("publishAdultMagnetBtn").disabled =
+            !(
+              adultMagnetTorrentReady &&
+              adultMagnetSelectedFileId !== null
+            );
+        }
+      });
+    });
+}
+
+
+function scheduleAdultMagnetPoll(){
+  stopAdultMagnetPolling();
+
+  if(
+    !adultMagnetTorrentId ||
+    adultMagnetTorrentReady
+  ){
+    return;
+  }
+
+  adultMagnetPollTimer =
+    setTimeout(
+      async () => {
+        try{
+          await refreshAdultMagnetStatus(true);
+        }catch(_){
+          // Keep the manual Refresh status button available if a background poll fails.
+        }
+
+        if(
+          adultMagnetTorrentId &&
+          !adultMagnetTorrentReady
+        ){
+          scheduleAdultMagnetPoll();
+        }
+      },
+      8000
+    );
+}
+
+
+async function inspectAdultMagnet(){
+  const button =
+    $("inspectAdultMagnetBtn");
+
+  try{
+    const magnet =
+      adultMagnetValue();
+
+    button.disabled = true;
+
+    setStatus(
+      $("adultMagnetStatus"),
+      "Reading magnet metadata from TorBox..."
+    );
+
+    const result =
+      await callAdultMagnetAdmin(
+        "inspect",
+        {
+          magnet
+        }
+      );
+
+    renderAdultMagnetPreview(
+      result?.data || {}
+    );
+
+    if(result?.data?.metadata_pending === true){
+      setAdultMagnetPill("READY TO ADD");
+
+      setStatus(
+        $("adultMagnetStatus"),
+        result?.data?.warning ||
+          "Metadata lookup took too long. Press Add to TorBox to continue.",
+        true
+      );
+    }else{
+      setStatus(
+        $("adultMagnetStatus"),
+        "Magnet metadata loaded. Press Add to TorBox when you are ready.",
+        true
+      );
+    }
+
+  }catch(e){
+    setAdultMagnetPill("ERROR","error");
+
+    setStatus(
+      $("adultMagnetStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+async function addAdultMagnet(){
+  const button =
+    $("addAdultMagnetBtn");
+
+  try{
+    const magnet =
+      adultMagnetValue();
+
+    button.disabled = true;
+
+    setStatus(
+      $("adultMagnetStatus"),
+      "Adding magnet to TorBox..."
+    );
+
+    const result =
+      await callAdultMagnetAdmin(
+        "create",
+        {
+          magnet,
+          name:
+            String(
+              $("adultMagnetTitle")?.value || ""
+            ).trim(),
+          cached_only:
+            !!$("adultMagnetCachedOnly")?.checked
+        }
+      );
+
+    adultMagnetTorrentId =
+      Number(result?.torrent_id || 0) || null;
+
+    adultMagnetSelectedFileId =
+      null;
+
+    if(!adultMagnetTorrentId){
+      throw new Error("TorBox did not return a torrent ID.");
+    }
+
+    if(result?.status){
+      renderAdultMagnetStatus(
+        result.status
+      );
+    }else{
+      adultMagnetTorrentReady = false;
+      adultMagnetFiles = [];
+
+      setAdultMagnetPill("PROCESSING");
+
+      $("adultMagnetSummary").textContent =
+        `Added to TorBox as torrent #${adultMagnetTorrentId}. Waiting for metadata...`;
+
+      $("refreshAdultMagnetBtn").disabled = false;
+      $("publishAdultMagnetBtn").disabled = true;
+    }
+
+    setStatus(
+      $("adultMagnetStatus"),
+      adultMagnetTorrentReady
+        ? "TorBox is ready. Choose the video file and publish it."
+        : "Added to TorBox. Panther will keep checking until the video is ready.",
+      true
+    );
+
+    scheduleAdultMagnetPoll();
+
+  }catch(e){
+    setAdultMagnetPill("ERROR","error");
+
+    setStatus(
+      $("adultMagnetStatus"),
+      e?.message || String(e),
+      false
+    );
+
+  }finally{
+    button.disabled = false;
+  }
+}
+
+
+async function refreshAdultMagnetStatus(background = false){
+  if(!adultMagnetTorrentId){
+    if(!background){
+      setStatus(
+        $("adultMagnetStatus"),
+        "Add a magnet to TorBox first.",
+        false
+      );
+    }
+    return;
+  }
+
+  const button =
+    $("refreshAdultMagnetBtn");
+
+  if(button && !background){
+    button.disabled = true;
+  }
+
+  if(!background){
+    setStatus(
+      $("adultMagnetStatus"),
+      "Refreshing TorBox status..."
+    );
+  }
+
+  try{
+    const result =
+      await callAdultMagnetAdmin(
+        "status",
+        {
+          torrent_id:
+            adultMagnetTorrentId
+        }
+      );
+
+    renderAdultMagnetStatus(
+      result?.status || {}
+    );
+
+    if(!background){
+      setStatus(
+        $("adultMagnetStatus"),
+        adultMagnetTorrentReady
+          ? "Ready to publish."
+          : "TorBox is still preparing this torrent.",
+        adultMagnetTorrentReady
+      );
+    }
+
+  }catch(e){
+    if(!background){
+      setStatus(
+        $("adultMagnetStatus"),
+        e?.message || String(e),
+        false
+      );
+    }
+    throw e;
+
+  }finally{
+    if(button){
+      button.disabled =
+        !adultMagnetTorrentId;
+    }
+  }
+}
+
+
+let adultMagnetBulkPublishing = false;
+async function publishAllAdultMagnet(){
+  if(adultMagnetBulkPublishing) return;
+  adultMagnetBulkPublishing = true;
+  const button = $("publishAllAdultMagnetBtn");
+  if(!adultMagnetTorrentId || !adultMagnetTorrentReady || !adultMagnetFiles.length){
+    setStatus($("adultMagnetStatus"), "Wait until TorBox lists ready video files.", false);
+    return;
+  }
+  const files = [...adultMagnetFiles];
+  const baseTitle = String($("adultMagnetTitle")?.value || "").trim();
+  const folder = String($("adultMagnetFolder")?.value || "Adult").trim() || "Adult";
+  const common = {
+    torrent_id: adultMagnetTorrentId,
+    category: folder,
+    poster_url: String($("adultMagnetPosterUrl")?.value || "").trim(),
+    description: String($("adultMagnetDescription")?.value || "").trim(),
+    creator: "TorBox",
+    enabled: !!$("adultMagnetEnabled")?.checked,
+    sort_order: Number.parseInt($("adultMagnetSortOrder")?.value || "100", 10) || 100
+  };
+  button.disabled = true;
+  $("publishAdultMagnetBtn").disabled = true;
+  let succeeded = 0;
+  const failures = [];
+  try{
+    for(let i=0; i<files.length; i++){
+      const file = files[i];
+      const fileTitle = adultMagnetCleanTitle(file.name || `Scene ${i+1}`);
+      const title = baseTitle && files.length > 1
+        ? `${baseTitle} - ${fileTitle}`
+        : (baseTitle || fileTitle);
+      setStatus($("adultMagnetStatus"), `Publishing ${i+1} of ${files.length}: ${title}`);
+      try{
+        await callAdultMagnetAdmin("publish", {...common, file_id: Number(file.id), title});
+        succeeded++;
+      }catch(error){
+        failures.push(`${file.name || file.id}: ${error?.message || String(error)}`);
+      }
+    }
+    await loadPrivateContent();
+    const summary = `Published ${succeeded} of ${files.length} videos to folder "${folder}".`;
+    setStatus($("adultMagnetStatus"), failures.length
+      ? summary + " Failed: " + failures.join(" | ")
+      : summary,
+      failures.length === 0);
+    // Keep the torrent and file list available so failed files can be retried.
+  } finally {
+    adultMagnetBulkPublishing = false;
+    button.disabled = !(adultMagnetTorrentReady && adultMagnetFiles.length > 0);
+    $("publishAdultMagnetBtn").disabled = !(adultMagnetTorrentReady && adultMagnetSelectedFileId !== null);
+  }
+}
+
+async function publishAdultMagnet(){
+  if(
+    !adultMagnetTorrentId ||
+    adultMagnetSelectedFileId === null
+  ){
+    setStatus(
+      $("adultMagnetStatus"),
+      "Choose a ready TorBox video file first.",
+      false
+    );
+    return;
+  }
+
+  const button =
+    $("publishAdultMagnetBtn");
+
+  button.disabled = true;
+
+  setStatus(
+    $("adultMagnetStatus"),
+    "Publishing to Panther Adult / Private Library..."
+  );
+
+  try{
+    const selected =
+      adultMagnetFiles.find(
+        file =>
+          Number(file.id) ===
+          Number(adultMagnetSelectedFileId)
+      );
+
+    const title =
+      String(
+        $("adultMagnetTitle")?.value || ""
+      ).trim() ||
+      adultMagnetCleanTitle(
+        selected?.name || adultMagnetLastStatus?.name || "Adult video"
+      );
+
+    const result =
+      await callAdultMagnetAdmin(
+        "publish",
+        {
+          torrent_id:
+            adultMagnetTorrentId,
+
+          file_id:
+            adultMagnetSelectedFileId,
+
+          title,
+
+          category:
+            String(
+              $("adultMagnetFolder")?.value || "Adult"
+            ).trim() || "Adult",
+
+          poster_url:
+            String(
+              $("adultMagnetPosterUrl")?.value || ""
+            ).trim(),
+
+          description:
+            String(
+              $("adultMagnetDescription")?.value || ""
+            ).trim(),
+
+          creator:
+            "TorBox",
+
+          enabled:
+            !!$("adultMagnetEnabled")?.checked,
+
+          sort_order:
+            Number.parseInt(
+              $("adultMagnetSortOrder")?.value || "100",
+              10
+            ) || 100
+        }
+      );
+
+    await loadPrivateContent();
+
+    const savedTitle =
+      result?.item?.title ||
+      title;
+
+    resetAdultMagnetForm();
+
+    setStatus(
+      $("adultMagnetStatus"),
+      `"${savedTitle}" has been published to the Adult / Private Library.`,
+      true
+    );
+
+  }catch(e){
+    setStatus(
+      $("adultMagnetStatus"),
+      e?.message || String(e),
+      false
+    );
+
+    if(
+      adultMagnetTorrentId &&
+      !adultMagnetTorrentReady
+    ){
+      scheduleAdultMagnetPoll();
+    }
+
+  }finally{
+    button.disabled =
+      !(
+        adultMagnetTorrentReady &&
+        adultMagnetSelectedFileId !== null
+      );
+  }
+}
+
+
+$("inspectAdultMagnetBtn")?.addEventListener(
+  "click",
+  inspectAdultMagnet
+);
+
+
+$("addAdultMagnetBtn")?.addEventListener(
+  "click",
+  addAdultMagnet
+);
+
+
+$("refreshAdultMagnetBtn")?.addEventListener(
+  "click",
+  () =>
+    refreshAdultMagnetStatus(
+      false
+    )
+);
+
+
+$("publishAdultMagnetBtn")?.addEventListener(
+  "click",
+  publishAdultMagnet
+);
+
+$("publishAllAdultMagnetBtn")?.addEventListener("click", publishAllAdultMagnet);
+
+// Keep the bulk action in sync with the latest TorBox status, even after resetting.
+const publishAllButton = $("publishAllAdultMagnetBtn");
+if(publishAllButton){
+  const syncPublishAllState = () => {
+    publishAllButton.disabled = adultMagnetBulkPublishing || !(adultMagnetTorrentReady && adultMagnetFiles.length > 0);
+  };
+  const singleButton = $("publishAdultMagnetBtn");
+  if(singleButton){
+    new MutationObserver(syncPublishAllState).observe(singleButton, {attributes:true, attributeFilter:["disabled"]});
+  }
+  syncPublishAllState();
+}
+
+
+$("resetAdultMagnetBtn")?.addEventListener(
+  "click",
+  resetAdultMagnetForm
+);
+
+
+
+// ============================================================
 // PRIVATE LIBRARY
 // ============================================================
 
@@ -8762,4 +9725,4 @@ boot();
 </div>
 
 </body>
-                                                           </html>
+  </html>
