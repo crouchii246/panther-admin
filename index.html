@@ -2739,6 +2739,27 @@ body.panther-touch-active {overflow:hidden !important;}
 
 </div>
 
+<!-- Separate phone-friendly control surface; uses the same approved remote session. -->
+<div id="pantherTouchRemote" role="dialog" aria-modal="true" aria-label="Full-screen Panther remote control">
+  <div class="ptr-header">
+    <strong>● PANTHER LIVE REMOTE</strong><span id="ptrStatus" class="ptr-status">Connecting…</span>
+    <button id="ptrFullscreen" type="button">⛶ Fullscreen</button>
+    <button id="ptrClose" type="button">✕ Exit</button>
+  </div>
+  <div class="ptr-stage" id="ptrStage" aria-label="Touch surface: swipe to navigate and tap to select">
+    <img id="ptrImage" alt="Current approved customer screen" draggable="false" />
+    <div id="ptrEmpty" class="ptr-empty">Waiting for a shared customer screen…</div>
+    <div class="ptr-gesture" id="ptrGesture"></div>
+  </div>
+  <div class="ptr-toolbar">
+    <button type="button" id="ptrBack">↩ Back</button>
+    <span class="ptr-hint">Swipe = move focus · Tap = Select<br>Touch is D-pad navigation, not coordinate clicking</span>
+    <button type="button" id="ptrRefresh">↻ Refresh</button>
+    <button type="button" id="ptrEnd" class="ptr-danger">End support</button>
+  </div>
+</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 
@@ -9934,25 +9955,6 @@ boot();
 </script>
 
 
-<!-- Separate phone-friendly control surface; uses the same approved remote session. -->
-<div id="pantherTouchRemote" role="dialog" aria-modal="true" aria-label="Full-screen Panther remote control">
-  <div class="ptr-header">
-    <strong>● PANTHER LIVE REMOTE</strong><span id="ptrStatus" class="ptr-status">Connecting…</span>
-    <button id="ptrFullscreen" type="button">⛶ Fullscreen</button>
-    <button id="ptrClose" type="button">✕ Exit</button>
-  </div>
-  <div class="ptr-stage" id="ptrStage" aria-label="Touch surface: swipe to navigate and tap to select">
-    <img id="ptrImage" alt="Current approved customer screen" draggable="false" />
-    <div id="ptrEmpty" class="ptr-empty">Waiting for a shared customer screen…</div>
-    <div class="ptr-gesture" id="ptrGesture"></div>
-  </div>
-  <div class="ptr-toolbar">
-    <button type="button" id="ptrBack">↩ Back</button>
-    <span class="ptr-hint">Swipe = move focus · Tap = Select<br>Touch is D-pad navigation, not coordinate clicking</span>
-    <button type="button" id="ptrRefresh">↻ Refresh</button>
-    <button type="button" id="ptrEnd" class="ptr-danger">End support</button>
-  </div>
-</div>
 
 </body>
-  </html>
+                </html>
