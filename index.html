@@ -9870,9 +9870,28 @@ async function remoteSend(command_type,command_payload={}){
  try {
    const result=await remoteCall('admin_command',{session_id:remoteSelectedId,command_type,command_payload});
    if(!result?.ok){remoteMessage('Command was not accepted by the server.',false);return false;}
-   remoteMessage(`${command_type.replaceAll('_',' ')} sent to Firestick. Ensure the text field itself is selected.`,true);
+   const seq=result.sequence_number;
+   remoteMessage(`${command_type.replaceAll('_',' ')} queued; checking Firestick response…`,null);
+   // The API uses sequence_number; retrieve the server-side command ID
+   // through admin_command_status using the sequence number.
+   if(Number.isInteger(seq))pantherCheckRemoteCommand(remoteSelectedId,seq,command_type);
    return true;
  } catch(e) {remoteMessage(e.message,false);return false;}
+}
+async function pantherCheckRemoteCommand(sessionId,sequence,command){
+ for(let n=0;n<8;n++){
+   await new Promise(resolve=>setTimeout(resolve,550));
+   if(remoteSelectedId!==sessionId)return;
+   try{
+     const status=await remoteCall('admin_command_status',{session_id:sessionId,sequence_number:sequence});
+     if(!status.handled)continue;
+     if(status.outcome==='handled')remoteMessage(`${command.replaceAll('_',' ')} completed on Firestick.`,true);
+     else if(status.outcome==='no_text_field_focused')remoteMessage('Firestick rejected text: select the actual text box first, then retry.',false);
+     else remoteMessage(`Firestick rejected ${command.replaceAll('_',' ')} (${status.outcome||'failed'}).`,false);
+     return;
+   }catch(e){remoteMessage(`Unable to check delivery: ${e.message}`,false);return;}
+ }
+ remoteMessage('Command queued but Firestick has not confirmed it. Check remote support connection.',false);
 }
 remoteEl('remoteSupportActions').querySelectorAll('[data-remote-command]').forEach(button=>button.addEventListener('click',()=>remoteSend(button.dataset.remoteCommand)));
 remoteEl('remoteSupportOpenScreen').addEventListener('click',()=>remoteSend('open_screen',{screen:remoteEl('remoteSupportScreen').value}));
@@ -10125,4 +10144,4 @@ boot();
 
 
 </body>
-            </html>
+      </html>
