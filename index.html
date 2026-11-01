@@ -2771,6 +2771,7 @@ body.panther-touch-active {overflow:hidden !important;}
     <strong style="font-size:18px">Type into selected field</strong>
     <p style="font-size:13px;color:#bfd1df">Select an ordinary text field on the Firestick, then type here. You can edit or clear the selected field. The customer must type passwords and PINs on their device.</p>
     <input id="ptrTextInput" maxlength="500" autocomplete="off" placeholder="Enter text" style="width:100%;box-sizing:border-box;font-size:16px;padding:12px;border-radius:8px" />
+    <div id="ptrTextDeliveryStatus" role="status" aria-live="polite" style="min-height:20px;margin-top:8px;color:#b8c7d8;font-size:13px">Select the Firestick field, then send a test username.</div>
     <div style="display:flex;gap:8px;margin-top:12px"><button type="button" id="ptrTextSend">Send text</button><button type="button" class="ptr-edit-command" data-edit-command="backspace">⌫ Backspace</button><button type="button" class="ptr-edit-command" data-edit-command="delete_forward">Delete →</button><button type="button" class="ptr-edit-command" data-edit-command="select_all">Select all</button><button type="button" class="ptr-edit-command" data-edit-command="clear_field">Clear field</button><button type="button" id="ptrTextCancel">Close</button></div>
   </div>
 </div>
@@ -9784,7 +9785,14 @@ let remotePreviewBusy = false;
 let remotePreviewSessionId = null;
 let remotePreviewCapturedAt = null;
 const remoteEl = id => document.getElementById(id);
-function remoteMessage(msg, ok=null){setStatus(remoteEl('remoteSupportStatus'),msg,ok);}
+function remoteMessage(msg, ok=null){
+ setStatus(remoteEl('remoteSupportStatus'),msg,ok);
+ const overlay=document.getElementById('ptrTextOverlay');
+ if(overlay && overlay.style.display==='flex'){
+  const indicator=document.getElementById('ptrTextDeliveryStatus');
+  if(indicator){indicator.textContent=msg;indicator.style.color=ok===false?'#ff9a9a':ok===true?'#6fe0a5':'#b8c7d8';}
+ }
+}
 async function remoteCall(action, args={}){
   if(!accessToken)throw new Error('Please sign in to Panther Admin.');
   const response=await fetch(remoteUrl,{
@@ -9911,7 +9919,7 @@ document.querySelectorAll('.ptr-edit-command').forEach(button=>button.addEventLi
 document.getElementById('remoteTextSend').addEventListener('click',()=>pantherSendTyped(document.getElementById('remoteTextInput')));
 document.getElementById('ptrTextOpen').addEventListener('click',()=>{document.getElementById('ptrTextOverlay').style.display='flex';document.getElementById('ptrTextInput').focus();});
 document.getElementById('ptrTextCancel').addEventListener('click',()=>{document.getElementById('ptrTextOverlay').style.display='none';});
-document.getElementById('ptrTextSend').addEventListener('click',()=>pantherSendTyped(document.getElementById('ptrTextInput'),()=>{document.getElementById('ptrTextOverlay').style.display='none';ptrNotice('Text sent');}));
+document.getElementById('ptrTextSend').addEventListener('click',()=>pantherSendTyped(document.getElementById('ptrTextInput')));
 remoteEl('remoteSupportEnd').addEventListener('click',async()=>{
  if(!remoteSelectedId||!confirm('End this customer remote assistance session?'))return;
  try{await remoteCall('admin_end',{session_id:remoteSelectedId});remoteMessage('Support session ended.',true);await remoteLoad();}
