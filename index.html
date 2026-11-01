@@ -2031,6 +2031,12 @@ body.panther-touch-active {overflow:hidden !important;}
           </div>
         </div>
 
+        <div class="wide">
+          <div class="field-label">Large APK — direct public download URL (optional)</div>
+          <input id="publishExternalApkUrl" type="url" placeholder="https://.../pantherstreams.apk" autocomplete="off">
+          <div class="update-help">For APKs over 50 MB on Supabase Free: upload the APK to a reliable public HTTPS file host (for example, a release asset in a public GitHub repository), then paste its direct .apk download URL here. Leave blank for the existing automatic upload (up to 50 MB). Do not use a private GitHub release or the release-page URL.</div>
+        </div>
+
         <div>
           <div class="field-label">Version</div>
           <input
@@ -8875,6 +8881,9 @@ $("publishUpdateBtn")?.addEventListener(
       $("publishApkFile")
         .files?.[0];
 
+    const externalApkUrl =
+      $("publishExternalApkUrl")?.value?.trim() || "";
+
     const version =
       $("publishVersion")
         .value
@@ -8918,7 +8927,7 @@ $("publishUpdateBtn")?.addEventListener(
       );
 
 
-    if(!file){
+    if(!file && !externalApkUrl){
       setStatus(
         $("updateStatus"),
         "Choose the new Panther APK first.",
@@ -8929,6 +8938,7 @@ $("publishUpdateBtn")?.addEventListener(
 
 
     if(
+      !externalApkUrl &&
       !file.name
         .toLowerCase()
         .endsWith(".apk")
@@ -8943,6 +8953,7 @@ $("publishUpdateBtn")?.addEventListener(
 
 
     if(
+      !externalApkUrl &&
       file.size >
       50 * 1024 * 1024
     ){
@@ -8991,6 +9002,26 @@ $("publishUpdateBtn")?.addEventListener(
 
 
     try{
+
+      // Public external APK mode avoids Supabase's 50 MB per-file cap.
+      // The Edge Function validates the URL and updates app_update_config.
+      if(externalApkUrl){
+        setStatus($("updateStatus"), "Verifying public APK download and publishing update...");
+        const published = await callUpdatePublisher({
+          action: "publish_external",
+          apk_url: externalApkUrl,
+          version, title, notes,
+          force_update: forceUpdate,
+          minimum_version: minimum,
+          enabled
+        });
+        $("publishResultText").textContent = `Panther Streams ${version} is live using the external APK link.`;
+        $("publishReleaseLink").classList.add("hidden");
+        $("publishResult").classList.remove("hidden");
+        setStatus($("updateStatus"), `Published Panther Streams ${version} successfully.`, true);
+        await loadUpdateConfig();
+        return;
+      }
 
       // -------------------------------------------------------
       // 1. Ask the secure Edge Function for a temporary signed
