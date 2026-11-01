@@ -9919,7 +9919,47 @@ document.querySelectorAll('.ptr-edit-command').forEach(button=>button.addEventLi
 document.getElementById('remoteTextSend').addEventListener('click',()=>pantherSendTyped(document.getElementById('remoteTextInput')));
 document.getElementById('ptrTextOpen').addEventListener('click',()=>{document.getElementById('ptrTextOverlay').style.display='flex';document.getElementById('ptrTextInput').focus();});
 document.getElementById('ptrTextCancel').addEventListener('click',()=>{document.getElementById('ptrTextOverlay').style.display='none';});
-document.getElementById('ptrTextSend').addEventListener('click',()=>pantherSendTyped(document.getElementById('ptrTextInput')));
+document.getElementById('ptrTextSend').addEventListener('click',async event=>{
+ event.preventDefault();event.stopPropagation();
+ const input=document.getElementById('ptrTextInput');
+ const button=document.getElementById('ptrTextSend');
+ const status=document.getElementById('ptrTextDeliveryStatus');
+ const value=input.value;
+ status.textContent='Send button pressed. Checking remote session…';
+ status.style.color='#b8c7d8';
+ if(!value){status.textContent='Nothing to send: enter text first.';status.style.color='#ff9a9a';return;}
+ if(!remoteSelectedId){status.textContent='No Remote Support session selected.';status.style.color='#ff9a9a';return;}
+ button.disabled=true;
+ try{
+  const session=remoteSessions.find(s=>s.id===remoteSelectedId);
+  if(!session||session.state!=='active')throw new Error('Remote Support is not active or approved.');
+  status.textContent='Sending text command to Supabase…';
+  const result=await remoteCall('admin_command',{
+   session_id:remoteSelectedId,command_type:'type_text',command_payload:{text:value}
+  });
+  if(!result?.ok)throw new Error('Server did not accept command.');
+  const seq=Number(result.sequence_number);
+  status.textContent=`Command #${seq} queued. Waiting for Firestick…`;
+  if(!Number.isSafeInteger(seq)||seq<1)throw new Error('Server returned no valid command sequence.');
+  let confirmed=false;
+  for(let i=0;i<12;i++){
+   await new Promise(resolve=>setTimeout(resolve,650));
+   const r=await remoteCall('admin_command_status',{session_id:remoteSelectedId,sequence_number:seq});
+   if(!r.handled)continue;
+   confirmed=true;
+   if(r.outcome==='handled'){
+    status.textContent=`Command #${seq}: Firestick reports text inserted.`;
+    status.style.color='#6fe0a5';
+   }else{
+    status.textContent=`Command #${seq}: Firestick replied ${r.outcome||'failed'}.`;
+    status.style.color='#ff9a9a';
+   }
+   break;
+  }
+  if(!confirmed){status.textContent=`Command #${seq} was queued but the Firestick did not acknowledge it.`;status.style.color='#ff9a9a';}
+ }catch(err){status.textContent=`Send failed: ${err?.message||String(err)}`;status.style.color='#ff9a9a';}
+ finally{button.disabled=false;}
+});
 remoteEl('remoteSupportEnd').addEventListener('click',async()=>{
  if(!remoteSelectedId||!confirm('End this customer remote assistance session?'))return;
  try{await remoteCall('admin_end',{session_id:remoteSelectedId});remoteMessage('Support session ended.',true);await remoteLoad();}
